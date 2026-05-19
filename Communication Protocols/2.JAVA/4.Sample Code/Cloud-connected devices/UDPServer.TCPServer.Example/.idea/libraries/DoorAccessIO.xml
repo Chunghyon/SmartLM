@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="DoorAccessIO">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../3.jar包/DoorAccessIO.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
