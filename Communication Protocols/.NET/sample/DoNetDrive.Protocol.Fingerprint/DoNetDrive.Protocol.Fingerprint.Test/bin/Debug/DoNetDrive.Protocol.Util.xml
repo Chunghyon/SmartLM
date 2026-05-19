@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DoNetDrive.Protocol.Util</name>
+    </assembly>
+    <members>
+        <member name="T:DoNetDrive.Protocol.Util.ByteBufferExtension">
+            <summary>
+            缓存区扩展函数
+            </summary>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteBufferExtension.WriteUInt32(DotNetty.Buffers.IByteBuffer,System.UInt32)">
+            <summary>
+            写入一个uint32数值到缓存区
+            </summary>
+            <param name="buf"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteBufferExtension.WriteUInt64(DotNetty.Buffers.IByteBuffer,System.UInt64)">
+            <summary>
+            写入一个uint64数值到缓存区
+            </summary>
+            <param name="buf"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteBufferExtension.ToHex(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            将缓存中数据编码为HEX
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DoNetDrive.Protocol.Util.ByteUtil">
+            <summary>
+            字节实用工具
+            </summary>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.ByteToBCD(System.Byte)">
+            <summary>
+            十进制字节转BCD
+            </summary>
+            <param name="iNum"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.ByteToBCD(System.Byte[])">
+            <summary>
+            BCD 转 十进制字节
+            </summary>
+            <param name="iNum"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.BCDToByte(System.Byte)">
+            <summary>
+            BCD 转 十进制字节
+            </summary>
+            <param name="iNum"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.BCDToByte(DotNetty.Buffers.IByteBuffer,System.Int32,System.Int32)">
+            <summary>
+            从一个ByteBuf中现有索引，开始转换指定长度，BCD数据 转 十进制字节
+            </summary>
+            <param name="buf"></param>
+            <param name="iIndex"></param>
+            <param name="iLen"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.ByteToBCD(DotNetty.Buffers.IByteBuffer,System.Int32,System.Int32)">
+            <summary>
+            从一个ByteBuf中现有索引，开始转换指定长度，十进制字节 转  BCD数据 
+            </summary>
+            <param name="buf"></param>
+            <param name="iIndex"></param>
+            <param name="iLen"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.BCDToByte(System.Byte[])">
+            <summary>
+            BCD 转 字节
+            </summary>
+            <param name="iNum"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.ByteUtil.ByteBufReadInt24(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            从Bytebuf中读取一个int24
+            
+            </summary>
+            <param name="buffer"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DoNetDrive.Protocol.Util.StringUtil">
+            <summary>
+            字符串实用工具
+            </summary>
+        </member>
+        <member name="F:DoNetDrive.Protocol.Util.StringUtil.HexToByte_Digit">
+            <summary>
+            十六进制转字节的转换表
+            </summary>
+        </member>
+        <member name="F:DoNetDrive.Protocol.Util.StringUtil.NumDigit">
+            <summary>
+            字符串转数组的值表
+            </summary>
+        </member>
+        <member name="F:DoNetDrive.Protocol.Util.StringUtil.mHexDigits">
+            <summary>
+            字节转十六进制时十六进制字符串代码表
+            </summary>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.#cctor">
+            <summary>
+            初始化 HexToByte 的转换表
+            </summary>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.ByteBufToHex(DotNetty.Buffers.IByteBuffer,System.Int32)">
+            <summary>
+            从ByteBuf中读取指定长度字节转十六进制
+            </summary>
+            <param name="bData"></param>
+            <param name="iLen"></param>
+            <returns></returns>
+            <remarks></remarks>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.HextoByteBuf(System.String,DotNetty.Buffers.IByteBuffer)">
+            <summary>
+             将十六进制字符串添加到ByteBuf中
+            </summary>
+            <param name="hexString">需要转换的十六进制字符串</param>
+            <param name="buf">保存这些数据的缓冲区</param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.IsHex(System.String)">
+            <summary>
+            检查字符串是否为十六进制
+            </summary>
+            <param name="sValue"></param>
+            <returns></returns>
+            <remarks></remarks>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.FillString(System.String,System.Int32,System.String,System.Boolean)">
+            <summary>
+            填充字符串，并返回一个指定长度的字符串，原始字符串长度大于指定长度时将被阶段，小于指定长度时，使用 fillstr 参数填充内容
+            </summary>
+            <param name="str"></param>
+            <param name="iLen"></param>
+            <param name="fillstr"></param>
+            <param name="fill_right"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.FillHexString(System.String,System.Int32,System.String,System.Boolean)">
+            <summary>
+            检查并填充十六进制字符串
+            </summary>
+            <param name="str">需要检查的字符串</param>
+            <param name="iLen">需要返回的字符串长度</param>
+            <param name="fillstr">占位字符</param>
+            <param name="fill_right">填充在结尾还是开头？ True 表示填充在结尾。</param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.WriteString(DotNetty.Buffers.IByteBuffer,System.String,System.Int32,System.Text.Encoding)">
+            <summary>
+            使用特定的编码写入字符串，超过指定长度会截取，不足长度会补0
+            </summary>
+            <param name="databuf"></param>
+            <param name="sValue"></param>
+            <param name="iLen"></param>
+            <param name="uc"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.StringUtil.GetString(DotNetty.Buffers.IByteBuffer,System.Int32,System.Text.Encoding)">
+            <summary>
+            用特定编码从buf读取字符串
+            </summary>
+            <param name="databuf"></param>
+            <param name="iLen"></param>
+            <param name="uc"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DoNetDrive.Protocol.Util.TimeUtil">
+            <summary>
+            时间操作实用工具
+            </summary>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_ssmmhhddMMyy(System.Byte[])">
+            <summary>
+            将BCD数组转换为时间，数组格式 ssmmhhddMMyy
+            </summary> 
+            <param name="btTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_yyMMddhh(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            将BCD缓存转换为时间，数组格式 yyMMddhh
+            </summary>
+            <param name="buf">可用长度为4的缓存区</param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_yyMMdd(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            从buf读取3个字节转换成日期
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.DateToBCD_yyMMddhh(System.Byte[],System.DateTime)">
+            <summary>
+            
+            </summary>
+            <param name="btData"></param>
+            <param name="date"></param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.DateToBCD_ssmmhhddMMwwyy(System.Byte[],System.DateTime)">
+            <summary>
+            日期类型转换为BCD格式日期字节数组，格式 ssmmhhddMMwwyy
+            </summary>
+            <param name="btData"></param>
+            <param name="date"></param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.DateToBCD_ssmmhhddMMyy(System.Byte[],System.DateTime)">
+            <summary>
+            日期类型转换为BCD格式日期字节数组
+            </summary>
+            <param name="btData"></param>
+            <param name="date"></param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.GetWeekNum">
+            <summary>
+            定义星期代表数值（星期表示：1表示星期一；2表示星期二。。。。6表示星期六；7表示星期日；）
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_yyMMddhhmm(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            从一个ByteBuf中读取5个BCD字节，并转换为日期格式；  yyMMddhhmm
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_yyMMddhhmmss(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            从一个ByteBuf中读取6个BCD字节，并转换为日期格式；  yyMMddhhmmss
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_yyMMddhhmmssByDex(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            从一个ByteBuf中读取6个BCD字节，并转换为日期格式；  yyMMddhhmmss
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_yyyyMMddhhmmss(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            从一个ByteBuf中读取7个BCD字节，并转换为日期格式；  yyyyMMddhhmmss
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.DateToBCD_yyMMddhhmm(DotNetty.Buffers.IByteBuffer,System.DateTime)">
+            <summary>
+            将日期转换为5个字节BCD格式的数据，并写入到Buf中；yyMMddhhmm
+            </summary>
+            <param name="buf"></param>
+            <param name="date"></param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.DateToBCD_yyMMdd(DotNetty.Buffers.IByteBuffer,System.DateTime)">
+            <summary>
+            将日期转换为3个字节BCD格式的数据，并写入到Buf中；yyMMdd
+            </summary>
+            <param name="buf"></param>
+            <param name="date"></param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.DateToBCD_yyMMddhhmmss(System.Byte[],System.DateTime)">
+            <summary>
+            将日期编码为BCD数组，格式为  yyMMddhhmmss
+            </summary>
+            <param name="btData">目标数组 最少6个元素</param>
+            <param name="date"></param>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.FormatTime(System.DateTime)">
+             将时间类型格式化为 yyyy-MM-dd HH:mm:ss
+            
+             @param date 需要格式化的时间
+             @return 时间字符串
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.FormatTimeHHmm(System.DateTime)">
+             将时间类型格式化为 yyyy-MM-dd HH:mm
+            
+             @param date 需要格式化的时间
+             @return 时间字符串
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.FormatTimeMillisecond(System.DateTime)">
+            <summary>
+            返回格式为 HH:mm:ss.fff 的字符串
+            </summary>
+            <param name="date"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DoNetDrive.Protocol.Util.TimeUtil.BCDTimeToDate_ssmmHHddMMWWyy(DotNetty.Buffers.IByteBuffer)">
+            <summary>
+            BCD格式日期字节数组转换为日期类型
+            </summary>
+            <param name="buf"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

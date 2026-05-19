@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <StartupObject></StartupObject>
+    <AssemblyName>DoNetDrive.Protocol.Fingerprint.Test</AssemblyName>
+    <RootNamespace>DoNetDrive.Protocol.Fingerprint.Test</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <None Remove="Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="System.IO.Ports" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DoNetDrive.Protocol.Fingerprint\Fingerprint\DoNetDrive.Protocol.Fingerprint_net5.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+
+    <Reference Include="DoNetDrive.Common">
+      <HintPath>..\Output\Release\net5.0\DoNetDrive.Common.dll</HintPath>
+    </Reference>
+
+    <Reference Include="DoNetDrive.Core">
+      <HintPath>..\Output\Release\net5.0\DoNetDrive.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="DoNetDrive.Protocol">
+      <HintPath>..\Output\Release\net5.0\DoNetDrive.Protocol.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="DoNetDrive.Protocol.Door">
+      <HintPath>..\Output\Release\net5.0\DoNetDrive.Protocol.Door.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="DotNetty.Buffers">
+      <HintPath>..\Output\Release\net5.0\DotNetty.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetty.Common">
+      <HintPath>..\Output\Release\net5.0\DotNetty.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Language\China.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Language\English.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
+

@@ -1,0 +1,1844 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+DoNetDrive.Protocol
+</name>
+</assembly>
+<members>
+<member name="T:DoNetDrive.Protocol.CommandDetailFactory">
+ <summary>
+ 命令详情的创造工厂
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.CommandDetailFactory.ConnectType">
+ <summary>
+ 连接参数
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ConnectType.TCPClient">
+ <summary>
+ 访问远程TCP服务器
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ConnectType.TCPServerClient">
+ <summary>
+ 本地开启的TCP 服务器中，查找已连接到服务器的客户端
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ConnectType.UDPClient">
+ <summary>
+ 访问远程UDP服务器
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.CommandDetailFactory.ControllerType">
+ <summary>
+ 控制器型号
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door88">
+ <summary>
+ Door8800系列控制器，已知型号：
+ 8810A\8820A\8840A
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door58">
+ <summary>
+ Door5800系列控制器，已知型号：
+ 5812R\5812T\5824R\5824T\5848R\5848T
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door59">
+ <summary>
+ 5900系列控制器，已知型号：
+ 5912T\5924T\5948T
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door5926T">
+ <summary>
+ 5926T道闸控制器，已知型号：
+ 5926T
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door89A">
+ <summary>
+ Door8900A系列控制器，已知型号：
+ 8910A\8920A\8940A
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door89H">
+ <summary>
+ Door8900H系列控制器，已知型号：
+ 8910H\8920H\8940H
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.Door989">
+ <summary>
+ Door989脱机刷卡门禁系列，已知型号：
+ 988M\1882M\2882M\989M
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.USBDrive_CardReader">
+ <summary>
+ USB设备中的USB 卡片读写器
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.USBDrive_OfflinePatrol">
+ <summary>
+ USB设备中的USB离线巡更棒
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.A33_Fingerprint">
+ <summary>
+ A33 芯片指纹机
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.CommandDetailFactory.ControllerType.A33_Face">
+ <summary>
+ A33_芯片人脸机
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.CommandDetailFactory.CreateDetail(DoNetDrive.Protocol.CommandDetailFactory.ConnectType,System.String,System.Int32,DoNetDrive.Protocol.CommandDetailFactory.ControllerType,System.String,System.String)">
+ <summary>
+ 创建一个命令详情
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.CommandDetailFactory.CreateDetail(DoNetDrive.Core.Connector.INConnectorDetail,DoNetDrive.Protocol.CommandDetailFactory.ControllerType,System.String,System.String)">
+ <summary>
+ 创建命令详情
+ </summary>
+ <param name="connDetal">通讯通道详情</param>
+ <param name="colerType"></param>
+ <param name="SN"></param>
+ <param name="Password"></param>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.Door8800.Door8800Command">
+ <summary>
+ Door8800系列命令格式的基类
+ 适用于：Door8800，Door8900，Door5800，Door5900，989，1882，2882
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Door8800.Door8800Command.NULLPassword">
+ <summary>
+ 通讯密码空密码常量
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Door8800.Door8800Command.NULLPasswordBuf">
+ <summary>
+ 通讯密码默认密码的字节常量
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Door8800.Door8800Command.DoorPacket">
+ <summary>
+ 处理当前命令逻辑的数据包和 _Packet 是同一个对象
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.#ctor(DoNetDrive.Core.Command.INCommandDetail,DoNetDrive.Core.Command.INCommandParameter)">
+ <summary>
+ 初始化两个重要参数，并进行参数检查
+ </summary>
+ <param name="cd">表示命令详情，包含通道信息，对端信息，超时时间，重发次数</param>
+ <param name="par">表示此命令逻辑所需要的命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CreateDecompile(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 创建命令的解码器
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.GetCmdBuf">
+ <summary>
+ 获取当前命令所使用的缓冲区
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.Release0">
+ <summary>
+ 释放使用的资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CheckResponse_OK(DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 命令返回值成功
+ </summary>
+ <param name="oResultPck">需要检查的指令--一般指接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CheckResponse_PasswordErr(DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 通讯密码错误
+ </summary>
+ <param name="oResultPck">需要检查的指令--一般指接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CheckResponse_CheckSumErr(DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 检验和错误
+ </summary>
+ <param name="oResultPck">需要检查的指令--一般指接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Protocol.Door8800.Door8800Command.ResultCmdTypeAddValkue">
+ <summary>
+ 指定命令的返回值中的CmdType需要增加的量
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CheckResponse(DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 检查返回指令是否正确
+ </summary>
+ <param name="oResultPck">需要检查的指令--一般指接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CheckResponse(DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket,System.Int32)">
+ <summary>
+ 检查返回指令是否正确
+ </summary>
+ <param name="oResultPck">需要检查的指令--一般指接收到的数据包</param>
+ <param name="ResultDataLen">返回值的长度要求</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Command.CheckResponse(DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket,System.Byte,System.Byte,System.Byte,System.Int32)">
+ <summary>
+ 检查返回指令是否符合规则
+ </summary>
+ <param name="oResultPck">需要检查的指令--一般指接收到的数据包</param>
+ <param name="ResultCmdType">返回值的命令类型</param>
+ <param name="ResultCmdIndex">返回值的命令索引</param>
+ <param name="ResultCmdPar">返回值的命令参数</param>
+ <param name="ResultDataLen">返回值的长度要求</param>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.Door8800.Door8800RequestHandle">
+ <summary>
+ 用于处理关于Door8800系列协议中产生的设备主动上报消息的处理类
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Door8800.Door8800RequestHandle.TransactionFactory">
+ <summary>
+ 事务工厂，用于处理获取各种类型的事物的类型
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800RequestHandle.#ctor(DotNetty.Buffers.IByteBufferAllocator,System.Func{System.String,System.Byte,System.Byte,DoNetDrive.Protocol.Transaction.AbstractTransaction})">
+ <summary>
+ 用于处理关于Door8800系列协议中产生的设备主动上报消息的处理类
+ </summary>
+ <param name="allocator">用于保存临时数据的ByteBuf分配器</param>
+ <param name="factory">用于根据SN，命令参数、命令索引生产用于处理对应消息的处理类工厂</param>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800RequestHandle.DisposeResponse(DoNetDrive.Core.Connector.INConnector,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 处理响应
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800RequestHandle.fireRequestEvent(DoNetDrive.Core.Connector.INConnector,DoNetDrive.Core.Packet.INPacket)">
+ <summary>
+ 当处理类接收并验证完毕数据包后，由此产生消息
+ </summary>
+ <param name="connector">消息所在连接通道</param>
+ <param name="p">接收到的数据包</param>
+</member>
+<member name="T:DoNetDrive.Protocol.Door8800.Door8800Transaction">
+ <summary>
+ 适用于使用Door8800协议格式的监控消息
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Door8800.Door8800Transaction.Connector">
+ <summary>
+ 事务发生时的连接通道信息
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:DoNetDrive.Protocol.Door8800.Door8800Transaction.CmdIndex">
+ <summary>
+ 命令索引
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Door8800.Door8800Transaction.CmdPar">
+ <summary>
+ 命令参数
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Door8800.Door8800Transaction.SN">
+ <summary>
+ 发送者的身份
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Door8800.Door8800Transaction.EventData">
+ <summary>
+ 事务的据结构
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Transaction.#ctor(DoNetDrive.Core.Connector.INConnectorDetail,System.String,System.Byte,System.Byte,DoNetDrive.Protocol.Transaction.INTransaction)">
+ <summary>
+ 初始化一个事务
+ </summary>
+ <param name="cdtl">连接通道信息</param>
+ <param name="s">控制器的SN</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Transaction.SetBytes(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 未使用
+ </summary>
+ <param name="databuf"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Transaction.GetDataLen">
+ <summary>
+ 返回这个消息的数据长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Transaction.GetBytes">
+ <summary>
+ 未使用
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Door8800.Door8800Transaction.GetBytes(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 未使用
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CheckSumErrorStatus">
+ <summary>
+ 表示校验和错误的状态
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.PasswordErrorStatus">
+ <summary>
+ 表示通讯密码错误的状态
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.FPacket">
+ <summary>
+ 处理当前命令逻辑的数据包和 _Packet 是同一个对象
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.#ctor(DoNetDrive.Core.Command.INCommandDetail,DoNetDrive.Core.Command.INCommandParameter)">
+ <summary>
+ 创建一个帧数据包命令，并初始化为命令发送后需要等待回应
+ </summary>
+ <param name="cd"></param>
+ <param name="par"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CreatePacket">
+ <summary>
+ 指令开始执行时，用于让命令组装第一个用于发送的数据包 CommandNext0 中组装（如果有的话）
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CreateDecompile(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 生成命令的第一个数据包，后续的数据包应该在接收到返回值在 CommandNext 函数中陆续组装
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CreatePacket0">
+ <summary>
+ 生成命令的第一个数据包，后续的数据包应该在接收到返回值在 CommandNext 函数中陆续组装
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CommandReady">
+ <summary>
+ 命令准备就绪，等待下次发送
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.Packet(System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 修改当前的数据包
+ </summary>
+ <param name="CmdType">命令分类</param>
+ <param name="CmdIndex">命令索引</param>
+ <param name="CmdPar">命令参数</param>
+ <param name="DataLen">数据长度</param>
+ <param name="CmdDataBuf">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.Packet(System.Byte,System.Byte)">
+ <summary>
+ 修改当前的数据包
+ </summary>
+ <param name="CmdType">命令分类</param>
+ <param name="CmdIndex">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.Packet(System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 修改当前的数据包
+ </summary>
+ <param name="CmdType">命令分类</param>
+ <param name="CmdIndex">命令索引</param>
+ <param name="CmdPar">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.Release0">
+ <summary>
+ 释放使用的资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.Release1">
+ <summary>
+ 让派生类主动释放资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CommandNext(DoNetDrive.Core.Packet.INPacket)">
+ <summary>
+ 检查并进行命令的下一部分
+ </summary>
+ <param name="readPacket">收到的数据包</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CommandNext0(`0)">
+ <summary>
+ 命令收到响应，解析响应并继续执行命令
+ </summary>
+ <param name="oPck">待处理的数据包(接收到的数据包)</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CommandNext1(`0)">
+ <summary>
+ 继续检查响应是否为命令的下一步骤
+ </summary>
+ <param name="oPck">待处理的数据包(接收到的数据包)</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CheckResponse_OK(`0)">
+ <summary>
+ 命令返回值成功
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CheckResponse_PasswordErr(`0)">
+ <summary>
+ 通讯密码错误
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFrameCommand`1.CheckResponse_CheckSumErr(`0)">
+ <summary>
+ 检验和错误
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.Code">
+ <summary>
+ 信息代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SN">
+ <summary>
+ 设备SN
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.Password">
+ <summary>
+ 通讯密码
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SetCommandDetail(DoNetDrive.Core.Command.INCommandDetail)">
+ <summary>
+ 设置数据包绑定的命令详情
+ </summary>
+ <param name="dtl"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SetPacket(System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 设置包裹数据
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SetPacket(System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 设置包裹数据
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SetUDPBroadcastPacket">
+ <summary>
+ 设置当前的数据包为UDP广播数据包,UDP广播发送和接收数据时使用
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SetNormalPacket">
+ <summary>
+ 设置当前的数据包为正常播数据包（默认状态就是正常，除非经过修改，否则不必调用此函数）
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.FrameCommand.AbstractFramePacket.SetNormalPacket(System.Int32)">
+ <summary>
+ 设置当前的数据包为正常播数据包（默认状态就是正常，除非经过修改，否则不必调用此函数）
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.FrameCommand.CheckSumError">
+ <summary>
+ 表示校验和错误的状态
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.FrameCommand.PasswordErrorStatus">
+ <summary>
+ 表示通讯密码错误的状态
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail">
+ <summary>
+ 用于在线门禁的身份详情记录
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.ASCII">
+ <summary>
+ 用于ASCII 字符串数据编解码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.EmptySN">
+ <summary>
+ 指示了一个空的SN
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.EmptyPassword">
+ <summary>
+ 默认的空密码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.mSN">
+ <summary>
+ 控制器的SN
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.SN">
+ <summary>
+ 控制器的SN
+ </summary>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.mPassword">
+ <summary>
+ 控制器的密码
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.Password">
+ <summary>
+ 控制器的密码
+ 即长度为8的十六进制字符串
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.#ctor(DoNetDrive.Core.Connector.INConnectorDetail,System.String,System.String)">
+ <summary>
+ 初始化一个新的控制器命令详情类
+ </summary>
+ <param name="cnt">只是通讯连接通道</param>
+ <param name="s">控制器的SN，16个字符</param>
+ <param name="p">控制器的密码，8个字符的十六进制字符串</param>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.SNByte">
+ <summary>
+ 控制器SN的字节数组
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.PasswordByte">
+ <summary>
+ 控制器密码的字节数组
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.Release0">
+ <summary>
+ 释放当前实例所使用的资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.Clone">
+ <summary>
+ 返回一个浅表副本
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail.Equals(DoNetDrive.Core.Command.INCommandDetail)">
+ <summary>
+ 比较连接通道指向和SN是否相同
+ </summary>
+ <param name="other"></param>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompile">
+ <summary>
+ 数据包 解析类；<para/>
+ 适用于在线门禁、在线电梯、指纹机、人脸机等设备通讯
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompile.#ctor(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 创建一个解析 OnlineAccess 类型数据包的解析器
+ </summary>
+ <param name="acr"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompile.GetFirstDecompileStep">
+ <summary>
+ 获取用于解析命令的第一个步骤
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep">
+ <summary>
+ 适用于 OnlineAccess 数据包格式的命令包解析步骤
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.Code">
+ <summary>
+ 解析信息代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.SN">
+ <summary>
+ 解析信息SN
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.Password">
+ <summary>
+ 解析密码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.Command">
+ <summary>
+ 解析命令部分
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.DataLen">
+ <summary>
+ 解析命令长度 
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.CmdData">
+ <summary>
+ 解析数据部分
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep.CheckSum">
+ <summary>
+ 判断检验和
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CommandCode">
+ <summary>
+ 解析信息代码
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CommandCode.ReadBufLen">
+ <summary>
+ 信息代码需要存储的长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CommandCode.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_SN">
+ <summary>
+ 解析SN
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.DecompileStep_SN.ReadBufLen">
+ <summary>
+ SN需要存储的长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.DecompileStep_SN.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Password">
+ <summary>
+ 解析密码
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Password.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Command">
+ <summary>
+ 解析命令
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Command.ReadBufLen">
+ <summary>
+ 信息代码需要存储的长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Command.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_DataLen">
+ <summary>
+ 解析命令长度
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.DecompileStep_DataLen.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CmdData">
+ <summary>
+ 解析命令数据
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CheckSum">
+ <summary>
+ 解析命令校验和
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC">
+ <summary>
+ 适用于 OnlineAccess 数据包格式的命令包解析步骤
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.SN">
+ <summary>
+ 解析信息SN
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.Password">
+ <summary>
+ 解析密码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.Code">
+ <summary>
+ 解析信息代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.Command">
+ <summary>
+ 解析命令部分
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.DataLen">
+ <summary>
+ 解析命令长度 
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.CmdData">
+ <summary>
+ 解析数据部分
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompileStep_PC.CheckSum">
+ <summary>
+ 判断检验和
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_SN_PC">
+ <summary>
+ 解析SN
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Password_PC">
+ <summary>
+ 解析密码
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CommandCode_PC">
+ <summary>
+ 解析信息代码
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_Command_PC">
+ <summary>
+ 解析命令
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_DataLen_PC">
+ <summary>
+ 解析命令长度
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CmdData_PC">
+ <summary>
+ 解析命令数据
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.DecompileStep_CheckSum_PC">
+ <summary>
+ 解析命令校验和
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompile_PC">
+ <summary>
+ 数据包 解析类；<para/>
+ 适用于在线门禁、在线电梯、指纹机、人脸机等设备通讯
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompile_PC.#ctor(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 创建一个解析 OnlineAccess 类型数据包的解析器
+ </summary>
+ <param name="acr"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessDecompile_PC.GetFirstDecompileStep">
+ <summary>
+ 获取用于解析命令的第一个步骤
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket">
+ <summary>
+ 适用于在线门禁、在线电梯、指纹机、人脸机等设备通讯数据包
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.UDPBroadcastCode">
+ <summary>
+ UDP广播时使用的网络标志
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.BroadcastCode">
+ <summary>
+ 广播代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.ConnectPassordLen">
+ <summary>
+ 密码长度
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.CmdType">
+ <summary>
+ 命令类型
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.CmdIndex">
+ <summary>
+ 命令索引
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.CmdPar">
+ <summary>
+ 命令参数
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(DoNetDrive.Core.Command.INCommandDetail)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">在线门禁的身份详情，要求包含SN和通讯密码</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail,System.UInt32,System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">在线门禁的身份详情，要求包含SN和通讯密码</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail,System.UInt32,System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">在线门禁的身份详情，要求包含SN和通讯密码</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail,System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">在线门禁的身份详情，要求包含SN和通讯密码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(DoNetDrive.Protocol.OnlineAccess.OnlineAccessCommandDetail,System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">在线门禁的身份详情，要求包含SN和通讯密码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(System.Byte[],System.Byte[],System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="s">设备SN</param>
+ <param name="ps">通讯密码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(System.Byte[],System.Byte[],System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="s">设备SN</param>
+ <param name="ps">通讯密码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(System.Byte[],System.Byte[],System.UInt32,System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="s">设备SN</param>
+ <param name="ps">通讯密码</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.#ctor(System.Byte[],System.Byte[],System.UInt32,System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="s">设备SN</param>
+ <param name="ps">通讯密码</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.SetPacketTarget(System.Byte[],System.Byte[])">
+ <summary>
+ 设置数据包的目标（SN和密码）
+ </summary>
+ <param name="SNbuf">SN</param>
+ <param name="ps">密码</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.SetCommandDetail(DoNetDrive.Core.Command.INCommandDetail)">
+ <summary>
+ 设置数据包绑定的命令详情
+ </summary>
+ <param name="dtl"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.SetPacket(System.Byte,System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 设置包裹数据
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="cp">命令参数</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.SetUDPBroadcastPacket">
+ <summary>
+ 设置当前的数据包为UDP广播数据包,UDP广播发送和接收数据时使用
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.SetNormalPacket">
+ <summary>
+ 设置当前的数据包为正常播数据包（默认状态就是正常，除非经过修改，否则不必调用此函数）
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.GetPacketData(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 获取数据包的打包后的ByteBuf，用于发送数据
+ </summary>
+ <param name="Allocator">用于分配ByteBuf的分配器</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.OnlineAccess.OnlineAccessPacket.Release">
+ <summary>
+ 释放使用的资源
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.Packet.BaseDecompile`1">
+ <summary>
+ 抽象的命令包解析类。
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1.DecompileTimeout">
+ <summary>
+ 解码器中缓存数据超时时间
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1.ActivityTime">
+ <summary>
+ 解码器活跃时间
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1.DecompileStep">
+ <summary>
+ 接收数据的步骤
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1._Buf">
+ <summary>
+ 存储临时数据的缓冲区
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1._Translate">
+ <summary>
+ 接收到转移码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1._Packet">
+ <summary>
+ 命令包
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BaseDecompile`1._Allocator">
+ <summary>
+ 存储数据包的缓冲区分配器
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.#ctor(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 创建一个解析器
+ </summary>
+ <param name="acr"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.GetPacket">
+ <summary>
+ 获取解析器包含的命令包
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.GetFirstDecompileStep">
+ <summary>
+ 获取用于解析命令的第一个步骤
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.GetNewByteBuffer(System.Int32)">
+ <summary>
+ 获取一个新的数据缓冲区
+ </summary>
+ <param name="iLen"></param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.ClearBuf">
+ <summary>
+ 清空缓冲区内容
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.Decompile(DotNetty.Buffers.IByteBuffer,System.Collections.Generic.List{DoNetDrive.Core.Packet.INPacket})">
+ <summary>
+ 将数据解析成特定的数据包，并返回结果
+ </summary>
+ <param name="bDataBuf">待解析数据缓冲区</param>
+ <param name="retPacketList">已解析的包会放在这个列表中</param>
+ <returns>解析出完整包则返回True</returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.DecompileByte(System.Byte)">
+ <summary>
+ 对字节进行转译
+ </summary>
+ <param name="value"></param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompile`1.AddBuf(System.Byte)">
+ <summary>
+ 加入到缓冲
+ </summary>
+ <param name="value"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.Packet.BaseDecompileStep`1">
+ <summary>
+ 抽象的命令包解析步骤
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Packet.BaseDecompileStep`1.ReadBufLen">
+ <summary>
+ buf需要存储的长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompileStep`1.DecompileStep(DoNetDrive.Protocol.Packet.BaseDecompile{`0},System.Byte)">
+ <summary>
+ 开始逐字节解析缓冲区中的数据
+ </summary>
+ <param name="decompile"></param>
+ <param name="value"></param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompileStep`1.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{`0},DotNetty.Buffers.IByteBuffer,`0)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BaseDecompileStep`1.AddSumCheck(DotNetty.Buffers.IByteBuffer,`0)">
+ <summary>
+ 累加和校验
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.Packet.BasePacket">
+ <summary>
+ 抽象的数据包，仅包含必要内容
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BasePacket.DataLen">
+ <summary>
+ 数据长度
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BasePacket.CmdData">
+ <summary>
+ 命令数据
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BasePacket.Check">
+ <summary>
+ 校验和
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.VerifyError(System.String)">
+ <summary>
+ 验证参数错误时，抛出错误
+ </summary>
+ <param name="sText"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.SetPacketCmdData(System.Int32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 设置包裹数据
+ </summary>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.ReleaseDataBuf">
+ <summary>
+ 释放数据包中的缓冲区
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.GetPacketData(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 获取数据包的打包后的ByteBuf，用于发送数据 -- 子类必须实现
+ </summary>
+ <param name="Allocator">用于分配ByteBuf的分配器</param>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Protocol.Packet.BasePacket.CodeRand">
+ <summary>
+ 随机数生成器
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.GetRandomCode(System.UInt32@,System.UInt32@)">
+ <summary>
+ 获取一个随机的信息代码
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.CreatePacket(DotNetty.Buffers.IByteBufferAllocator,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 生成最终指令和校验和，并对命令进行转义码转义
+ </summary>
+ <param name="Allocator">缓冲区分配器</param>
+ <param name="buf">已存在原始指令的缓冲区</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.WriteByteToBuf(System.Byte,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 将一个字节写入到缓冲区，并进行转义码转换
+ </summary>
+ <param name="bValue"></param>
+ <param name="buf"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.BasePacket.Release">
+ <summary>
+ 释放使用的资源
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.Packet.INDecompileStep`1">
+ <summary>
+ 定义命令包解析的步骤的统一接口形式
+ </summary>
+ <typeparam name="T"></typeparam>
+</member>
+<member name="M:DoNetDrive.Protocol.Packet.INDecompileStep`1.DecompileStep(DoNetDrive.Protocol.Packet.BaseDecompile{`0},System.Byte)">
+ <summary>
+ 解析步骤，命令包完整解析后返回true
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.Transaction.AbstractTransaction">
+ <summary>
+ 表示一个事务
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Transaction.AbstractTransaction._SerialNumber">
+ <summary>
+ 事务序列号
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Transaction.AbstractTransaction._TransactionDate">
+ <summary>
+ 事务时间
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Transaction.AbstractTransaction._TransactionType">
+ <summary>
+ 事务类型
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Transaction.AbstractTransaction._TransactionCode">
+ <summary>
+ 事务代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.Transaction.AbstractTransaction._IsNull">
+ <summary>
+ 记录是否为空记录
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.AbstractTransaction.SerialNumber">
+ <summary>
+ 事务序列号
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.SetSerialNumber(System.Int32)">
+ <summary>
+ 设置记录的事务序号--一般是逻辑存储序号
+ </summary>
+ <param name="num">事务序号</param>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.AbstractTransaction.TransactionDate">
+ <summary>
+ 事务时间
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.AbstractTransaction.TransactionType">
+ <summary>
+ 事务类型
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.AbstractTransaction.TransactionCode">
+ <summary>
+ 事务代码
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.IsNull">
+ <summary>
+ 记录是否为空记录
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.SetBytes(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 将一个缓冲区 ByteBuf 设置到数据结构中
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.GetDataLen">
+ <summary>
+ 获取数据的字节长度
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.GetBytes">
+ <summary>
+ 获取一个 ByteBuf 此 缓冲中包含了此数据结构的所有数据  --- 此功能未实现
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.GetBytes(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 将数据序列化到指定的 ByteBuf 中  --- 此功能未实现
+ </summary>
+ <param name="databuf">具有足够缓冲空间的bytebuf</param>
+ <returns>返回传入的bytebuf</returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.CheckNull(DotNetty.Buffers.IByteBuffer,System.Int32)">
+ <summary>
+ 检查记录是否为空
+ </summary>
+ <param name="databuf">记录缓冲区</param>
+ <param name="iCheckLen">需要检查的数据长度</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.AbstractTransaction.ReadNullRecord(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 将记录所有字节从缓冲区中读出，但不处理
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.Transaction.INTransaction">
+ <summary>
+ 表示一个事务
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.INTransaction.SerialNumber">
+ <summary>
+ 事务序列号
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.INTransaction.TransactionDate">
+ <summary>
+ 事务时间
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.INTransaction.TransactionType">
+ <summary>
+ 事务类型
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:DoNetDrive.Protocol.Transaction.INTransaction.TransactionCode">
+ <summary>
+ 事务代码
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.Transaction.INTransaction.IsNull">
+ <summary>
+ 记录是否为空记录
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveCommand">
+ <summary>
+ USB 设备命令格式的基类
+ 适用于：读写器，巡更棒
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveCommand.USBPacket">
+ <summary>
+ 处理当前命令逻辑的数据包和 _Packet 是统一个对象
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CheckSumErrorStatus">
+ <summary>
+ 表示校验和错误的状态
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.#ctor(DoNetDrive.Core.Command.INCommandDetail,DoNetDrive.Core.Command.INCommandParameter)">
+ <summary>
+ 初始化两个重要参数，并进行参数检查
+ </summary>
+ <param name="cd">表示命令详情，包含通道信息，对端信息，超时时间，重发次数</param>
+ <param name="par">表示此命令逻辑所需要的命令参数</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CreatePacket">
+ <summary>
+ 指令开始执行时，用于让命令组装第一个用于发送的数据包 CommandNext0 中组装（如果有的话）
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CreatePacket0">
+ <summary>
+ 生成命令的第一个数据包，后续的数据包应该在
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.Packet(System.Byte,System.Byte,System.UInt32,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 修改当前的数据包
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.Packet(System.Byte,System.Byte)">
+ <summary>
+ 修改当前的数据包
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.Release0">
+ <summary>
+ 释放使用的资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.Release1">
+ <summary>
+ 让派生类主动释放资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CommandNext(DoNetDrive.Core.Packet.INPacket)">
+ <summary>
+ 检查并进行命令的下一部分
+ </summary>
+ <param name="readPacket">收到的数据包</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CommandNext0(DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 命令收到响应，解析响应并继续执行命令
+ </summary>
+ <param name="oPck">待处理的数据包(接收到的数据包)</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CommandNext1(DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 继续检查响应是否为命令的下一步骤
+ </summary>
+ <param name="oPck">待处理的数据包(接收到的数据包)</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CheckResponse_OK(DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 命令返回值成功
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CheckResponse_CheckSumErr(DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 检验和错误
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveCommand.ResultCmdTypeAddValkue">
+ <summary>
+ 指定命令的返回值中的CmdType需要增加的量
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CheckResponse(DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 检查返回指令是否正确
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CheckResponse(DoNetDrive.Protocol.USBDrive.USBDrivePacket,System.Byte)">
+ <summary>
+ 检查返回指令是否正确
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <param name="dl">返回值的长度要求</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommand.CheckResponse(DoNetDrive.Protocol.USBDrive.USBDrivePacket,System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 检查返回指令是否符合规则
+ </summary>
+ <param name="oPck">需要检查的指令--一般值接收到的数据包</param>
+ <param name="CmdType">返回值的命令类型</param>
+ <param name="CmdIndex">返回值的命令索引</param>
+ <param name="DataLen">返回值的长度要求</param>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail">
+ <summary>
+ 用于标记USB设备的身份详情记录
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail.ASCII">
+ <summary>
+ 用于ASCII 字符串数据编解码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail.Addr">
+ <summary>
+ 控制器的SN
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail.#ctor(DoNetDrive.Core.Connector.INConnectorDetail,System.Int32)">
+ <summary>
+ 初始化一个新的控制器命令详情类
+ </summary>
+ <param name="cnt">只是通讯连接通道</param>
+ <param name="ar">设备机器号</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail.Release0">
+ <summary>
+ 释放资源
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail.Clone">
+ <summary>
+ 返回一个浅表副本
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail.Equals(DoNetDrive.Core.Command.INCommandDetail)">
+ <summary>
+ 比较连接通道指向和SN是否相同
+ </summary>
+ <param name="other"></param>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveCommandStatus_CheckSumError">
+ <summary>
+ 表示校验和错误的状态
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveDecompile">
+ <summary>
+ 数据包 解析类；<para/>
+ 适用于 USB设备的通讯数据包，适合设备 usb读写器、巡更棒
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveDecompile.#ctor(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 创建一个解析 OnlineAccess 类型数据包的解析器
+ </summary>
+ <param name="acr"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveDecompile.GetFirstDecompileStep">
+ <summary>
+ 获取用于解析命令的第一个步骤
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep">
+ <summary>
+ 适用于 USBDrive 数据包格式的命令包解析步骤
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep.Addr">
+ <summary>
+ 解析机器号
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep.Code">
+ <summary>
+ 解析信息代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep.Command">
+ <summary>
+ 解析命令部分
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep.DataLen">
+ <summary>
+ 解析命令长度 
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep.CmdData">
+ <summary>
+ 解析数据部分
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveDecompileStep.CheckSum">
+ <summary>
+ 判断检验和
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.DecompileStep_Addr">
+ <summary>
+ 解析机器号
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.USBDrive.DecompileStep_Addr.ReadBufLen">
+ <summary>
+ 信息代码需要存储的长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.DecompileStep_Addr.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.USBDrive.USBDrivePacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 解析机器号，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.DecompileStep_CommandCode">
+ <summary>
+ 解析信息代码
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.USBDrive.DecompileStep_CommandCode.ReadBufLen">
+ <summary>
+ 信息代码需要存储的长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.DecompileStep_CommandCode.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.USBDrive.USBDrivePacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.DecompileStep_Command">
+ <summary>
+ 解析命令
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.DecompileStep_Command.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.USBDrive.USBDrivePacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.DecompileStep_DataLen">
+ <summary>
+ 解析命令长度
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.DecompileStep_DataLen.DecompileNext(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.USBDrive.USBDrivePacket},DotNetty.Buffers.IByteBuffer,DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 解析命令长度，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.DecompileStep_CmdData">
+ <summary>
+ 解析命令数据
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.DecompileStep_CmdData.DecompileStep(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.USBDrive.USBDrivePacket},System.Byte)">
+ <summary>
+ 解析命令数据，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.DecompileStep_CheckSum">
+ <summary>
+ 解析命令校验和
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.DecompileStep_CheckSum.DecompileStep(DoNetDrive.Protocol.Packet.BaseDecompile{DoNetDrive.Protocol.USBDrive.USBDrivePacket},System.Byte)">
+ <summary>
+ 解析缓冲区，并接入下一个步骤
+ </summary>
+ <param name="decompile"></param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDrivePacket">
+ <summary>
+ USB设备的通讯数据包，适合设备 usb读写器、巡更棒
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDrivePacket.BroadcastCode">
+ <summary>
+ 广播代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDrivePacket.Code">
+ <summary>
+ 信息代码
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDrivePacket.Addr">
+ <summary>
+ 机器号
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDrivePacket.CmdType">
+ <summary>
+ 命令类型
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDrivePacket.CmdIndex">
+ <summary>
+ 命令索引
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(DoNetDrive.Core.Command.INCommandDetail)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">USB设备的身份详情，要求包含SN和通讯密码</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail,System.UInt16,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">USB设备的身份详情，要求包含SN和通讯密码</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail,System.UInt16,System.Byte,System.Byte,System.Byte,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">USB设备的身份详情，要求包含SN和通讯密码</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">USB设备的身份详情，要求包含SN和通讯密码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(DoNetDrive.Protocol.USBDrive.USBDriveCommandDetail,System.Byte,System.Byte,System.Byte,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="detail">USB设备的身份详情，要求包含SN和通讯密码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(System.Byte,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="addr">机器号</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(System.Byte,System.Byte,System.Byte,System.Byte,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="addr">机器号</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(System.Byte,System.UInt16,System.Byte,System.Byte)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="addr">机器号</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.#ctor(System.Byte,System.UInt16,System.Byte,System.Byte,System.Byte,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 初始化数据包类
+ </summary>
+ <param name="addr">机器号</param>
+ <param name="cc">信息代码</param>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.SetPacket(System.Byte,System.Byte,System.Byte,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 设置包裹数据
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+ <param name="dl">数据长度</param>
+ <param name="cd">命令数据</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.SetPacket(System.Byte,System.Byte)">
+ <summary>
+ 设置包裹数据
+ </summary>
+ <param name="ct">命令分类</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.GetPacketData(DotNetty.Buffers.IByteBufferAllocator)">
+ <summary>
+ 获取数据包的打包后的ByteBuf，用于发送数据
+ </summary>
+ <param name="Allocator">用于分配ByteBuf的分配器</param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDrivePacket.Release">
+ <summary>
+ 释放使用的资源 --未使用
+ </summary>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveRequestHandle">
+ <summary>
+ 用于处理关于 USBDrive 设备协议中产生的设备主动上报消息的处理类
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveRequestHandle.TransactionFactory">
+ <summary>
+ 事务工厂，用于处理获取各种类型的事物的类型
+ 第一个参数是机器号，第二个参数是命令索引，需要返回一个成产好的消息实体
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveRequestHandle.#ctor(DotNetty.Buffers.IByteBufferAllocator,System.Func{System.Byte,System.Byte,DoNetDrive.Protocol.Transaction.AbstractTransaction})">
+ <summary>
+ 创建一个用于解析 USB 设备消息的处理器
+ </summary>
+ <param name="allocator">用于保存临时数据的ByteBuf分配器</param>
+ <param name="factory">用于根据SN，命令参数、命令索引生产用于处理对应消息的处理类工厂</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveRequestHandle.DisposeResponse(DoNetDrive.Core.Connector.INConnector,DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 处理响应
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveRequestHandle.CheckPacketIsTransaction(DoNetDrive.Protocol.USBDrive.USBDrivePacket)">
+ <summary>
+ 检查命令是否为事务
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveRequestHandle.fireRequestEvent(DoNetDrive.Core.Connector.INConnector,DoNetDrive.Core.Packet.INPacket)">
+ <summary>
+ 当处理类接收并验证完毕数据包后，由此产生消息
+ </summary>
+ <param name="connector">消息所在连接通道</param>
+ <param name="p">接收到的数据包</param>
+</member>
+<member name="T:DoNetDrive.Protocol.USBDrive.USBDriveTransaction">
+ <summary>
+ 适用于使用Door8800协议格式的监控消息
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.Connector">
+ <summary>
+ 事务发生时的连接通道信息
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.CmdIndex">
+ <summary>
+ 命令索引
+ </summary>
+</member>
+<member name="P:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.Addr">
+ <summary>
+ 发送者的身份
+ </summary>
+</member>
+<member name="F:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.EventData">
+ <summary>
+ 事务的据结构
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.#ctor(DoNetDrive.Core.Connector.INConnectorDetail,System.Byte,System.Byte,DoNetDrive.Protocol.Transaction.INTransaction)">
+ <summary>
+ 初始化一个事务
+ </summary>
+ <param name="cdtl">连接通道信息</param>
+ <param name="num">USB设备的机器号</param>
+ <param name="ci">命令索引</param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.SetBytes(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 未使用
+ </summary>
+ <param name="databuf"></param>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.GetDataLen">
+ <summary>
+ 返回这个消息的数据长度
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.GetBytes">
+ <summary>
+ 未使用
+ </summary>
+</member>
+<member name="M:DoNetDrive.Protocol.USBDrive.USBDriveTransaction.GetBytes(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 未使用
+ </summary>
+</member>
+</members>
+</doc>

@@ -1,0 +1,196 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+DoNetDrive.Connector.SerialPort
+</name>
+</assembly>
+<members>
+<member name="T:DoNetDrive.Connector.COM.SerialPortConnector">
+ <summary>
+ 表示一个串口通道，使用RS232、RS485方式或USB转串口方式和硬件通讯
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortConnector.mConnectorWriteError">
+ <summary>
+ 串口的写操作错误次数
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortConnector.mSerialPort">
+ <summary>
+ 串口操作类
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.#ctor(DoNetDrive.Connector.COM.SerialPortDetail)">
+ <summary>
+ 根据指定的串口参数，创建连接通道
+ </summary>
+ <param name="dtl"></param>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.GetConnectorType">
+ <summary>
+ 返回此通道的类路径
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.ReadConnector">
+ <summary>
+ 读通道中的数据
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.WriteByteBuf0(DotNetty.Buffers.IByteBuffer)">
+ <summary>
+ 发送数据
+ </summary>
+ <param name="buf"></param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.ConnectAsync">
+ <summary>
+ 打开串口
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.ConnectingNext(System.Threading.Tasks.Task)">
+ <summary>
+ 异步处理成功的后续操作
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.CheckConnector">
+ <summary>
+ 检查通道是否已开启
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.CheckConnectedStatus">
+ <summary>
+ 连接状态检查，当连接成功时，检查连接状态
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.CloseAsync">
+ <summary>
+ 关闭串口
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortConnector.Release0">
+ <summary>
+ 释放资源
+ </summary>
+</member>
+<member name="T:DoNetDrive.Connector.COM.SerialPortDetail">
+ <summary>
+ 表示一个串口通讯的通道详情
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortDetail.Port">
+ <summary>
+ 电脑上的串口号
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortDetail.Baudrate">
+ <summary>
+ 波特率；
+ 可选值：19200,115200 等标准值
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.#ctor(System.Byte)">
+ <summary>
+ 根据串口号和波特率初始化
+ </summary>
+ <param name="iport">串口号</param>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.#ctor(System.Byte,System.Int32)">
+ <summary>
+ 根据串口号和波特率初始化
+ </summary>
+ <param name="iport">串口号</param>
+ <param name="iBaudrate">波特率</param>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.GetTypeName">
+ <summary>
+ 获取连接通道的类名
+ </summary>
+ <returns>类名的全名</returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.Equals(DoNetDrive.Core.Connector.INConnectorDetail)">
+ <summary>
+ 用来比较此连接通道是否为同一个
+ </summary>
+ <param name="other"></param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.GetKey">
+ <summary>
+ 获取一个用于界定此通道的唯一Key值
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.ToString">
+ <summary>
+ 打印此详情所指示的连接信息
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortDetail.GetAssemblyName">
+ <summary>
+ 获取连接通道所在的程序集
+ 例如：DoNetDrive.Core
+ </summary>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortFactory.lockobj">
+ <summary>
+ 用于单例模式加锁的
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortFactory.mSerialPortFactory">
+ <summary>
+ 用于生成TCP Server的分配器
+ </summary>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortFactory.GetInstance">
+ <summary>
+ 获取用于生成TCPServer的分配器
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortFactory.CreateConnector(DoNetDrive.Core.Connector.INConnectorDetail,DoNetDrive.Core.IConnecterManage)">
+ <summary>
+ 创建一个新的连接通道
+ </summary>
+ <param name="detail"></param>
+ <returns></returns>
+</member>
+<member name="M:DoNetDrive.Connector.COM.SerialPortFactory.CreateConnectorAsync(DoNetDrive.Core.Connector.INConnectorDetail,DoNetDrive.Core.IConnecterManage)">
+ <summary>
+ 创建一个新的连接通道
+ </summary>
+ <param name="detail"></param>
+ <returns></returns>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortStatus.Closed">
+ <summary>
+ 空闲状态
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortStatus.Connected">
+ <summary>
+  表示串口已开启的状态
+ </summary>
+</member>
+<member name="F:DoNetDrive.Connector.COM.SerialPortStatus.Connecting">
+ <summary>
+ 正在打开串口
+ </summary>
+</member>
+<member name="T:DoNetDrive.Connector.COM.SerialPortStatus_Closed">
+ <summary>
+ 表示通道已关闭，未开启串口的状态
+ </summary>
+</member>
+<member name="T:DoNetDrive.Connector.COM.SerialPortStatus_Connected">
+ <summary>
+ 表示串口已开启的状态
+ </summary>
+</member>
+</members>
+</doc>
