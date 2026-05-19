@@ -1,0 +1,165 @@
+// SBXPC.idl : type library source for ActiveX Control project.
+
+// This file will be processed by the MIDL compiler tool to
+// produce the type library (SBXPC.tlb) that will become a resource in
+// SBXPC.ocx.
+
+#include <olectl.h>
+#include <idispids.h>
+#include "dispids.h"
+
+[ uuid(08B7A8C2-FA2E-445D-81F9-8254C7B3FD16), version(1.0),
+  helpfile("SBXPC.hlp"),
+  helpstring("SBXPC ActiveX Control module"),
+  control ]
+library SBXPCLib
+{
+	importlib(STDOLE_TLB);
+	importlib(STDTYPE_TLB);
+
+	//  Primary dispatch interface for CSBXPCCtrl
+
+	[ uuid(6C1D3CFC-712A-41B4-A53F-CC10F6412791),
+	  helpstring("Dispatch interface for SBXPC Control")]
+	dispinterface _DSBXPC
+	{
+		properties:
+			[id(DISPID_COMMPORT)] long CommPort;
+			[id(DISPID_BAUDRATE)] long Baudrate;
+			[id(DISPID_READMARK)] boolean ReadMark;
+
+		methods:
+			[id(DISPID_SETMACHINETYPE)] boolean SetMachineType(BSTR lpszMachineType);
+			[id(DISPID_DOTNET)] void DotNET();
+
+			[id(DISPID_GETENROLLDATA)] boolean GetEnrollData(long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,long dwBackupNumber,long* dwMachinePrivilege,VARIANT* dwEnrollData,long* dwPassWord);
+			[id(DISPID_GETENROLLDATA1)] boolean GetEnrollData1(long dwMachineNumber, long dwEnrollNumber, long dwBackupNumber, long* dwMachinePrivilege, long* dwEnrollData, long* dwPassWord);
+			[id(DISPID_SETENROLLDATA)] boolean SetEnrollData(long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,long dwBackupNumber,long dwMachinePrivilege,VARIANT* dwEnrollData,long dwPassWord);
+			[id(DISPID_SETENROLLDATA1)] boolean SetEnrollData1(long dwMachineNumber, long dwEnrollNumber, long dwBackupNumber, long dwMachinePrivilege, long* dwEnrollData, long dwPassWord);
+			[id(DISPID_DELETEENROLLDATA)] boolean DeleteEnrollData(long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,long dwBackupNumber);
+			[id(DISPID_READSUPERLOGDATA)] boolean ReadSuperLogData(long dwMachineNumber);
+			[id(DISPID_GETSUPERLOGDATA)] boolean GetSuperLogData(long dwMachineNumber,long* dwTMachineNumber,long* dwSEnrollNumber,long* dwSMachineNumber,long* dwGEnrollNumber,long* dwGMachineNumber,long* dwManipulation,long* dwBackupNumber,long* dwYear,long* dwMonth,long* dwDay,long* dwHour,long* dwMinute, long* dwSecond);
+			[id(DISPID_READGENERALLOGDATA)] boolean ReadGeneralLogData(long dwMachineNumber);
+			[id(DISPID_GETGENERALLOGDATA)] boolean GetGeneralLogData(long dwMachineNumber,long* dwTMachineNumber,long* dwEnrollNumber,long* dwEMachineNumber,long* dwVerifyMode,long* dwYear,long* dwMonth,long* dwDay,long* dwHour,long* dwMinute,long* dwSecond);
+			[id(DISPID_READALLSLOGDATA)] boolean ReadAllSLogData(long dwMachineNumber);
+			[id(DISPID_GETALLSLOGDATA)] boolean GetAllSLogData(long dwMachineNumber,long* dwTMachineNumber,long* dwSEnrollNumber,long* dwSMachineNumber,long* dwGEnrollNumber,long* dwGMachineNumber,long* dwManipulation,long* dwBackupNumber,long* dwYear,long* dwMonth,long* dwDay,long* dwHour,long* dwMinute, long* dwSecond);
+			[id(DISPID_READALLGLOGDATA)] boolean ReadAllGLogData(long dwMachineNumber);
+			[id(DISPID_GETALLGLOGDATA)] boolean GetAllGLogData(long dwMachineNumber,long* dwTMachineNumber,long* dwEnrollNumber,long* dwEMachineNumber,long* dwVerifyMode,long* dwYear,long* dwMonth,long* dwDay,long* dwHour,long* dwMinute,long* dwSecond);
+			[id(DISPID_GETDEVICESTATUS)] boolean GetDeviceStatus(long dwMachineNumber, long dwStatus, long* dwValue);
+			[id(DISPID_GETDEVICEINFO)] boolean GetDeviceInfo(long dwMachineNumber, long dwInfo, long* dwValue);
+			[id(DISPID_SETDEVICEINFO)] boolean SetDeviceInfo(long dwMachineNumber, long dwInfo, long dwValue);
+			[id(DISPID_ENABLEDEVICE)] boolean EnableDevice(long dwMachineNumber, BOOL bFlag);
+			[id(DISPID_ENABLEUSER)] boolean EnableUser(long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,long dwBackupNumber,BOOL bFlag);
+			[id(DISPID_GETDEVICETIME)] boolean GetDeviceTime(long dwMachineNumber,long* dwYear,long* dwMonth,long* dwDay,long* dwHour,long* dwMinute,long* dwSecond,long* dwDayOfWeek);
+			[id(DISPID_SETDEVICETIME)] boolean SetDeviceTime(long dwMachineNumber);
+			[id(DISPID_POWERONALLDEVICE)] boolean PowerOnAllDevice();
+			[id(DISPID_POWEROFFDEVICE)] boolean PowerOffDevice(long dwMachineNumber);
+			[id(DISPID_MODIFYPRIVILEGE)] boolean ModifyPrivilege(long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,long dwBackupNumber,long dwMachinePrivilege);
+			[id(DISPID_READALLUSERID)] boolean ReadAllUserID(long dwMachineNumber);
+			[id(DISPID_GETALLUSERID)] boolean GetAllUserID(long dwMachineNumber,long* dwEnrollNumber,long* dwEMachineNumber,long* dwBackupNumber,long* dwMachinePrivilege,long* dwEnable);
+			[id(DISPID_GETSERIALNUMBER)] boolean GetSerialNumber(long dwMachineNumber, BSTR* lpszSerialNumber);
+			[id(DISPID_GETBACKUPNUMBER)] long GetBackupNumber(long dwMachineNumber);
+			[id(DISPID_GETPRODUCTCODE)] boolean GetProductCode(long dwMachineNumber, BSTR* lpszProductCode);
+			[id(DISPID_CLEARKEEPERDATA)] boolean ClearKeeperData(long dwMachineNumber);
+			[id(DISPID_EMPTYENROLLDATA)] boolean EmptyEnrollData(long dwMachineNumber);
+			[id(DISPID_EMPTYGENERALLOGDATA)] boolean EmptyGeneralLogData(long dwMachineNumber);
+			[id(DISPID_EMPTYSUPERLOGDATA)] boolean EmptySuperLogData(long dwMachineNumber);
+			[id(DISPID_GETUSERNAME)] boolean GetUserName(long DeviceKind,long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,VARIANT* lpszUserName);
+			[id(DISPID_GETUSERNAME1)] boolean GetUserName1(long dwMachineNumber, long dwEnrollNumber, BSTR* lpszUserName);
+			[id(DISPID_SETUSERNAME)] boolean SetUserName(long DeviceKind,long dwMachineNumber,long dwEnrollNumber,long dwEMachineNumber,VARIANT* lpszUserName);
+			[id(DISPID_SETUSERNAME1)] boolean SetUserName1(long dwMachineNumber, long dwEnrollNumber, BSTR* lpszUserName);
+			[id(DISPID_GETCOMPANYNAME)] boolean GetCompanyName(long dwMachineNumber, VARIANT* dwCompanyName);
+			[id(DISPID_GETCOMPANYNAME1)] boolean GetCompanyName1(long dwMachineNumber, BSTR* dwCompanyName);
+			[id(DISPID_SETCOMPANYNAME)] boolean SetCompanyName(long dwMachineNumber, long vKind, VARIANT* dwCompanyName);
+			[id(DISPID_SETCOMPANYNAME1)] boolean SetCompanyName1(long dwMachineNumber, long vKind, BSTR* dwCompanyName);
+			[id(DISPID_GETDOORSTATUS)] boolean GetDoorStatus(long dwMachineNumber, long* dwValue);
+			[id(DISPID_SETDOORSTATUS)] boolean SetDoorStatus(long dwMachineNumber, long dwValue);
+			[id(DISPID_GETBELLTIME)] boolean GetBellTime(long dwMachineNumber, long* dwValue, long* dwBellInfo);
+			[id(DISPID_SETBELLTIME)] boolean SetBellTime(long dwMachineNumber, long dwValue, long* dwBellInfo);
+			[id(DISPID_CONNECTSERIAL)] boolean ConnectSerial(long dwMachineNumber, long dwCommPort, long dwBaudRate);
+			[id(DISPID_CONNECTTCPIP)] boolean ConnectTcpip(long dwMachineNumber, BSTR* lpszIPAddress, long dwPortNumber, long dwPassWord);
+			[id(DISPID_DISCONNECT)] void Disconnect();
+			[id(DISPID_SETIPADDRESS)] boolean SetIPAddress(BSTR* lpszIPAddress, long dwPortNumber, long dwPassWord);
+			[id(DISPID_OPENCOMMPORT)] boolean OpenCommPort(long dwMachineNumber);
+			[id(DISPID_CLOSECOMMPORT)] void CloseCommPort();
+			[id(DISPID_GETLASTERROR)] boolean GetLastError(long* dwErrorCode);
+			[id(DISPID_GENERALOPERATIONXML)] boolean GeneralOperationXML(BSTR* lpszReqNResXML);
+			[id(DISPID_GETDEVICELONGINFO)] boolean GetDeviceLongInfo(long dwMachineNumber, long dwInfo, long* dwValue);
+			[id(DISPID_SETDEVICELONGINFO)] boolean SetDeviceLongInfo(long dwMachineNumber, long dwInfo, long* dwValue);
+			[id(DISPID_MODIFYDURESSFP)] boolean ModifyDuressFP(long dwMachineNumber, long dwEnrollNumber, long dwBackupNumber, long dwDuressSetting);
+			[id(DISPID_GETMACHINEIP)] boolean GetMachineIP( BSTR lpszProduct, long dwMachineNumber, BSTR *lpszIPBuf );
+			[id(DISPID_GETDEPARTNAME)] boolean GetDepartName(long dwMachineNumber, long dwDepartNumber, long dwDepartOrDaigong, BSTR* lpszUserName);
+			[id(DISPID_SETDEPARTNAME)] boolean SetDepartName(long dwMachineNumber, long dwDepartNumber, long dwDepartOrDaigong, BSTR* lpszUserName);
+
+			[id(DISPID_STARTEVENTCAPTURE)] boolean StartEventCapture(long dwCommType, long dwParam1, long dwParam2);
+			[id(DISPID_STOPEVENTCAPTURE)] void StopEventCapture();
+
+			[id(DISPID_XML_PARSEINT)] long XML_ParseInt(BSTR* lpszXML, BSTR lpszTagname);
+			[id(DISPID_XML_PARSELONG)] long XML_ParseLong(BSTR* lpszXML, BSTR lpszTagname);
+			[id(DISPID_XML_PARSEBOOLEAN)] boolean XML_ParseBoolean(BSTR* lpszXML, BSTR lpszTagname);
+			[id(DISPID_XML_PARSESTRING)] boolean XML_ParseString(BSTR* lpszXML, BSTR lpszTagname, BSTR* lpszValue);
+			[id(DISPID_XML_PARSEBINARYBYTE)] boolean XML_ParseBinaryByte(BSTR* lpszXML, BSTR lpszTagname, BYTE* pData, long dwLen);
+			[id(DISPID_XML_PARSEBINARYWORD)] boolean XML_ParseBinaryWord(BSTR* lpszXML, BSTR lpszTagname, WORD* pData, long dwLen);
+			[id(DISPID_XML_PARSEBINARYLONG)] boolean XML_ParseBinaryLong(BSTR* lpszXML, BSTR lpszTagname, long* pData, long dwLen);
+			[id(DISPID_XML_PARSEBINARYUNICODE)] boolean XML_ParseBinaryUnicode(BSTR* lpszXML, LPCTSTR lpszTagname, BSTR* pData, long dwLen);
+
+			[id(DISPID_XML_ADDINT)] boolean XML_AddInt(BSTR* lpszXML, BSTR lpszTagname, int nValue);
+			[id(DISPID_XML_ADDLONG)] boolean XML_AddLong(BSTR* lpszXML, BSTR lpszTagname, long dwValue);
+			[id(DISPID_XML_ADDBOOLEAN)] boolean XML_AddBoolean(BSTR* lpszXML, BSTR lpszTagname, boolean bValue);
+			[id(DISPID_XML_ADDSTRING)] boolean XML_AddString(BSTR* lpszXML, BSTR lpszTagname, BSTR lpszValue);
+			[id(DISPID_XML_ADDBINARYBYTE)] boolean XML_AddBinaryByte(BSTR* lpszXML, BSTR lpszTagname, BYTE* dwData, long dwLen);
+			[id(DISPID_XML_ADDBINARYWORD)] boolean XML_AddBinaryWord(BSTR* lpszXML, BSTR lpszTagname, WORD* dwData, long dwLen);
+			[id(DISPID_XML_ADDBINARYLONG)] boolean XML_AddBinaryLong(BSTR* lpszXML, BSTR lpszTagname, long* dwData, long dwLen);
+			[id(DISPID_XML_ADDBINARYUNICODE)] boolean XML_AddBinaryUnicode(BSTR* lpszXML, BSTR lpszTagname, BSTR* lpszData);
+			[id(DISPID_XML_ADDBINARYGLYPH)] boolean XML_AddBinaryGlyph(BSTR* lpszXML, BSTR lpszMessage, long width, long height, BSTR lpszFontDescriptor);
+
+			[id(DISPID_CONNECTP2P)] long ConnectP2p(BSTR* lpszMachineID, BSTR* lpszServerIPAddress, long dwServerPortNumber, long dwPassWord, long* pnError);
+			[id(DISPID_PREPAREP2P)] boolean PrepareP2p(BSTR* lpszMachineID, BSTR* lpszServerIPAddress, long dwServerPortNumber, long* dwYearStart,long* dwMonthStart,long* dwDayStart,long* dwYearEnd,long* dwMonthEnd,long* dwDayEnd, long* pnError);
+
+			[id(DISPID_XML_ADDBINARYNAMEGLYPH)] boolean XML_AddBinaryNameGlyph(long dwMachineNumber, BSTR* lpszXML, BSTR* lpszName);
+			[id(DISPID_XML_PARSEMULTIUNICODE)] boolean XML_ParseMultiUnicode(BSTR* lpszXML, LPCTSTR lpszTagname, BSTR* pData, long dwLen);
+
+			[id(DISPID_SETDEVICETIME1)] boolean SetDeviceTime1(long dwMachineNumber,long dwYear,long dwMonth,long dwDay,long dwHour,long dwMinute,long dwSecond);
+			[id(DISPID_DISCONNECT1)] void Disconnect1(long dwMachineNumber);
+			[id(DISPID_DISCONNECTALL)] void DisconnectAll();
+			[id(DISPID_GENERALOPERATIONXML1)] boolean GeneralOperationXML1(long dwMachineNumber, BSTR* lpszReqNResXML);
+			[id(DISPID_USEINTERNALREDRAW)] void UseInternalRedraw(BOOL redraw);		
+
+			[id(DISPID_GETINTERNALFWVER)] long GetInternalFwVer(long dwMachineNumber);
+
+			[id(DISPID_READGLOGWITHPOS)] boolean ReadGLogWithPos(long dwMachineNumber, long dwStartPos, long dwEndPos);
+			[id(DISPID_READSLOGWITHPOS)] boolean ReadSLogWithPos(long dwMachineNumber, long dwStartPos, long dwEndPos);
+
+			[id(DISPID_GETDEVICEUNIQUEID)] boolean GetDeviceUniqueID(long dwMachineNumber, VARIANT* dwDeviceUniqueID);
+			[id(DISPID_GETDEVICEUNIQUEID1)] boolean GetDeviceUniqueID1(long dwMachineNumber, BSTR* dwDeviceUniqueID);
+			[id(DISPID_GETDEVICEMODEL)] boolean GetDeviceModel(long dwMachineNumber, long* dwIsBigUserId, long* dwCompanyType, long* dwMachineType, long* dwMachineVersion);
+
+			[id(DISPID_XML_PARSEBINARYANSI2UNICODE)] boolean XML_ParseBinaryAnsi2Unicode(BSTR* lpszXML, LPCTSTR lpszTagname, BSTR* pData, long dwLen);
+
+			[id(DISPID_ABOUTBOX)] void AboutBox();
+	};
+
+	//  Event dispatch interface for CSBXPCCtrl
+
+	[ uuid(9FF3A121-0E3D-4C35-A776-C9C766FB14BE),
+	  helpstring("Event interface for SBXPC Control") ]
+	dispinterface _DSBXPCEvents
+	{
+		properties:
+			//  Event interface has no properties
+
+		methods:
+			[id(EVENTID_ONRECEIVEEVENTXML)] void OnReceiveEventXML(BSTR lpszEventXML);
+	};
+
+	//  Class information for CSBXPCCtrl
+
+	[ uuid(2894E36D-6941-48E0-ABF9-0D38241884FB),
+	  helpstring("SBXPC Control"), control ]
+	coclass SBXPC
+	{
+		[default] dispinterface _DSBXPC;
+		[default, source] dispinterface _DSBXPCEvents;
+	};
+
+};

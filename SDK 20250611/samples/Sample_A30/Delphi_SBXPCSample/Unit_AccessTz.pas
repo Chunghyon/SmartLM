@@ -1,0 +1,199 @@
+unit Unit_AccessTz;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ComCtrls;
+
+type
+  TfrmAccessTz = class(TForm)
+    Label1: TLabel;
+    Label2: TLabel;
+    lstAccessTz: TListBox;
+    cmdUpdate: TButton;
+    cmdRead: TButton;
+    cmdWrite: TButton;
+    cmdExit: TButton;
+    dtStart: TDateTimePicker;
+    dtEnd: TDateTimePicker;
+    lblMessage: TStaticText;
+    procedure FormShow(Sender: TObject);
+    procedure AccessTzListInit();
+    procedure DrawAccessTzList();
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure cmdExitClick(Sender: TObject);
+    procedure lstAccessTzClick(Sender: TObject);
+    procedure cmdUpdateClick(Sender: TObject);
+    procedure cmdReadClick(Sender: TObject);
+    procedure cmdWriteClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmAccessTz: TfrmAccessTz;
+
+implementation
+
+{$R *.dfm}
+
+uses Unit_Main, Utils, SBXPCLib_TLB;
+
+const
+    TIMEZONE_COUNT      : Integer = 50;
+    TIMESECTION_COUNT   : Integer = 8;
+var
+    mTimeZoneInfoList   : array[0..50*8*4] of Integer;
+    bpc         :TSBXPC;
+    
+procedure TfrmAccessTz.FormShow(Sender: TObject);
+begin
+    AccessTzListInit();
+    DrawAccessTzList();
+end;
+
+procedure TfrmAccessTz.AccessTzListInit();
+var
+    i, j, index : Integer;
+begin
+    for i := 0 to TIMEZONE_COUNT - 1 do
+    begin
+        for j := 0 to TIMESECTION_COUNT - 1 do
+        begin
+            index := i * TIMESECTION_COUNT + j;
+            mTimeZoneInfoList[index * 4 + 0] := 0;
+            mTimeZoneInfoList[index * 4 + 1] := 0;
+            mTimeZoneInfoList[index * 4 + 2] := 23;
+            mTimeZoneInfoList[index * 4 + 3] := 59;
+        end;
+    end;
+end;
+
+procedure TfrmAccessTz.DrawAccessTzList();
+var
+    i, j, index : Integer;
+    itemStr     : String;
+begin
+    lstAccessTz.Clear();
+    for i := 0 to TIMEZONE_COUNT - 1 do
+    begin
+        for j := 0 to TIMESECTION_COUNT - 1 do
+        begin
+            index := i * TIMESECTION_COUNT + j;
+
+            itemStr := '[No] ' + Format('%.2d', [i]) + '-' + Format('%.3d', [j]) + ' ';
+            itemStr := itemStr + '[S]'  + Format('%.2d', [mTimeZoneInfoList[index * 4 + 0]]);
+            itemStr := itemStr + ':'    + Format('%.2d', [mTimeZoneInfoList[index * 4 + 1]]) + ' ';
+            itemStr := itemStr + '[E]'  + Format('%.2d', [mTimeZoneInfoList[index * 4 + 2]]);
+            itemStr := itemStr + ':'    + Format('%.2d', [mTimeZoneInfoList[index * 4 + 3]]) + ' ';
+
+            lstAccessTz.Items.Add(itemStr);
+        end;
+    end;
+end;
+
+procedure TfrmAccessTz.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+    TfrmMain(application.FindComponent('frmMain')).Visible := true;
+end;
+
+procedure TfrmAccessTz.cmdExitClick(Sender: TObject);
+begin
+    Close();
+end;
+
+procedure TfrmAccessTz.lstAccessTzClick(Sender: TObject);
+var
+    index : Integer;
+begin
+    index := lstAccessTz.ItemIndex;
+    if index = -1 then Exit;
+
+    dtStart.Time := EncodeTime(mTimeZoneInfoList[index * 4], mTimeZoneInfoList[index * 4 + 1], 0, 0);
+    dtEnd.Time := EncodeTime(mTimeZoneInfoList[index * 4 + 2], mTimeZoneInfoList[index * 4 + 3], 0, 0);
+end;
+
+procedure TfrmAccessTz.cmdUpdateClick(Sender: TObject);
+var
+    hour, minute, second, miliSecond    : WORD;
+    index                               : Integer;
+begin
+    index := lstAccessTz.ItemIndex;
+    if index = -1 then Exit;
+
+    DecodeTime(dtStart.Time, hour, minute, second, miliSecond);
+    mTimeZoneInfoList[index * 4 + 0] := hour;
+    mTimeZoneInfoList[index * 4 + 1] := minute;
+    DecodeTime(dtEnd.Time, hour, minute, second, miliSecond);
+    mTimeZoneInfoList[index * 4 + 2] := hour;
+    mTimeZoneInfoList[index * 4 + 3] := minute;
+
+    DrawAccessTzList();
+end;
+
+procedure TfrmAccessTz.cmdReadClick(Sender: TObject);
+var
+    vRet        : Boolean;
+    vErrorCode  : Integer;
+    vAddr       : Integer;
+begin
+    lblMessage.Caption := 'Waiting...';
+    vRet := bpc.EnableDevice(gMachineNumber, 0);
+    if Not vRet then
+    begin
+        lblMessage.Caption := GSTR_NODEVICE;
+        Exit;
+    end;
+    vAddr := Integer(addr(mTimeZoneInfoList));
+    vRet := bpc.GetDeviceLongInfo(gMachineNumber, 3, vAddr);
+    if vRet then
+      begin
+          lblMessage.Caption := 'Success';
+          DrawAccessTzList();
+      end
+    else
+      begin
+          bpc.GetLastError(vErrorCode);
+          lblMessage.Caption := ErrorPrint(vErrorCode);
+      end;
+    bpc.EnableDevice(gMachineNumber, 1);
+end;
+
+procedure TfrmAccessTz.cmdWriteClick(Sender: TObject);
+var
+    vRet        : Boolean;
+    vErrorCode  : Integer;
+    vAddr       : Integer;
+begin
+    lblMessage.Caption := 'Waiting...';
+    vRet := bpc.EnableDevice(gMachineNumber, 0);
+    if Not vRet then
+    begin
+        lblMessage.Caption := GSTR_NODEVICE;
+        Exit;
+    end;
+    vAddr := Integer(addr(mTimeZoneInfoList));
+    vRet := bpc.SetDeviceLongInfo(gMachineNumber, 3, vAddr);
+    if vRet then
+      begin
+          lblMessage.Caption := 'Success';
+      end
+    else
+      begin
+          bpc.GetLastError(vErrorCode);
+          lblMessage.Caption := ErrorPrint(vErrorCode);
+      end;
+    bpc.EnableDevice(gMachineNumber, 1);
+end;
+
+procedure TfrmAccessTz.FormCreate(Sender: TObject);
+begin
+  bpc := TfrmMain(application.FindComponent('frmMain')).SBXPC1;
+end;
+
+end.

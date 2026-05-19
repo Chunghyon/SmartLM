@@ -1,0 +1,85 @@
+* {
+  padding: 0;
+  margin: 0;
+  color: #1a1f36;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Ubuntu,sans-serif;
+}
+
+body {
+    min-height: 100%;
+    background-color: #ffffff;
+}
+
+h1 {
+    letter-spacing: -1px;
+}
+
+a {
+    background: none;
+    color: #333;
+    text-decoration: none;
+}
+
+a:hover {
+	color: #00f;
+	text-decoration: none;
+}
+
+ul {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin: 0 0 5px;
+    padding: 0;
+}
+
+li {
+	display: inline;
+	list-style: none;
+	padding-left: 15px;
+}
+
+button {
+    background-color: #efefef;
+    border: 1px solid #767676;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: 600;
+    font-size: large;
+    padding: 4px 10px;
+    margin: 2px 0px;
+    width: auto;
+}
+
+button:hover {
+    background-color: #d8d8d8;
+}
+
+select {
+	height: 32px;
+	font-size: large;
+}
+
+input {
+    height: 32px;
+    font-size: large;
+}
+
+th {
+    background-color: #efefef;
+    text-align: left;
+    padding: 5px 10px;
+}
+
+td {
+    padding: 2px 10px;
+    text-align: left;
+}
+
+.result {
+    height:36px;
+    width:100%;
+    font-size:x-large;
+    font-weight:600;
+}

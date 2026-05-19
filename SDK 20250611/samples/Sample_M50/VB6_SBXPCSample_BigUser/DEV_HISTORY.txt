@@ -1,0 +1,7 @@
+- 2011.5.20
+    Bell count is Extended to 24
+- 2011.4.22
+    Added real-time event sending functions
+- 2011.02.26
+    Modified TimeZone setting part by KCN
+    In SB2960, a verify mode attached in every timezone between 1 to 10 by request from Nideka.

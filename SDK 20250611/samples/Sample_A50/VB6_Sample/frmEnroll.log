@@ -1,0 +1,3 @@
+Line 160: Class MSComDlg.CommonDialog of control OpenDlg was not a loaded control class.
+Line 229: Class MSComCtl2.DTPicker of control dtStartPeriod was not a loaded control class.
+Line 798: Class MSComCtl2.DTPicker of control dtEndPeriod was not a loaded control class.

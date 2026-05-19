@@ -1,0 +1,115 @@
+2015-12-25 22:26:49,440 Performance - ---------------------------------------------------
+CPU Usage: 0.00%, Physical Memory Usage: 68,501,504.00, Total Thread Count: 44
+AvailableWorkingThreads: 4094, AvailableCompletionPortThreads: 1000
+MaxWorkingThreads: 4095, MaxCompletionPortThreads: 1000
+SuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:26:49 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+SecureSuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:26:49 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+
+2015-12-25 22:27:49,382 Performance - ---------------------------------------------------
+CPU Usage: 0.84%, Physical Memory Usage: 88,883,200.00, Total Thread Count: 45
+AvailableWorkingThreads: 4094, AvailableCompletionPortThreads: 1000
+MaxWorkingThreads: 4095, MaxCompletionPortThreads: 1000
+SuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:26:49 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+SecureSuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:26:49 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 3
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+
+2015-12-25 22:28:49,395 Performance - ---------------------------------------------------
+CPU Usage: 0.00%, Physical Memory Usage: 89,247,744.00, Total Thread Count: 45
+AvailableWorkingThreads: 4094, AvailableCompletionPortThreads: 1000
+MaxWorkingThreads: 4095, MaxCompletionPortThreads: 1000
+SuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:26:49 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+SecureSuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:26:49 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 3
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+
+2015-12-25 22:29:37,740 Performance - ---------------------------------------------------
+CPU Usage: 0.00%, Physical Memory Usage: 53,260,288.00, Total Thread Count: 45
+AvailableWorkingThreads: 4094, AvailableCompletionPortThreads: 1000
+MaxWorkingThreads: 4095, MaxCompletionPortThreads: 1000
+SuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:29:37 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+SecureSuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:29:37 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+
+2015-12-25 22:37:20,705 Performance - ---------------------------------------------------
+CPU Usage: 0.00%, Physical Memory Usage: 79,417,344.00, Total Thread Count: 48
+AvailableWorkingThreads: 4094, AvailableCompletionPortThreads: 1000
+MaxWorkingThreads: 4095, MaxCompletionPortThreads: 1000
+SuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:37:20 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+SecureSuperWebSocket ----------------------------------
+Started Time: 12/25/2015 10:37:20 PM
+Is Running: True
+Total Connections: 0
+Maximum Allowed Connection Number: 100
+Total Handled Requests: 0
+Request Handling Speed (#/second): 0
+Avialable Sending Queue Items: 256
+Total Sending Queue Items: 256
+

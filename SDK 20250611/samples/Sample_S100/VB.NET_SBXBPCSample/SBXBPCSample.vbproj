@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <MyType>WindowsForms</MyType>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E68F8B9B-E59A-43C1-97E7-5F3D2F7466BF}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <AssemblyName>SBXPCSample</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>SBXPCSample.frmMain</StartupObject>
+    <AssemblyMajorVersion>2</AssemblyMajorVersion>
+    <AssemblyMinorVersion>2</AssemblyMinorVersion>
+    <AssemblyRevisionNumber>0</AssemblyRevisionNumber>
+    <GenerateRevisionNumber>False</GenerateRevisionNumber>
+    <AssemblyCompanyName>SmackBio Technology Co.,Ltd.</AssemblyCompanyName>
+    <StartWithIE>False</StartWithIE>
+    <ApplicationIcon>SB100BPCSample.ico</ApplicationIcon>
+    <RootNamespace>SBXPCSample</RootNamespace>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <PublishUrl>http://localhost/SBXPCSample/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>Win32=True</DefineConstants>
+    <DocumentationFile>SBXPCSample.xml</DocumentationFile>
+    <NoWarn>42016,42017,42018,42019,42032,42353,42354,42355</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>Win32=True</DefineConstants>
+    <DocumentationFile>SBXPCSample.xml</DocumentationFile>
+    <NoWarn>42016,42017,42018,42019,42032,42353,42354,42355</NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic.Compatibility">
+      <Name>Microsoft.VisualBasic.Compatibility</Name>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0" />
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.XML">
+      <Name>System.XML</Name>
+    </Reference>
+    <COMReference Include="AxMSFlexGridLib">
+      <Guid>{5E9E78A0-531B-11CF-91F6-C2863C385E30}</Guid>
+      <Lcid>0</Lcid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <WrapperTool>aximp</WrapperTool>
+    </COMReference>
+    <COMReference Include="AxSBXPCLib">
+      <Guid>{08B7A8C2-FA2E-445D-81F9-8254C7B3FD16}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>aximp</WrapperTool>
+      <Isolated>False</Isolated>
+    </COMReference>
+    <COMReference Include="DAO">
+      <Guid>{00025E01-0000-0000-C000-000000000046}</Guid>
+      <Lcid>0</Lcid>
+      <VersionMajor>4</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <WrapperTool>tlbimp</WrapperTool>
+    </COMReference>
+    <COMReference Include="Microsoft.StdFormat">
+      <Guid>{6B263850-900B-11D0-9484-00A0C91110ED}</Guid>
+      <Lcid>0</Lcid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <WrapperTool>primary</WrapperTool>
+      <Private>True</Private>
+    </COMReference>
+    <COMReference Include="MSFlexGridLib">
+      <Guid>{5E9E78A0-531B-11CF-91F6-C2863C385E30}</Guid>
+      <Lcid>0</Lcid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <WrapperTool>tlbimp</WrapperTool>
+    </COMReference>
+    <COMReference Include="SBXPCLib">
+      <Guid>{08B7A8C2-FA2E-445D-81F9-8254C7B3FD16}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="Microsoft.VisualBasic.Compatibility" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.vb" />
+    <Compile Include="EnrollData.vb" />
+    <Compile Include="frmAccessTz.Designer.vb">
+      <DependentUpon>frmAccessTz.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAccessTz.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmBellInfo.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmBellInfo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmBellInfo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmEnroll.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmEnroll.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmEnroll.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmHoliday.Designer.vb">
+      <DependentUpon>frmHoliday.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmHoliday.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmLockCtl.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmLockCtl.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmLockCtl.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmLog.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmLog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmLog.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmMain.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmMain.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmMain.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmPrtCode.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmPrtCode.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmPrtCode.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSytemInfo.Designer.vb">
+      <SubType>Code</SubType>
+      <DependentUpon>frmSytemInfo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSytemInfo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTMode.Designer.vb">
+      <DependentUpon>frmTMode.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmTMode.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTrMode.Designer.vb">
+      <DependentUpon>frmTrMode.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmTrMode.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="mdlFunction.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UpgradeSupport.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <EmbeddedResource Include="frmAccessTz.resx">
+      <DependentUpon>frmAccessTz.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmBellInfo.resX">
+      <DependentUpon>frmBellInfo.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmEnroll.resX">
+      <DependentUpon>frmEnroll.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmHoliday.resx">
+      <DependentUpon>frmHoliday.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLockCtl.resX">
+      <DependentUpon>frmLockCtl.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLog.resX">
+      <DependentUpon>frmLog.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMain.resX">
+      <DependentUpon>frmMain.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmPrtCode.resX">
+      <DependentUpon>frmPrtCode.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSytemInfo.resX">
+      <DependentUpon>frmSytemInfo.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTMode.resx">
+      <DependentUpon>frmTMode.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTrMode.resx">
+      <DependentUpon>frmTrMode.vb</DependentUpon>
+    </EmbeddedResource>
+    <Content Include="SB100BPCSample.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="My Project\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

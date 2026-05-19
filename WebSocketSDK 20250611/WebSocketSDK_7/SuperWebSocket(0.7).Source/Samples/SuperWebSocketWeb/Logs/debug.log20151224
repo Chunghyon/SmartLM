@@ -1,0 +1,82 @@
+2015-12-24 22:08:04,600 [3796] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been created!
+2015-12-24 22:08:04,658 [3796] DEBUG SuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:08:04,682 [3796] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been initialized!
+2015-12-24 22:08:04,683 [3796] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been created!
+2015-12-24 22:08:04,770 [3796] DEBUG SecureSuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:08:04,770 [3796] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been initialized!
+2015-12-24 22:08:05,719 [3796] DEBUG DefaultBootstrap - The PerformanceMonitor has been initialized!
+2015-12-24 22:08:05,719 [3796] DEBUG DefaultBootstrap - The Bootstrap has been initialized!
+2015-12-24 22:08:05,783 [3796] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was started
+2015-12-24 22:08:05,829 [3796] DEBUG SecureSuperWebSocket - Listener (0.0.0.0:4503) failed to start
+2015-12-24 22:08:05,833 [3796] DEBUG DefaultBootstrap - The PerformanceMonitor has been started!
+2015-12-24 22:09:24,631 [400] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been created!
+2015-12-24 22:09:24,686 [400] DEBUG SuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:09:24,710 [400] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been initialized!
+2015-12-24 22:09:24,711 [400] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been created!
+2015-12-24 22:09:24,775 [400] DEBUG SecureSuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:09:24,775 [400] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been initialized!
+2015-12-24 22:09:25,818 [400] DEBUG DefaultBootstrap - The PerformanceMonitor has been initialized!
+2015-12-24 22:09:25,818 [400] DEBUG DefaultBootstrap - The Bootstrap has been initialized!
+2015-12-24 22:09:25,855 [400] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was started
+2015-12-24 22:09:25,886 [400] DEBUG SecureSuperWebSocket - Listener (0.0.0.0:4503) failed to start
+2015-12-24 22:09:25,890 [400] DEBUG DefaultBootstrap - The PerformanceMonitor has been started!
+2015-12-24 22:19:37,730 [11216] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been created!
+2015-12-24 22:19:37,794 [11216] DEBUG SuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:19:37,818 [11216] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been initialized!
+2015-12-24 22:19:37,819 [11216] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been created!
+2015-12-24 22:19:37,897 [11216] DEBUG SecureSuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:19:37,897 [11216] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been initialized!
+2015-12-24 22:19:39,037 [11216] DEBUG DefaultBootstrap - The PerformanceMonitor has been initialized!
+2015-12-24 22:19:39,037 [11216] DEBUG DefaultBootstrap - The Bootstrap has been initialized!
+2015-12-24 22:19:39,075 [11216] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was started
+2015-12-24 22:19:39,125 [11216] DEBUG SecureSuperWebSocket - Listener (0.0.0.0:4503) failed to start
+2015-12-24 22:19:39,128 [11216] DEBUG DefaultBootstrap - The PerformanceMonitor has been started!
+2015-12-24 22:23:46,615 [8888] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been created!
+2015-12-24 22:23:46,690 [8888] DEBUG SuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:23:46,714 [8888] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been initialized!
+2015-12-24 22:23:46,714 [8888] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been created!
+2015-12-24 22:23:46,771 [8888] DEBUG SecureSuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:23:46,771 [8888] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been initialized!
+2015-12-24 22:23:47,941 [8888] DEBUG DefaultBootstrap - The PerformanceMonitor has been initialized!
+2015-12-24 22:23:47,941 [8888] DEBUG DefaultBootstrap - The Bootstrap has been initialized!
+2015-12-24 22:23:47,977 [8888] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was started
+2015-12-24 22:23:48,017 [8888] DEBUG SecureSuperWebSocket - Listener (0.0.0.0:4503) failed to start
+2015-12-24 22:23:48,021 [8888] DEBUG DefaultBootstrap - The PerformanceMonitor has been started!
+2015-12-24 22:26:51,990 [9800] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been created!
+2015-12-24 22:26:52,066 [9800] DEBUG SuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:26:52,170 [9800] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been initialized!
+2015-12-24 22:26:52,171 [9800] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been created!
+2015-12-24 22:26:52,214 [9800] DEBUG SecureSuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 22:26:52,215 [9800] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been initialized!
+2015-12-24 22:26:53,050 [9800] DEBUG DefaultBootstrap - The PerformanceMonitor has been initialized!
+2015-12-24 22:26:53,050 [9800] DEBUG DefaultBootstrap - The Bootstrap has been initialized!
+2015-12-24 22:26:53,179 [9800] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was started
+2015-12-24 22:26:53,243 [9800] DEBUG SecureSuperWebSocket - Listener (0.0.0.0:4503) failed to start
+2015-12-24 22:26:53,251 [9800] DEBUG DefaultBootstrap - The PerformanceMonitor has been started!
+2015-12-24 23:08:51,865 [3628] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was stoppped
+2015-12-24 23:08:51,866 [3628] DEBUG DefaultBootstrap - The PerformanceMonitor has been stoppped!
+2015-12-24 23:08:55,111 [6108] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been created!
+2015-12-24 23:08:55,180 [6108] DEBUG SuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 23:08:55,211 [6108] DEBUG DefaultBootstrap - The server instance SuperWebSocket has been initialized!
+2015-12-24 23:08:55,212 [6108] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been created!
+2015-12-24 23:08:55,258 [6108] DEBUG SecureSuperWebSocket - SubProtocol Basic found the commands below:
+
+2015-12-24 23:08:55,258 [6108] DEBUG DefaultBootstrap - The server instance SecureSuperWebSocket has been initialized!
+2015-12-24 23:08:55,930 [6108] DEBUG DefaultBootstrap - The PerformanceMonitor has been initialized!
+2015-12-24 23:08:55,930 [6108] DEBUG DefaultBootstrap - The Bootstrap has been initialized!
+2015-12-24 23:08:55,948 [6108] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was started
+2015-12-24 23:08:55,956 [6108] DEBUG SecureSuperWebSocket - Listener (0.0.0.0:4503) failed to start
+2015-12-24 23:08:55,961 [6108] DEBUG DefaultBootstrap - The PerformanceMonitor has been started!
+2015-12-24 23:36:55,750 [8288] DEBUG SuperWebSocket - Listener (0.0.0.0:4502) was stoppped
+2015-12-24 23:36:55,751 [8288] DEBUG DefaultBootstrap - The PerformanceMonitor has been stoppped!

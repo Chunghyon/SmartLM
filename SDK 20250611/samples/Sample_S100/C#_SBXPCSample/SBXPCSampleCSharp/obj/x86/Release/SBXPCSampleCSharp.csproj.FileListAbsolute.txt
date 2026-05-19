@@ -1,0 +1,5 @@
+D:\SDK\SBXPC\samples\Sample_2900\C#_SBXPCSample\SBXPCSampleCSharp\obj\x86\Release\Interop.MSFlexGridLib.dll
+D:\SDK\SBXPC\samples\Sample_2900\C#_SBXPCSample\SBXPCSampleCSharp\obj\x86\Release\Interop.SBXPCLib.dll
+D:\SDK\SBXPC\samples\Sample_2900\C#_SBXPCSample\SBXPCSampleCSharp\obj\x86\Release\AxInterop.MSFlexGridLib.dll
+D:\SDK\SBXPC\samples\Sample_2900\C#_SBXPCSample\SBXPCSampleCSharp\obj\x86\Release\AxInterop.SBXPCLib.dll
+D:\SDK\SBXPC\samples\Sample_2900\C#_SBXPCSample\SBXPCSampleCSharp\obj\x86\Release\SBXPCSampleCSharp.csproj.ResolveComReference.cache
