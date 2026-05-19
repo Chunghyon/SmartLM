@@ -292,7 +292,7 @@ namespace A3_8190_HTTPServer.HttpServer
                 OnRecord?.Invoke(sn, record);
                 Log($"  ★ 출입기록  UserID={record.UserID} Name={record.Name}  " +
                     $"Type={RecordDetail.GetRecordTypeText(record.RecordType)}  " +
-                    $"{'입' }{(record.IsEntry == 1 ? "입실" : "퇴실")}  " +
+                    $"{(record.IsEntry == 1 ? "입실" : "퇴실")}  " +
                     $"{record.GetDateTime():HH:mm:ss}");
             }
             return "{\"Success\":0}";
