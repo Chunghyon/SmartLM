@@ -36,9 +36,9 @@ namespace A3_8190_HTTPServer
             this.SuspendLayout();
 
             // ─── Column Headers ───────────────────────────────────────────────
-            this.colRecID.Text   = "RecordID";    this.colRecID.Width  = 80;
-            this.colRSN.Text     = "SN";          this.colRSN.Width    = 150;
-            this.colRUID.Text    = "UserID";       this.colRUID.Width   = 70;
+            this.colRecID.Text   = "기록 ID";      this.colRecID.Width  = 80;
+            this.colRSN.Text     = "장치 SN";      this.colRSN.Width    = 150;
+            this.colRUID.Text    = "사용자 ID";    this.colRUID.Width   = 70;
             this.colRName.Text   = "이름";         this.colRName.Width  = 80;
             this.colRDept.Text   = "부서";         this.colRDept.Width  = 90;
             this.colRType.Text   = "인증 방법";    this.colRType.Width  = 100;
@@ -59,7 +59,7 @@ namespace A3_8190_HTTPServer
             this.lvRecords.Font          = new System.Drawing.Font("Malgun Gothic", 8.5F);
 
             // ─── grpRecords ───────────────────────────────────────────────────
-            this.grpRecords.Text     = "출입 기록  (Attendance Records)   —   최신 기록이 상단에 표시됩니다";
+            this.grpRecords.Text     = "출입 기록   —   최신 기록이 상단에 표시됩니다";
             this.grpRecords.Location = new System.Drawing.Point(12, 12);
             this.grpRecords.Size     = new System.Drawing.Size(980, 522);
             this.grpRecords.Controls.Add(this.lvRecords);

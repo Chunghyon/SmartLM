@@ -54,7 +54,7 @@ namespace A3_8190_HTTPServer
             this.SuspendLayout();
 
             // ─── grpServer ───────────────────────────────────────────────────
-            this.grpServer.Text     = "서버 설정  (Server Settings)";
+            this.grpServer.Text     = "서버 설정";
             this.grpServer.Location = new System.Drawing.Point(12, 12);
             this.grpServer.Size     = new System.Drawing.Size(660, 60);
             this.grpServer.Controls.Add(this.lblPort);
@@ -96,7 +96,7 @@ namespace A3_8190_HTTPServer
             this.lblStatus.Font      = new System.Drawing.Font("Malgun Gothic", 9.5F, System.Drawing.FontStyle.Bold);
 
             // ─── grpDevices ──────────────────────────────────────────────────
-            this.grpDevices.Text     = "연결된 디바이스  (Connected Devices)";
+            this.grpDevices.Text     = "연결된 디바이스";
             this.grpDevices.Location = new System.Drawing.Point(12, 82);
             this.grpDevices.Size     = new System.Drawing.Size(660, 130);
             this.grpDevices.Controls.Add(this.lvDevices);
@@ -117,7 +117,7 @@ namespace A3_8190_HTTPServer
             this.lvDevices.GridLines    = true;
 
             // ─── grpRemote ───────────────────────────────────────────────────
-            this.grpRemote.Text     = "원격 제어  (Remote Control)";
+            this.grpRemote.Text     = "원격 제어";
             this.grpRemote.Location = new System.Drawing.Point(12, 222);
             this.grpRemote.Size     = new System.Drawing.Size(660, 62);
             this.grpRemote.Controls.AddRange(new System.Windows.Forms.Control[] {
@@ -185,7 +185,7 @@ namespace A3_8190_HTTPServer
             this.btnClearLog.Click    += new System.EventHandler(this.btnClearLog_Click);
 
             // ─── grpLog ──────────────────────────────────────────────────────
-            this.grpLog.Text     = "서버 로그  (Server Log)";
+            this.grpLog.Text     = "서버 로그";
             this.grpLog.Location = new System.Drawing.Point(12, 344);
             this.grpLog.Size     = new System.Drawing.Size(660, 210);
             this.grpLog.Controls.Add(this.rtbLog);

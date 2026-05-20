@@ -58,7 +58,7 @@ namespace A3_8190_HTTPServer
             this.SuspendLayout();
 
             // ─── grpList ─────────────────────────────────────────────────────
-            this.grpList.Text     = "인원 목록  (Personnel List)";
+            this.grpList.Text     = "인원 목록";
             this.grpList.Location = new System.Drawing.Point(12, 12);
             this.grpList.Size     = new System.Drawing.Size(660, 185);
             this.grpList.Controls.Add(this.lvPersonnel);
@@ -66,7 +66,7 @@ namespace A3_8190_HTTPServer
             this.grpList.Controls.Add(this.btnDelete);
             this.grpList.Controls.Add(this.btnClearAll);
 
-            this.colUID.Text    = "UserID";       this.colUID.Width   = 80;
+            this.colUID.Text    = "사용자 ID";       this.colUID.Width   = 80;
             this.colName.Text   = "이름";         this.colName.Width  = 90;
             this.colDeptH.Text  = "부서";         this.colDeptH.Width = 100;
             this.colJobH.Text   = "직위";         this.colJobH.Width  = 80;
@@ -101,7 +101,7 @@ namespace A3_8190_HTTPServer
             this.btnClearAll.Click    += new System.EventHandler(this.btnClearAll_Click);
 
             // ─── grpAdd ──────────────────────────────────────────────────────
-            this.grpAdd.Text     = "인원 추가  (Add Person)";
+            this.grpAdd.Text     = "인원 추가";
             this.grpAdd.Location = new System.Drawing.Point(12, 206);
             this.grpAdd.Size     = new System.Drawing.Size(660, 145);
             this.grpAdd.Controls.AddRange(new System.Windows.Forms.Control[] {
@@ -111,7 +111,7 @@ namespace A3_8190_HTTPServer
                 this.grpAccess, this.btnAdd });
 
             // Row 1: UserID / Name / Dept
-            this.lblUID.Text      = "UserID *";
+            this.lblUID.Text      = "사용자 ID *";
             this.lblUID.Location  = new System.Drawing.Point(10, 28); this.lblUID.Size = new System.Drawing.Size(65, 23);
             this.lblUID.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.txtUserID.Location = new System.Drawing.Point(80, 26); this.txtUserID.Size = new System.Drawing.Size(80, 23);
@@ -166,7 +166,7 @@ namespace A3_8190_HTTPServer
             this.btnAdd.Click    += new System.EventHandler(this.btnAdd_Click);
 
             // ─── grpPush ─────────────────────────────────────────────────────
-            this.grpPush.Text     = "디바이스로 전송  (Push to Device)";
+            this.grpPush.Text     = "디바이스로 전송";
             this.grpPush.Location = new System.Drawing.Point(12, 360);
             this.grpPush.Size     = new System.Drawing.Size(660, 60);
             this.grpPush.Controls.AddRange(new System.Windows.Forms.Control[] {

@@ -89,7 +89,7 @@ namespace A3_8190_HTTPServer
                 using (var sw = new StreamWriter(dlg.FileName, false, new UTF8Encoding(true)))
                 {
                     // BOM 포함 UTF-8 (엑셀 한글 호환)
-                    sw.WriteLine("RecordID,SN,UserID,이름,부서,인증방법,입출,시간,체온,이미지");
+                    sw.WriteLine("기록ID,장치SN,사용자ID,이름,부서,인증방법,입출,시간,체온,이미지");
                     foreach (ListViewItem item in lvRecords.Items)
                     {
                         var cols = new string[item.SubItems.Count];
