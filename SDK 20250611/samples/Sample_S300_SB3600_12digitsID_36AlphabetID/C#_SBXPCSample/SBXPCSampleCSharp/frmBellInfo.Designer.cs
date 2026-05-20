@@ -679,7 +679,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(99, 34);
             this.cmdExit.TabIndex = 71;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -694,7 +694,7 @@
             this.cmdWrite.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdWrite.Size = new System.Drawing.Size(99, 34);
             this.cmdWrite.TabIndex = 70;
-            this.cmdWrite.Text = "Write";
+            this.cmdWrite.Text = "쓰기";
             this.cmdWrite.UseVisualStyleBackColor = false;
             this.cmdWrite.Click += new System.EventHandler(this.cmdWrite_Click);
             // 
@@ -709,7 +709,7 @@
             this.cmdRead.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdRead.Size = new System.Drawing.Size(99, 34);
             this.cmdRead.TabIndex = 69;
-            this.cmdRead.Text = "Read";
+            this.cmdRead.Text = "읽기";
             this.cmdRead.UseVisualStyleBackColor = false;
             this.cmdRead.Click += new System.EventHandler(this.cmdRead_Click);
             // 
@@ -2127,8 +2127,8 @@
             this.Controls.Add(this._Label2_0);
             this.Controls.Add(this.Label1);
             this.Controls.Add(this.lblMessage);
-            this.Name = "frmBellInfo";
-            this.Text = "frmBellInfo";
+            this.Name = "벨 시간 설정";
+            this.Text = "벨 시간 설정";
             this.Load += new System.EventHandler(this.frmBellInfo_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

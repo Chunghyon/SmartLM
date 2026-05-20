@@ -1,2 +1,56 @@
+# ============================
+# Visual Studio / MSBuild
+# ============================
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# 빌드 출력물
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# 게시/배포 출력
+[Pp]ublish/
+PublishProfiles/
+
+# ============================
+# Windows 시스템
+# ============================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================
+# 임시/백업 파일
+# ============================
+*.tmp
+*.bak
+*.swp
+*~
 *.sqlite3
-Access Control System.exe
+
+# ============================
+# 실행 파일 (소스에서 빌드 가능)
+# ============================
+# Access Control System.exe  ← 필요하면 주석 해제
+*.exe
+*.dll
+
+# ============================
+# IDE (기타)
+# ============================
+.idea/
+*.iml

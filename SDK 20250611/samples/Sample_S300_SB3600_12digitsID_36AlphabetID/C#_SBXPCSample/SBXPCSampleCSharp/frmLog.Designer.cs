@@ -74,7 +74,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(94, 48);
             this.cmdExit.TabIndex = 30;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = true;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -90,7 +90,7 @@
             this.cmdGlogData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGlogData.Size = new System.Drawing.Size(94, 48);
             this.cmdGlogData.TabIndex = 29;
-            this.cmdGlogData.Text = "Read GLogData";
+            this.cmdGlogData.Text = "GLog 데이터 읽기";
             this.cmdGlogData.UseVisualStyleBackColor = true;
             this.cmdGlogData.Click += new System.EventHandler(this.cmdGlogData_Click);
             // 
@@ -106,7 +106,7 @@
             this.cmdSLogData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSLogData.Size = new System.Drawing.Size(94, 48);
             this.cmdSLogData.TabIndex = 28;
-            this.cmdSLogData.Text = "Read SLogData";
+            this.cmdSLogData.Text = "SLog 데이터 읽기";
             this.cmdSLogData.UseVisualStyleBackColor = true;
             this.cmdSLogData.Click += new System.EventHandler(this.cmdSLogData_Click);
             // 
@@ -122,7 +122,7 @@
             this.lblEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblEnrollData.Size = new System.Drawing.Size(73, 19);
             this.lblEnrollData.TabIndex = 35;
-            this.lblEnrollData.Text = "Log Data :";
+            this.lblEnrollData.Text = "로그 데이터 :";
             // 
             // chkAndDelete
             // 
@@ -136,7 +136,7 @@
             this.chkAndDelete.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkAndDelete.Size = new System.Drawing.Size(138, 19);
             this.chkAndDelete.TabIndex = 38;
-            this.chkAndDelete.Text = "and Delete ";
+            this.chkAndDelete.Text = "읽고 삭제 ";
             this.chkAndDelete.UseVisualStyleBackColor = true;
             // 
             // cmdEmptySLog
@@ -151,7 +151,7 @@
             this.cmdEmptySLog.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEmptySLog.Size = new System.Drawing.Size(94, 48);
             this.cmdEmptySLog.TabIndex = 37;
-            this.cmdEmptySLog.Text = "Empty SLogData";
+            this.cmdEmptySLog.Text = "SLog 데이터 비우기";
             this.cmdEmptySLog.UseVisualStyleBackColor = true;
             this.cmdEmptySLog.Click += new System.EventHandler(this.cmdEmptySLog_Click);
             // 
@@ -167,7 +167,7 @@
             this.cmdEmptyGLog.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEmptyGLog.Size = new System.Drawing.Size(94, 48);
             this.cmdEmptyGLog.TabIndex = 36;
-            this.cmdEmptyGLog.Text = "Empty GLogData";
+            this.cmdEmptyGLog.Text = "GLog 데이터 비우기";
             this.cmdEmptyGLog.UseVisualStyleBackColor = true;
             this.cmdEmptyGLog.Click += new System.EventHandler(this.cmdEmptyGLog_Click);
             // 
@@ -183,7 +183,7 @@
             this.chkReadMark.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkReadMark.Size = new System.Drawing.Size(101, 19);
             this.chkReadMark.TabIndex = 33;
-            this.chkReadMark.Text = "ReadMark";
+            this.chkReadMark.Text = "읽기 표시";
             this.chkReadMark.UseVisualStyleBackColor = true;
             this.chkReadMark.CheckedChanged += new System.EventHandler(this.chkReadMark_CheckedChanged);
             // 
@@ -199,7 +199,7 @@
             this.cmdAllGLogData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdAllGLogData.Size = new System.Drawing.Size(94, 48);
             this.cmdAllGLogData.TabIndex = 32;
-            this.cmdAllGLogData.Text = "Read All GLogData";
+            this.cmdAllGLogData.Text = "전체 GLog 읽기";
             this.cmdAllGLogData.UseVisualStyleBackColor = true;
             this.cmdAllGLogData.Click += new System.EventHandler(this.cmdAllGLogData_Click);
             // 
@@ -215,7 +215,7 @@
             this.cmdAllSLogData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdAllSLogData.Size = new System.Drawing.Size(94, 48);
             this.cmdAllSLogData.TabIndex = 31;
-            this.cmdAllSLogData.Text = "Read All SLogData";
+            this.cmdAllSLogData.Text = "전체 SLog 읽기";
             this.cmdAllSLogData.UseVisualStyleBackColor = true;
             this.cmdAllSLogData.Click += new System.EventHandler(this.cmdAllSLogData_Click);
             // 
@@ -231,7 +231,7 @@
             this.LabelTotal.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.LabelTotal.Size = new System.Drawing.Size(46, 19);
             this.LabelTotal.TabIndex = 34;
-            this.LabelTotal.Text = "Total :";
+            this.LabelTotal.Text = "합계 :";
             // 
             // lblMessage
             // 
@@ -288,7 +288,7 @@
             this.chkShowGlogPhoto.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkShowGlogPhoto.Size = new System.Drawing.Size(151, 29);
             this.chkShowGlogPhoto.TabIndex = 42;
-            this.chkShowGlogPhoto.Text = "Show Glog Photo";
+            this.chkShowGlogPhoto.Text = "Glog 사진 보기";
             this.chkShowGlogPhoto.UseVisualStyleBackColor = true;
             // 
             // picGlogPhoto
@@ -318,7 +318,7 @@
             this.groupBox1.Size = new System.Drawing.Size(184, 177);
             this.groupBox1.TabIndex = 44;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Glog Search Range";
+            this.groupBox1.Text = "Glog 검색 범위";
             // 
             // btnSetRange
             // 
@@ -328,7 +328,7 @@
             this.btnSetRange.Name = "btnSetRange";
             this.btnSetRange.Size = new System.Drawing.Size(116, 37);
             this.btnSetRange.TabIndex = 5;
-            this.btnSetRange.Text = "Set Range";
+            this.btnSetRange.Text = "범위 설정";
             this.btnSetRange.UseVisualStyleBackColor = true;
             this.btnSetRange.Click += new System.EventHandler(this.btnSetRange_Click);
             // 
@@ -376,7 +376,7 @@
             this.chkSearchRangeUse.Name = "chkSearchRangeUse";
             this.chkSearchRangeUse.Size = new System.Drawing.Size(140, 23);
             this.chkSearchRangeUse.TabIndex = 0;
-            this.chkSearchRangeUse.Text = "Use Search Range";
+            this.chkSearchRangeUse.Text = "검색 범위 사용";
             this.chkSearchRangeUse.UseVisualStyleBackColor = true;
             // 
             // frmLog
@@ -403,8 +403,8 @@
             this.Controls.Add(this.LabelTotal);
             this.Controls.Add(this.lblMessage);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.Name = "frmLog";
-            this.Text = "frmLog";
+            this.Name = "로그 데이터 관리";
+            this.Text = "로그 데이터 관리";
             this.Load += new System.EventHandler(this.frmLog_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmLog_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.gridSLogData2)).EndInit();

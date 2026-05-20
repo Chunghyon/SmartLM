@@ -87,7 +87,7 @@
             this.lblEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblEnrollData.Size = new System.Drawing.Size(112, 19);
             this.lblEnrollData.TabIndex = 36;
-            this.lblEnrollData.Text = "Company Name:";
+            this.lblEnrollData.Text = "회사명:";
             // 
             // label1
             // 
@@ -101,7 +101,7 @@
             this.label1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label1.Size = new System.Drawing.Size(104, 19);
             this.label1.TabIndex = 37;
-            this.label1.Text = "Sleep Message:";
+            this.label1.Text = "절전 메시지:";
             // 
             // label2
             // 
@@ -115,7 +115,7 @@
             this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label2.Size = new System.Drawing.Size(112, 19);
             this.label2.TabIndex = 38;
-            this.label2.Text = "Customer Name:";
+            this.label2.Text = "고객명:";
             // 
             // txtCompanyName
             // 
@@ -156,7 +156,7 @@
             this.cmdGetCustomerInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetCustomerInfo.Size = new System.Drawing.Size(200, 30);
             this.cmdGetCustomerInfo.TabIndex = 55;
-            this.cmdGetCustomerInfo.Text = "Get Customer Info";
+            this.cmdGetCustomerInfo.Text = "고객 정보 읽기";
             this.cmdGetCustomerInfo.UseVisualStyleBackColor = false;
             this.cmdGetCustomerInfo.Click += new System.EventHandler(this.cmdGetCustomerInfo_Click);
             // 
@@ -171,7 +171,7 @@
             this.cmdSetCustomerInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetCustomerInfo.Size = new System.Drawing.Size(200, 30);
             this.cmdSetCustomerInfo.TabIndex = 56;
-            this.cmdSetCustomerInfo.Text = "Set Customer Info";
+            this.cmdSetCustomerInfo.Text = "고객 정보 설정";
             this.cmdSetCustomerInfo.UseVisualStyleBackColor = false;
             this.cmdSetCustomerInfo.Click += new System.EventHandler(this.cmdSetCustomerInfo_Click);
             // 
@@ -211,7 +211,7 @@
             this.label3.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label3.Size = new System.Drawing.Size(89, 19);
             this.label3.TabIndex = 58;
-            this.label3.Text = "Glyph Width:";
+            this.label3.Text = "글리프 폭:";
             // 
             // txtGlyphHeight
             // 
@@ -240,7 +240,7 @@
             this.label4.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label4.Size = new System.Drawing.Size(91, 19);
             this.label4.TabIndex = 60;
-            this.label4.Text = "Glyph Height:";
+            this.label4.Text = "글리프 높이:";
             // 
             // txtFontHeight
             // 
@@ -269,7 +269,7 @@
             this.label5.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label5.Size = new System.Drawing.Size(83, 19);
             this.label5.TabIndex = 62;
-            this.label5.Text = "Font Height:";
+            this.label5.Text = "폰트 높이:";
             // 
             // txtFontWidth
             // 
@@ -298,7 +298,7 @@
             this.label6.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label6.Size = new System.Drawing.Size(81, 19);
             this.label6.TabIndex = 64;
-            this.label6.Text = "Font Width:";
+            this.label6.Text = "폰트 폭:";
             // 
             // txtFontWeight
             // 
@@ -327,7 +327,7 @@
             this.label7.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label7.Size = new System.Drawing.Size(87, 19);
             this.label7.TabIndex = 66;
-            this.label7.Text = "Font Weight:";
+            this.label7.Text = "폰트 두께:";
             // 
             // cmdGetGlyphSize
             // 
@@ -340,7 +340,7 @@
             this.cmdGetGlyphSize.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetGlyphSize.Size = new System.Drawing.Size(200, 30);
             this.cmdGetGlyphSize.TabIndex = 68;
-            this.cmdGetGlyphSize.Text = "Get Glyph Size";
+            this.cmdGetGlyphSize.Text = "글리프 크기 읽기";
             this.cmdGetGlyphSize.UseVisualStyleBackColor = false;
             this.cmdGetGlyphSize.Click += new System.EventHandler(this.cmdGetGlyphSize_Click);
             // 
@@ -353,7 +353,7 @@
             this.chkItalic.Name = "chkItalic";
             this.chkItalic.Size = new System.Drawing.Size(63, 24);
             this.chkItalic.TabIndex = 69;
-            this.chkItalic.Text = "Italic";
+            this.chkItalic.Text = "기울임";
             this.chkItalic.UseVisualStyleBackColor = true;
             // 
             // chkUnderline
@@ -365,7 +365,7 @@
             this.chkUnderline.Name = "chkUnderline";
             this.chkUnderline.Size = new System.Drawing.Size(92, 24);
             this.chkUnderline.TabIndex = 70;
-            this.chkUnderline.Text = "Underline";
+            this.chkUnderline.Text = "밑줄";
             this.chkUnderline.UseVisualStyleBackColor = true;
             // 
             // chkStrikeOut
@@ -377,7 +377,7 @@
             this.chkStrikeOut.Name = "chkStrikeOut";
             this.chkStrikeOut.Size = new System.Drawing.Size(93, 24);
             this.chkStrikeOut.TabIndex = 71;
-            this.chkStrikeOut.Text = "StrikeOut";
+            this.chkStrikeOut.Text = "취소선";
             this.chkStrikeOut.UseVisualStyleBackColor = true;
             // 
             // cmdSetSleepMsg
@@ -391,7 +391,7 @@
             this.cmdSetSleepMsg.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetSleepMsg.Size = new System.Drawing.Size(200, 30);
             this.cmdSetSleepMsg.TabIndex = 73;
-            this.cmdSetSleepMsg.Text = "Set Sleep Message";
+            this.cmdSetSleepMsg.Text = "절전 메시지 설정";
             this.cmdSetSleepMsg.UseVisualStyleBackColor = false;
             this.cmdSetSleepMsg.Click += new System.EventHandler(this.cmdSetSleepMsg_Click);
             // 
@@ -406,7 +406,7 @@
             this.cmdGetSleepMsg.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetSleepMsg.Size = new System.Drawing.Size(200, 30);
             this.cmdGetSleepMsg.TabIndex = 72;
-            this.cmdGetSleepMsg.Text = "Get Sleep Message";
+            this.cmdGetSleepMsg.Text = "절전 메시지 읽기";
             this.cmdGetSleepMsg.UseVisualStyleBackColor = false;
             this.cmdGetSleepMsg.Click += new System.EventHandler(this.cmdGetSleepMsg_Click);
             // 
@@ -421,7 +421,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(113, 30);
             this.cmdExit.TabIndex = 74;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -434,7 +434,7 @@
             this.chkDebugOut.Name = "chkDebugOut";
             this.chkDebugOut.Size = new System.Drawing.Size(97, 24);
             this.chkDebugOut.TabIndex = 75;
-            this.chkDebugOut.Text = "DebugOut";
+            this.chkDebugOut.Text = "디버그 출력";
             this.chkDebugOut.UseVisualStyleBackColor = true;
             // 
             // txtDebugOutFile
@@ -501,8 +501,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lblEnrollData);
             this.Controls.Add(this.lblMessage);
-            this.Name = "frmScreenSaver";
-            this.Text = "frmScreenSaver";
+            this.Name = "화면 보호기";
+            this.Text = "화면 보호기";
             this.Load += new System.EventHandler(this.frmScreenSaver_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmScreenSaver_FormClosing);
             this.ResumeLayout(false);

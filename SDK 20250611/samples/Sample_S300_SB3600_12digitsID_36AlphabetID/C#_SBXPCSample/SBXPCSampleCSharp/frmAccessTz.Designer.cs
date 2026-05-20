@@ -53,7 +53,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(104, 46);
             this.cmdExit.TabIndex = 76;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -68,7 +68,7 @@
             this.cmdWrite.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdWrite.Size = new System.Drawing.Size(104, 46);
             this.cmdWrite.TabIndex = 75;
-            this.cmdWrite.Text = "Write";
+            this.cmdWrite.Text = "쓰기";
             this.cmdWrite.UseVisualStyleBackColor = false;
             this.cmdWrite.Click += new System.EventHandler(this.cmdWrite_Click);
             // 
@@ -83,7 +83,7 @@
             this.cmdRead.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdRead.Size = new System.Drawing.Size(104, 46);
             this.cmdRead.TabIndex = 74;
-            this.cmdRead.Text = "Read";
+            this.cmdRead.Text = "읽기";
             this.cmdRead.UseVisualStyleBackColor = false;
             this.cmdRead.Click += new System.EventHandler(this.cmdRead_Click);
             // 
@@ -98,7 +98,7 @@
             this.cmdUpdate.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdUpdate.Size = new System.Drawing.Size(104, 46);
             this.cmdUpdate.TabIndex = 72;
-            this.cmdUpdate.Text = "Update";
+            this.cmdUpdate.Text = "업데이트";
             this.cmdUpdate.UseVisualStyleBackColor = false;
             this.cmdUpdate.Click += new System.EventHandler(this.cmdUpdate_Click);
             // 
@@ -114,7 +114,7 @@
             this.lblEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblEnrollData.Size = new System.Drawing.Size(41, 19);
             this.lblEnrollData.TabIndex = 70;
-            this.lblEnrollData.Text = "Start:";
+            this.lblEnrollData.Text = "시작:";
             // 
             // lblMessage
             // 
@@ -166,7 +166,7 @@
             this.label1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label1.Size = new System.Drawing.Size(36, 19);
             this.label1.TabIndex = 78;
-            this.label1.Text = "End:";
+            this.label1.Text = "종료:";
             // 
             // lstTimeZone
             // 
@@ -230,8 +230,8 @@
             this.Controls.Add(this.cmdUpdate);
             this.Controls.Add(this.lblEnrollData);
             this.Controls.Add(this.lblMessage);
-            this.Name = "frmAccessTz";
-            this.Text = "frmAccessTz";
+            this.Name = "출입 시간대";
+            this.Text = "출입 시간대";
             this.Load += new System.EventHandler(this.frmAccessTz_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmAccessTz_FormClosing);
             this.ResumeLayout(false);

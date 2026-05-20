@@ -124,7 +124,7 @@
             this.cmdDeleteCompany.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdDeleteCompany.Size = new System.Drawing.Size(268, 37);
             this.cmdDeleteCompany.TabIndex = 69;
-            this.cmdDeleteCompany.Text = "Delete Company Name";
+            this.cmdDeleteCompany.Text = "회사명 삭제";
             this.cmdDeleteCompany.UseVisualStyleBackColor = false;
             this.cmdDeleteCompany.Click += new System.EventHandler(this.cmdDeleteCompany_Click);
             // 
@@ -140,7 +140,7 @@
             this.cmdSetCompany.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetCompany.Size = new System.Drawing.Size(268, 37);
             this.cmdSetCompany.TabIndex = 68;
-            this.cmdSetCompany.Text = "Set Company Name";
+            this.cmdSetCompany.Text = "회사명 설정";
             this.cmdSetCompany.UseVisualStyleBackColor = false;
             this.cmdSetCompany.Click += new System.EventHandler(this.cmdSetCompany_Click);
             // 
@@ -156,7 +156,7 @@
             this.cmdGetName.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetName.Size = new System.Drawing.Size(268, 37);
             this.cmdGetName.TabIndex = 66;
-            this.cmdGetName.Text = "Get Name Data";
+            this.cmdGetName.Text = "이름 데이터 읽기";
             this.ToolTip1.SetToolTip(this.cmdGetName, "Get All Enroll Data From Device And Save To DataBase");
             this.cmdGetName.UseVisualStyleBackColor = false;
             this.cmdGetName.Click += new System.EventHandler(this.cmdGetName_Click);
@@ -173,7 +173,7 @@
             this.cmdSetName.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetName.Size = new System.Drawing.Size(268, 37);
             this.cmdSetName.TabIndex = 65;
-            this.cmdSetName.Text = "Set Name Data";
+            this.cmdSetName.Text = "이름 데이터 설정";
             this.ToolTip1.SetToolTip(this.cmdSetName, "Load All Enroll Data From DataBase And Set To Device");
             this.cmdSetName.UseVisualStyleBackColor = false;
             this.cmdSetName.Click += new System.EventHandler(this.cmdSetName_Click);
@@ -190,7 +190,7 @@
             this.cmdModifyPrivilege.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdModifyPrivilege.Size = new System.Drawing.Size(267, 37);
             this.cmdModifyPrivilege.TabIndex = 64;
-            this.cmdModifyPrivilege.Text = "ModifyPrivilege";
+            this.cmdModifyPrivilege.Text = "권한 수정";
             this.cmdModifyPrivilege.UseVisualStyleBackColor = false;
             this.cmdModifyPrivilege.Click += new System.EventHandler(this.cmdModifyPrivilege_Click);
             // 
@@ -206,7 +206,7 @@
             this.cmdEnableUser.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEnableUser.Size = new System.Drawing.Size(267, 37);
             this.cmdEnableUser.TabIndex = 63;
-            this.cmdEnableUser.Text = "EnableUser";
+            this.cmdEnableUser.Text = "사용자 활성화";
             this.cmdEnableUser.UseVisualStyleBackColor = false;
             this.cmdEnableUser.Click += new System.EventHandler(this.cmdEnableUser_Click);
             // 
@@ -222,7 +222,7 @@
             this.cmdGetAllEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetAllEnrollData.Size = new System.Drawing.Size(267, 37);
             this.cmdGetAllEnrollData.TabIndex = 61;
-            this.cmdGetAllEnrollData.Text = "Get All Enroll Data";
+            this.cmdGetAllEnrollData.Text = "전체 등록 데이터 읽기";
             this.ToolTip1.SetToolTip(this.cmdGetAllEnrollData, "Get All Enroll Data From Device And Save To DataBase");
             this.cmdGetAllEnrollData.UseVisualStyleBackColor = false;
             this.cmdGetAllEnrollData.Click += new System.EventHandler(this.cmdGetAllEnrollData_Click);
@@ -239,7 +239,7 @@
             this.cmdGetEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetEnrollData.Size = new System.Drawing.Size(267, 37);
             this.cmdGetEnrollData.TabIndex = 60;
-            this.cmdGetEnrollData.Text = "Get Enroll Data";
+            this.cmdGetEnrollData.Text = "등록 데이터 읽기";
             this.ToolTip1.SetToolTip(this.cmdGetEnrollData, "Get EnrollData From Device");
             this.cmdGetEnrollData.UseVisualStyleBackColor = false;
             this.cmdGetEnrollData.Click += new System.EventHandler(this.cmdGetEnrollData_Click);
@@ -256,7 +256,7 @@
             this.cmdClearData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdClearData.Size = new System.Drawing.Size(267, 37);
             this.cmdClearData.TabIndex = 59;
-            this.cmdClearData.Text = "Clear All Data(E,GL,SL) ";
+            this.cmdClearData.Text = "전체 데이터 삭제(E,GL,SL)";
             this.ToolTip1.SetToolTip(this.cmdClearData, "Clear EnrollData and LogDat Into Device");
             this.cmdClearData.UseVisualStyleBackColor = false;
             this.cmdClearData.Click += new System.EventHandler(this.cmdClearData_Click);
@@ -273,7 +273,7 @@
             this.cmdGetEnrollInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetEnrollInfo.Size = new System.Drawing.Size(267, 37);
             this.cmdGetEnrollInfo.TabIndex = 57;
-            this.cmdGetEnrollInfo.Text = "Get Enroll Info";
+            this.cmdGetEnrollInfo.Text = "등록 정보 읽기";
             this.ToolTip1.SetToolTip(this.cmdGetEnrollInfo, "Get All Enrolled User Info From Device");
             this.cmdGetEnrollInfo.UseVisualStyleBackColor = false;
             this.cmdGetEnrollInfo.Click += new System.EventHandler(this.cmdGetEnrollInfo_Click);
@@ -290,7 +290,7 @@
             this.cmdDeleteEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdDeleteEnrollData.Size = new System.Drawing.Size(267, 37);
             this.cmdDeleteEnrollData.TabIndex = 56;
-            this.cmdDeleteEnrollData.Text = "Delete Enroll Data";
+            this.cmdDeleteEnrollData.Text = "등록 데이터 삭제";
             this.ToolTip1.SetToolTip(this.cmdDeleteEnrollData, "Delete Enroll Data Into Device");
             this.cmdDeleteEnrollData.UseVisualStyleBackColor = false;
             this.cmdDeleteEnrollData.Click += new System.EventHandler(this.cmdDeleteEnrollData_Click);
@@ -307,7 +307,7 @@
             this.cmdSetEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetEnrollData.Size = new System.Drawing.Size(267, 37);
             this.cmdSetEnrollData.TabIndex = 55;
-            this.cmdSetEnrollData.Text = "Set Enroll Data";
+            this.cmdSetEnrollData.Text = "등록 데이터 전송";
             this.ToolTip1.SetToolTip(this.cmdSetEnrollData, "Set EnrollData To Device");
             this.cmdSetEnrollData.UseVisualStyleBackColor = false;
             this.cmdSetEnrollData.Click += new System.EventHandler(this.cmdSetEnrollData_Click);
@@ -324,7 +324,7 @@
             this.cmdDel.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdDel.Size = new System.Drawing.Size(133, 37);
             this.cmdDel.TabIndex = 47;
-            this.cmdDel.Text = "Delete DB";
+            this.cmdDel.Text = "DB 삭제";
             this.ToolTip1.SetToolTip(this.cmdDel, "Delete All Saved Data From DataBase");
             this.cmdDel.UseVisualStyleBackColor = false;
             this.cmdDel.Click += new System.EventHandler(this.cmdDel_Click);
@@ -341,7 +341,7 @@
             this.cmdSetAllEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetAllEnrollData.Size = new System.Drawing.Size(267, 37);
             this.cmdSetAllEnrollData.TabIndex = 93;
-            this.cmdSetAllEnrollData.Text = "Set All Enroll Data";
+            this.cmdSetAllEnrollData.Text = "전체 등록 데이터 전송";
             this.ToolTip1.SetToolTip(this.cmdSetAllEnrollData, "Load All Enroll Data From DataBase And Set To Device");
             this.cmdSetAllEnrollData.UseVisualStyleBackColor = false;
             this.cmdSetAllEnrollData.Click += new System.EventHandler(this.cmdSetAllEnrollData_Click);
@@ -358,7 +358,7 @@
             this.btnSetUserPeriod.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btnSetUserPeriod.Size = new System.Drawing.Size(267, 37);
             this.btnSetUserPeriod.TabIndex = 106;
-            this.btnSetUserPeriod.Text = "SetUserPeriod";
+            this.btnSetUserPeriod.Text = "사용자 기간 설정";
             this.ToolTip1.SetToolTip(this.btnSetUserPeriod, "Clear EnrollData and LogDat Into Device");
             this.btnSetUserPeriod.UseVisualStyleBackColor = false;
             this.btnSetUserPeriod.Click += new System.EventHandler(this.btnSetUserPeriod_Click);
@@ -375,7 +375,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(267, 37);
             this.cmdExit.TabIndex = 58;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -391,7 +391,7 @@
             this.cmdEmptyEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEmptyEnrollData.Size = new System.Drawing.Size(267, 37);
             this.cmdEmptyEnrollData.TabIndex = 54;
-            this.cmdEmptyEnrollData.Text = "Empty Enroll Data";
+            this.cmdEmptyEnrollData.Text = "등록 데이터 비우기";
             this.cmdEmptyEnrollData.UseVisualStyleBackColor = false;
             this.cmdEmptyEnrollData.Click += new System.EventHandler(this.cmdEmptyEnrollData_Click);
             // 
@@ -422,7 +422,7 @@
             this.chkDisable.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkDisable.Size = new System.Drawing.Size(163, 42);
             this.chkDisable.TabIndex = 49;
-            this.chkDisable.Text = "Disable User";
+            this.chkDisable.Text = "사용자 비활성화";
             this.chkDisable.UseVisualStyleBackColor = false;
             // 
             // cmbPrivilege
@@ -510,7 +510,7 @@
             this.lblCardNum.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblCardNum.Size = new System.Drawing.Size(163, 48);
             this.lblCardNum.TabIndex = 70;
-            this.lblCardNum.Text = "Card or Password Number :";
+            this.lblCardNum.Text = "카드 또는 비밀번호 :";
             // 
             // lbName
             // 
@@ -525,7 +525,7 @@
             this.lbName.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lbName.Size = new System.Drawing.Size(67, 22);
             this.lbName.TabIndex = 53;
-            this.lbName.Text = "Name :";
+            this.lbName.Text = "이름 :";
             // 
             // Label2
             // 
@@ -540,7 +540,7 @@
             this.Label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.Label2.Size = new System.Drawing.Size(67, 22);
             this.Label2.TabIndex = 48;
-            this.Label2.Text = "Total : ";
+            this.Label2.Text = "합계 : ";
             // 
             // Label1
             // 
@@ -555,7 +555,7 @@
             this.Label1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.Label1.Size = new System.Drawing.Size(94, 22);
             this.Label1.TabIndex = 44;
-            this.Label1.Text = "Privilege :";
+            this.Label1.Text = "움선권위 :";
             // 
             // lblMessage
             // 
@@ -586,7 +586,7 @@
             this.lblEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblEnrollData.Size = new System.Drawing.Size(132, 22);
             this.lblEnrollData.TabIndex = 41;
-            this.lblEnrollData.Text = "Enrolled Data :";
+            this.lblEnrollData.Text = "등록 데이터 :";
             // 
             // lblBackupNumber
             // 
@@ -601,7 +601,7 @@
             this.lblBackupNumber.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblBackupNumber.Size = new System.Drawing.Size(148, 22);
             this.lblBackupNumber.TabIndex = 39;
-            this.lblBackupNumber.Text = "Backup Number :";
+            this.lblBackupNumber.Text = "백업 번호 :";
             // 
             // _lblEnrollNum_0
             // 
@@ -616,7 +616,7 @@
             this._lblEnrollNum_0.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this._lblEnrollNum_0.Size = new System.Drawing.Size(139, 22);
             this._lblEnrollNum_0.TabIndex = 37;
-            this._lblEnrollNum_0.Text = "Enroll Number :";
+            this._lblEnrollNum_0.Text = "등록 번호 :";
             // 
             // cmdModifyDuressFP
             // 
@@ -630,7 +630,7 @@
             this.cmdModifyDuressFP.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdModifyDuressFP.Size = new System.Drawing.Size(267, 37);
             this.cmdModifyDuressFP.TabIndex = 72;
-            this.cmdModifyDuressFP.Text = "Modify Duress FP";
+            this.cmdModifyDuressFP.Text = "당황지문 수정";
             this.cmdModifyDuressFP.UseVisualStyleBackColor = false;
             this.cmdModifyDuressFP.Click += new System.EventHandler(this.cmdModifyDuressFP_Click);
             // 
@@ -646,7 +646,7 @@
             this.cmdSetUserPhoto.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetUserPhoto.Size = new System.Drawing.Size(267, 37);
             this.cmdSetUserPhoto.TabIndex = 74;
-            this.cmdSetUserPhoto.Text = "Set User Photo";
+            this.cmdSetUserPhoto.Text = "사용자 사진 설정";
             this.cmdSetUserPhoto.UseVisualStyleBackColor = false;
             this.cmdSetUserPhoto.Click += new System.EventHandler(this.cmdSetUserPhoto_Click);
             // 
@@ -662,7 +662,7 @@
             this.cmdGetUserPhoto.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetUserPhoto.Size = new System.Drawing.Size(267, 37);
             this.cmdGetUserPhoto.TabIndex = 73;
-            this.cmdGetUserPhoto.Text = "Get User Photo";
+            this.cmdGetUserPhoto.Text = "사용자 사진 읽기";
             this.cmdGetUserPhoto.UseVisualStyleBackColor = false;
             this.cmdGetUserPhoto.Click += new System.EventHandler(this.cmdGetUserPhoto_Click);
             // 
@@ -678,7 +678,7 @@
             this.cmdDeleteUserPhoto.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdDeleteUserPhoto.Size = new System.Drawing.Size(267, 37);
             this.cmdDeleteUserPhoto.TabIndex = 75;
-            this.cmdDeleteUserPhoto.Text = "Delete User Photo";
+            this.cmdDeleteUserPhoto.Text = "사용자 사진 삭제";
             this.cmdDeleteUserPhoto.UseVisualStyleBackColor = false;
             this.cmdDeleteUserPhoto.Click += new System.EventHandler(this.cmdDeleteUserPhoto_Click);
             // 
@@ -892,7 +892,7 @@
             this.label10.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label10.Size = new System.Drawing.Size(106, 22);
             this.label10.TabIndex = 88;
-            this.label10.Text = "User Depart";
+            this.label10.Text = "사용자 부서";
             // 
             // OpenFileDlg
             // 
@@ -912,7 +912,7 @@
             this.groupBox1.Size = new System.Drawing.Size(356, 197);
             this.groupBox1.TabIndex = 90;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "User Photo Related";
+            this.groupBox1.Text = "사용자 사진 관리";
             // 
             // picUserPhoto
             // 
@@ -955,7 +955,7 @@
             this.chkDupCheck.Name = "chkDupCheck";
             this.chkDupCheck.Size = new System.Drawing.Size(186, 27);
             this.chkDupCheck.TabIndex = 94;
-            this.chkDupCheck.Text = "Duplication Check";
+            this.chkDupCheck.Text = "중복 확인";
             this.chkDupCheck.UseVisualStyleBackColor = true;
             // 
             // btnGetUserPeriod
@@ -970,7 +970,7 @@
             this.btnGetUserPeriod.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btnGetUserPeriod.Size = new System.Drawing.Size(267, 37);
             this.btnGetUserPeriod.TabIndex = 105;
-            this.btnGetUserPeriod.Text = "GetUserPeriod";
+            this.btnGetUserPeriod.Text = "사용자 기간 읽기";
             this.btnGetUserPeriod.UseVisualStyleBackColor = false;
             this.btnGetUserPeriod.Click += new System.EventHandler(this.btnGetUserPeriod_Click);
             // 
@@ -1036,7 +1036,7 @@
             this.chkUsePeriod.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkUsePeriod.Size = new System.Drawing.Size(191, 32);
             this.chkUsePeriod.TabIndex = 100;
-            this.chkUsePeriod.Text = "Use Period";
+            this.chkUsePeriod.Text = "기간 사용";
             this.chkUsePeriod.UseVisualStyleBackColor = false;
             this.chkUsePeriod.CheckedChanged += new System.EventHandler(this.chkUsePeriod_CheckedChanged);
             // 
@@ -1052,7 +1052,7 @@
             this.cmdGetCompany.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetCompany.Size = new System.Drawing.Size(268, 37);
             this.cmdGetCompany.TabIndex = 68;
-            this.cmdGetCompany.Text = "Get Company Name";
+            this.cmdGetCompany.Text = "회사명 읽기";
             this.cmdGetCompany.UseVisualStyleBackColor = false;
             this.cmdGetCompany.Click += new System.EventHandler(this.cmdGetCompany_Click);
             // 

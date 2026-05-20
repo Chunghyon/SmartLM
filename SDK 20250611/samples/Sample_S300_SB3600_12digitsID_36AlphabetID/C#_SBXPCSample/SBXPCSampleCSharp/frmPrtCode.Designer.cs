@@ -85,7 +85,7 @@
             this.cmdGetProductCode.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetProductCode.Size = new System.Drawing.Size(121, 45);
             this.cmdGetProductCode.TabIndex = 27;
-            this.cmdGetProductCode.Text = "Get ProductCode";
+            this.cmdGetProductCode.Text = "제품 코드 읽기";
             this.cmdGetProductCode.UseVisualStyleBackColor = true;
             this.cmdGetProductCode.Click += new System.EventHandler(this.cmdGetProductCode_Click);
             // 
@@ -100,7 +100,7 @@
             this.cmdGetBackupNumber.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetBackupNumber.Size = new System.Drawing.Size(121, 45);
             this.cmdGetBackupNumber.TabIndex = 26;
-            this.cmdGetBackupNumber.Text = "Get BackupNumber";
+            this.cmdGetBackupNumber.Text = "백업 번호 읽기";
             this.cmdGetBackupNumber.UseVisualStyleBackColor = true;
             this.cmdGetBackupNumber.Click += new System.EventHandler(this.cmdGetBackupNumber_Click);
             // 
@@ -130,7 +130,7 @@
             this.lblSerialNo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblSerialNo.Size = new System.Drawing.Size(115, 19);
             this.lblSerialNo.TabIndex = 30;
-            this.lblSerialNo.Text = "Serial Number :";
+            this.lblSerialNo.Text = "시리얼 번호 :";
             this.lblSerialNo.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // cmdGetSerialNumber
@@ -144,7 +144,7 @@
             this.cmdGetSerialNumber.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetSerialNumber.Size = new System.Drawing.Size(121, 45);
             this.cmdGetSerialNumber.TabIndex = 22;
-            this.cmdGetSerialNumber.Text = "Get SerialNumber";
+            this.cmdGetSerialNumber.Text = "시리얼 번호 읽기";
             this.cmdGetSerialNumber.UseVisualStyleBackColor = true;
             this.cmdGetSerialNumber.Click += new System.EventHandler(this.cmdGetSerialNumber_Click);
             // 
@@ -160,7 +160,7 @@
             this.lblBackuplNo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblBackuplNo.Size = new System.Drawing.Size(127, 19);
             this.lblBackuplNo.TabIndex = 32;
-            this.lblBackuplNo.Text = "Backup Number :";
+            this.lblBackuplNo.Text = "백업 번호 :";
             this.lblBackuplNo.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // cmdExit
@@ -174,7 +174,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(94, 45);
             this.cmdExit.TabIndex = 23;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = true;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -190,7 +190,7 @@
             this.Label1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.Label1.Size = new System.Drawing.Size(108, 19);
             this.Label1.TabIndex = 31;
-            this.Label1.Text = "Product Code :";
+            this.Label1.Text = "제품 코드 :";
             this.Label1.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // lblMessage
@@ -228,7 +228,7 @@
             this.btnGetDeviceDetailInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btnGetDeviceDetailInfo.Size = new System.Drawing.Size(324, 45);
             this.btnGetDeviceDetailInfo.TabIndex = 23;
-            this.btnGetDeviceDetailInfo.Text = "Get Device Detail Info";
+            this.btnGetDeviceDetailInfo.Text = "장치 상세 정보 읽기";
             this.btnGetDeviceDetailInfo.UseVisualStyleBackColor = true;
             this.btnGetDeviceDetailInfo.Click += new System.EventHandler(this.btnGetDeviceDetailInfo_Click);
             // 
@@ -250,8 +250,8 @@
             this.Controls.Add(this.cmdExit);
             this.Controls.Add(this.Label1);
             this.Controls.Add(this.lblMessage);
-            this.Name = "frmPrtCode";
-            this.Text = "frmPrtCode";
+            this.Name = "제품 코드";
+            this.Text = "제품 코드";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmPrtCode_FormClosed);
             this.Load += new System.EventHandler(this.frmPrtCode_Load);
             this.ResumeLayout(false);

@@ -79,7 +79,7 @@
             this.label1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label1.Size = new System.Drawing.Size(36, 19);
             this.label1.TabIndex = 88;
-            this.label1.Text = "End:";
+            this.label1.Text = "종료:";
             // 
             // dtStart
             // 
@@ -102,7 +102,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(104, 46);
             this.cmdExit.TabIndex = 86;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -117,7 +117,7 @@
             this.cmdWrite.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdWrite.Size = new System.Drawing.Size(104, 46);
             this.cmdWrite.TabIndex = 85;
-            this.cmdWrite.Text = "Write";
+            this.cmdWrite.Text = "쓰기";
             this.cmdWrite.UseVisualStyleBackColor = false;
             this.cmdWrite.Click += new System.EventHandler(this.cmdWrite_Click);
             // 
@@ -132,7 +132,7 @@
             this.cmdRead.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdRead.Size = new System.Drawing.Size(104, 46);
             this.cmdRead.TabIndex = 84;
-            this.cmdRead.Text = "Read";
+            this.cmdRead.Text = "읽기";
             this.cmdRead.UseVisualStyleBackColor = false;
             this.cmdRead.Click += new System.EventHandler(this.cmdRead_Click);
             // 
@@ -147,7 +147,7 @@
             this.cmdUpdate.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdUpdate.Size = new System.Drawing.Size(104, 46);
             this.cmdUpdate.TabIndex = 83;
-            this.cmdUpdate.Text = "Update";
+            this.cmdUpdate.Text = "업데이트";
             this.cmdUpdate.UseVisualStyleBackColor = false;
             this.cmdUpdate.Click += new System.EventHandler(this.cmdUpdate_Click);
             // 
@@ -163,7 +163,7 @@
             this.lblEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblEnrollData.Size = new System.Drawing.Size(41, 19);
             this.lblEnrollData.TabIndex = 82;
-            this.lblEnrollData.Text = "Start:";
+            this.lblEnrollData.Text = "시작:";
             // 
             // lblMessage
             // 
@@ -192,7 +192,7 @@
             this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label2.Size = new System.Drawing.Size(92, 19);
             this.label2.TabIndex = 91;
-            this.label2.Text = "In/Out Status:";
+            this.label2.Text = "입출력 상태:";
             // 
             // cmbTrMode
             // 
@@ -221,7 +221,7 @@
             this.cmdSaveFile.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSaveFile.Size = new System.Drawing.Size(104, 46);
             this.cmdSaveFile.TabIndex = 94;
-            this.cmdSaveFile.Text = "Save To File";
+            this.cmdSaveFile.Text = "파일로 저장";
             this.cmdSaveFile.UseVisualStyleBackColor = false;
             this.cmdSaveFile.Visible = false;
             this.cmdSaveFile.Click += new System.EventHandler(this.cmdSaveFile_Click);
@@ -237,7 +237,7 @@
             this.cmdLoadFile.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdLoadFile.Size = new System.Drawing.Size(104, 46);
             this.cmdLoadFile.TabIndex = 93;
-            this.cmdLoadFile.Text = "Load From File";
+            this.cmdLoadFile.Text = "파일에서 불러오기";
             this.cmdLoadFile.UseVisualStyleBackColor = false;
             this.cmdLoadFile.Visible = false;
             this.cmdLoadFile.Click += new System.EventHandler(this.cmdLoadFile_Click);
@@ -265,8 +265,8 @@
             this.Controls.Add(this.cmdUpdate);
             this.Controls.Add(this.lblEnrollData);
             this.Controls.Add(this.lblMessage);
-            this.Name = "frmTrMode";
-            this.Text = "frmTrMode";
+            this.Name = "이동 모드";
+            this.Text = "이동 모드";
             this.Load += new System.EventHandler(this.frmTrMode_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmTrMode_FormClosing);
             this.ResumeLayout(false);

@@ -300,8 +300,8 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.Name = "frmEvent";
-            this.Text = "frmEvent";
+            this.Name = "이벤트 모니터";
+            this.Text = "이벤트 모니터";
             this.Load += new System.EventHandler(this.frmEvent_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmEvent_FormClosing);
             this.groupBox1.ResumeLayout(false);

@@ -88,7 +88,7 @@
             this.cmdOpen.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdOpen.Size = new System.Drawing.Size(91, 33);
             this.cmdOpen.TabIndex = 23;
-            this.cmdOpen.Text = "Open";
+            this.cmdOpen.Text = "열기";
             this.cmdOpen.UseVisualStyleBackColor = false;
             this.cmdOpen.Click += new System.EventHandler(this.cmdOpen_Click);
             // 
@@ -103,7 +103,7 @@
             this.cmdLockCtl.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdLockCtl.Size = new System.Drawing.Size(117, 33);
             this.cmdLockCtl.TabIndex = 26;
-            this.cmdLockCtl.Text = "Lock Control";
+            this.cmdLockCtl.Text = "잠금 제어";
             this.cmdLockCtl.UseVisualStyleBackColor = false;
             this.cmdLockCtl.Click += new System.EventHandler(this.cmdLockCtl_Click);
             // 
@@ -118,7 +118,7 @@
             this.cmdSystemInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSystemInfo.Size = new System.Drawing.Size(113, 33);
             this.cmdSystemInfo.TabIndex = 25;
-            this.cmdSystemInfo.Text = "System Info";
+            this.cmdSystemInfo.Text = "시스템 정보";
             this.cmdSystemInfo.UseVisualStyleBackColor = false;
             this.cmdSystemInfo.Click += new System.EventHandler(this.cmdSystemInfo_Click);
             // 
@@ -148,7 +148,7 @@
             this.frmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMain.Size = new System.Drawing.Size(272, 313);
             this.frmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMain.TabIndex = 21;
             this.frmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMain.TabStop = false;
-            this.frmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMain.Text = "Management Group";
+            this.frmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMain.Text = "관리 그룹";
             // 
             // cmdEventMonitor
             // 
@@ -161,7 +161,7 @@
             this.cmdEventMonitor.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEventMonitor.Size = new System.Drawing.Size(117, 33);
             this.cmdEventMonitor.TabIndex = 33;
-            this.cmdEventMonitor.Text = "Event Monitor";
+            this.cmdEventMonitor.Text = "이벤트 모니터";
             this.cmdEventMonitor.UseVisualStyleBackColor = false;
             this.cmdEventMonitor.Click += new System.EventHandler(this.cmdEventMoniter_Click);
             // 
@@ -176,7 +176,7 @@
             this.cmdLogTz.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdLogTz.Size = new System.Drawing.Size(117, 33);
             this.cmdLogTz.TabIndex = 32;
-            this.cmdLogTz.Text = "Log TZone";
+            this.cmdLogTz.Text = "로그 시간대";
             this.cmdLogTz.UseVisualStyleBackColor = false;
             this.cmdLogTz.Click += new System.EventHandler(this.cmdLogTz_Click);
             // 
@@ -191,7 +191,7 @@
             this.cmdScreenSaver.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdScreenSaver.Size = new System.Drawing.Size(113, 33);
             this.cmdScreenSaver.TabIndex = 31;
-            this.cmdScreenSaver.Text = "Screen Saver";
+            this.cmdScreenSaver.Text = "화면 보호기";
             this.cmdScreenSaver.UseVisualStyleBackColor = false;
             this.cmdScreenSaver.Click += new System.EventHandler(this.cmdScreenSaver_Click);
             // 
@@ -206,7 +206,7 @@
             this.cmdProxy.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdProxy.Size = new System.Drawing.Size(117, 33);
             this.cmdProxy.TabIndex = 30;
-            this.cmdProxy.Text = "Daigong";
+            this.cmdProxy.Text = "대공";
             this.cmdProxy.UseVisualStyleBackColor = false;
             this.cmdProxy.Click += new System.EventHandler(this.cmdProxy_Click);
             // 
@@ -221,7 +221,7 @@
             this.cmdAccessTz.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdAccessTz.Size = new System.Drawing.Size(117, 33);
             this.cmdAccessTz.TabIndex = 29;
-            this.cmdAccessTz.Text = "Access TZone";
+            this.cmdAccessTz.Text = "출입 시간대";
             this.cmdAccessTz.UseVisualStyleBackColor = false;
             this.cmdAccessTz.Click += new System.EventHandler(this.cmdAccessTz_Click);
             // 
@@ -236,7 +236,7 @@
             this.cmdDepartment.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdDepartment.Size = new System.Drawing.Size(113, 33);
             this.cmdDepartment.TabIndex = 27;
-            this.cmdDepartment.Text = "Department";
+            this.cmdDepartment.Text = "부서";
             this.cmdDepartment.UseVisualStyleBackColor = false;
             this.cmdDepartment.Click += new System.EventHandler(this.cmdDepartment_Click);
             // 
@@ -251,7 +251,7 @@
             this.cmdBellInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdBellInfo.Size = new System.Drawing.Size(113, 33);
             this.cmdBellInfo.TabIndex = 24;
-            this.cmdBellInfo.Text = "Bell time";
+            this.cmdBellInfo.Text = "벨 시간";
             this.cmdBellInfo.UseVisualStyleBackColor = false;
             this.cmdBellInfo.Click += new System.EventHandler(this.cmdBellInfo_Click);
             // 
@@ -266,7 +266,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(236, 33);
             this.cmdExit.TabIndex = 5;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -281,7 +281,7 @@
             this.cmdLogData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdLogData.Size = new System.Drawing.Size(236, 33);
             this.cmdLogData.TabIndex = 4;
-            this.cmdLogData.Text = "Log Data Management";
+            this.cmdLogData.Text = "로그 데이터 관리";
             this.cmdLogData.UseVisualStyleBackColor = false;
             this.cmdLogData.Click += new System.EventHandler(this.cmdLogData_Click);
             // 
@@ -296,7 +296,7 @@
             this.cmdEnrollData.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEnrollData.Size = new System.Drawing.Size(236, 33);
             this.cmdEnrollData.TabIndex = 3;
-            this.cmdEnrollData.Text = "Enroll Data Management";
+            this.cmdEnrollData.Text = "등록 데이터 관리";
             this.cmdEnrollData.UseVisualStyleBackColor = false;
             this.cmdEnrollData.Click += new System.EventHandler(this.cmdEnrollData_Click);
             // 
@@ -311,7 +311,7 @@
             this.cmdProuctCode.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdProuctCode.Size = new System.Drawing.Size(113, 33);
             this.cmdProuctCode.TabIndex = 2;
-            this.cmdProuctCode.Text = "Get SN";
+            this.cmdProuctCode.Text = "시리얼 번호 읽기";
             this.cmdProuctCode.UseVisualStyleBackColor = false;
             this.cmdProuctCode.Click += new System.EventHandler(this.cmdProuctCode_Click);
             // 
@@ -357,7 +357,7 @@
             this.lbSubject.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lbSubject.Size = new System.Drawing.Size(196, 31);
             this.lbSubject.TabIndex = 20;
-            this.lbSubject.Text = "SBXPC Sample";
+            this.lbSubject.Text = "SBXPC 샘플";
             this.lbSubject.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // txtPassword
@@ -438,7 +438,7 @@
             this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label2.Size = new System.Drawing.Size(78, 19);
             this.label2.TabIndex = 18;
-            this.label2.Text = "Device ID :";
+            this.label2.Text = "장치 ID :";
             // 
             // optNetworkDevice
             // 
@@ -453,7 +453,7 @@
             this.optNetworkDevice.Size = new System.Drawing.Size(147, 23);
             this.optNetworkDevice.TabIndex = 14;
             this.optNetworkDevice.TabStop = true;
-            this.optNetworkDevice.Text = "Network Device";
+            this.optNetworkDevice.Text = "네트워크 장치";
             this.optNetworkDevice.UseVisualStyleBackColor = false;
             this.optNetworkDevice.CheckedChanged += new System.EventHandler(this.optNetworkDevice_CheckedChanged);
             // 
@@ -469,7 +469,7 @@
             this.lblPassword.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblPassword.Size = new System.Drawing.Size(76, 19);
             this.lblPassword.TabIndex = 18;
-            this.lblPassword.Text = "Password :";
+            this.lblPassword.Text = "비밀번호 :";
             // 
             // lblIPAddress
             // 
@@ -483,7 +483,7 @@
             this.lblIPAddress.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblIPAddress.Size = new System.Drawing.Size(83, 19);
             this.lblIPAddress.TabIndex = 10;
-            this.lblIPAddress.Text = "Ip Address :";
+            this.lblIPAddress.Text = "IP 주소 :";
             // 
             // lblPortNo
             // 
@@ -497,7 +497,7 @@
             this.lblPortNo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblPortNo.Size = new System.Drawing.Size(96, 19);
             this.lblPortNo.TabIndex = 9;
-            this.lblPortNo.Text = "Port Number :";
+            this.lblPortNo.Text = "포트 번호 :";
             // 
             // optUSBDevice
             // 
@@ -511,7 +511,7 @@
             this.optUSBDevice.Size = new System.Drawing.Size(123, 27);
             this.optUSBDevice.TabIndex = 24;
             this.optUSBDevice.TabStop = true;
-            this.optUSBDevice.Text = "USB Device";
+            this.optUSBDevice.Text = "USB 장치";
             this.optUSBDevice.UseVisualStyleBackColor = false;
             this.optUSBDevice.CheckedChanged += new System.EventHandler(this.optUSBDevice_CheckedChanged);
             // 
@@ -527,7 +527,7 @@
             this.optSerialDevice.Size = new System.Drawing.Size(123, 27);
             this.optSerialDevice.TabIndex = 25;
             this.optSerialDevice.TabStop = true;
-            this.optSerialDevice.Text = "Serial Device";
+            this.optSerialDevice.Text = "시리얼 장치";
             this.optSerialDevice.UseVisualStyleBackColor = false;
             this.optSerialDevice.CheckedChanged += new System.EventHandler(this.optSerialDevice_CheckedChanged);
             // 
@@ -542,7 +542,7 @@
             this.cmdClose.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdClose.Size = new System.Drawing.Size(91, 33);
             this.cmdClose.TabIndex = 22;
-            this.cmdClose.Text = "Close";
+            this.cmdClose.Text = "닫기";
             this.cmdClose.UseVisualStyleBackColor = false;
             this.cmdClose.Click += new System.EventHandler(this.cmdClose_Click);
             // 
@@ -562,7 +562,7 @@
             this.Frame4.Size = new System.Drawing.Size(524, 67);
             this.Frame4.TabIndex = 27;
             this.Frame4.TabStop = false;
-            this.Frame4.Text = "Connect";
+            this.Frame4.Text = "연결";
             // 
             // cmbMachineNumber
             // 
@@ -599,7 +599,7 @@
             this.lblMachineNumber.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblMachineNumber.Size = new System.Drawing.Size(122, 19);
             this.lblMachineNumber.TabIndex = 21;
-            this.lblMachineNumber.Text = "Machine Number :";
+            this.lblMachineNumber.Text = "장치 번호 :";
             // 
             // lblComPort
             // 
@@ -613,7 +613,7 @@
             this.lblComPort.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblComPort.Size = new System.Drawing.Size(76, 19);
             this.lblComPort.TabIndex = 13;
-            this.lblComPort.Text = "ComPort : ";
+            this.lblComPort.Text = "COM 포트 : ";
             this.lblComPort.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // Frame3
@@ -686,7 +686,7 @@
             this.lblBaudrate.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.lblBaudrate.Size = new System.Drawing.Size(75, 19);
             this.lblBaudrate.TabIndex = 28;
-            this.lblBaudrate.Text = "Baudrate : ";
+            this.lblBaudrate.Text = "전송속도 : ";
             this.lblBaudrate.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // SBXPC1
@@ -714,7 +714,7 @@
             this.Controls.Add(this.Frame3);
             this.MaximizeBox = false;
             this.Name = "frmMain";
-            this.Text = "C#";
+            this.Text = "SBXPC 샘플";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.frmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMainfrmMain.ResumeLayout(false);

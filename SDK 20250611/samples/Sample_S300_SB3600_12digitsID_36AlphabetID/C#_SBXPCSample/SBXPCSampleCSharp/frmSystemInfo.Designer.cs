@@ -56,7 +56,7 @@
             this.cmdSetDeviceTime.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetDeviceTime.Size = new System.Drawing.Size(125, 32);
             this.cmdSetDeviceTime.TabIndex = 29;
-            this.cmdSetDeviceTime.Text = "SetDeviceTime";
+            this.cmdSetDeviceTime.Text = "장치 시간 설정";
             this.cmdSetDeviceTime.UseVisualStyleBackColor = false;
             this.cmdSetDeviceTime.Click += new System.EventHandler(this.cmdSetDeviceTime_Click);
             // 
@@ -71,7 +71,7 @@
             this.cmdGetDeviceTime.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetDeviceTime.Size = new System.Drawing.Size(125, 32);
             this.cmdGetDeviceTime.TabIndex = 28;
-            this.cmdGetDeviceTime.Text = "GetDeviceTime";
+            this.cmdGetDeviceTime.Text = "장치 시간 읽기";
             this.cmdGetDeviceTime.UseVisualStyleBackColor = false;
             this.cmdGetDeviceTime.Click += new System.EventHandler(this.cmdGetDeviceTime_Click);
             // 
@@ -86,7 +86,7 @@
             this.cmdGetDeviceInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetDeviceInfo.Size = new System.Drawing.Size(125, 32);
             this.cmdGetDeviceInfo.TabIndex = 27;
-            this.cmdGetDeviceInfo.Text = "GetDeviceInfo";
+            this.cmdGetDeviceInfo.Text = "장치 정보 읽기";
             this.cmdGetDeviceInfo.UseVisualStyleBackColor = false;
             this.cmdGetDeviceInfo.Click += new System.EventHandler(this.cmdGetDeviceInfo_Click);
             // 
@@ -101,7 +101,7 @@
             this.cmdExit.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdExit.Size = new System.Drawing.Size(125, 32);
             this.cmdExit.TabIndex = 26;
-            this.cmdExit.Text = "Exit";
+            this.cmdExit.Text = "종료";
             this.cmdExit.UseVisualStyleBackColor = false;
             this.cmdExit.Click += new System.EventHandler(this.cmdExit_Click);
             // 
@@ -116,7 +116,7 @@
             this.cmdPowerOn.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdPowerOn.Size = new System.Drawing.Size(125, 32);
             this.cmdPowerOn.TabIndex = 25;
-            this.cmdPowerOn.Text = "PowerOnDevice";
+            this.cmdPowerOn.Text = "장치 켜기";
             this.cmdPowerOn.UseVisualStyleBackColor = false;
             this.cmdPowerOn.Click += new System.EventHandler(this.cmdPowerOn_Click);
             // 
@@ -127,11 +127,11 @@
             this.PowerOffDevice.Font = new System.Drawing.Font("Times New Roman", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.PowerOffDevice.ForeColor = System.Drawing.SystemColors.ControlText;
             this.PowerOffDevice.Location = new System.Drawing.Point(152, 120);
-            this.PowerOffDevice.Name = "PowerOffDevice";
+            this.PowerOffDevice.Name = "장치 끄기";
             this.PowerOffDevice.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.PowerOffDevice.Size = new System.Drawing.Size(125, 32);
             this.PowerOffDevice.TabIndex = 24;
-            this.PowerOffDevice.Text = "PowerOffDevice";
+            this.PowerOffDevice.Text = "장치 끄기";
             this.PowerOffDevice.UseVisualStyleBackColor = false;
             this.PowerOffDevice.Click += new System.EventHandler(this.PowerOffDevice_Click);
             // 
@@ -146,7 +146,7 @@
             this.cmdSetDeviceInfo.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdSetDeviceInfo.Size = new System.Drawing.Size(125, 32);
             this.cmdSetDeviceInfo.TabIndex = 23;
-            this.cmdSetDeviceInfo.Text = "SetDeviceInfo";
+            this.cmdSetDeviceInfo.Text = "장치 정보 설정";
             this.cmdSetDeviceInfo.UseVisualStyleBackColor = false;
             this.cmdSetDeviceInfo.Click += new System.EventHandler(this.cmdSetDeviceInfo_Click);
             // 
@@ -161,7 +161,7 @@
             this.cmdEnableDevice.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdEnableDevice.Size = new System.Drawing.Size(125, 32);
             this.cmdEnableDevice.TabIndex = 22;
-            this.cmdEnableDevice.Text = "DisableDevice";
+            this.cmdEnableDevice.Text = "장치 비활성화";
             this.cmdEnableDevice.UseVisualStyleBackColor = false;
             this.cmdEnableDevice.Click += new System.EventHandler(this.cmdEnableDevice_Click);
             // 
@@ -228,7 +228,7 @@
             this.cmdGetDeviceStaus.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetDeviceStaus.Size = new System.Drawing.Size(142, 32);
             this.cmdGetDeviceStaus.TabIndex = 17;
-            this.cmdGetDeviceStaus.Text = "GetDeviceStatus";
+            this.cmdGetDeviceStaus.Text = "장치 상태 읽기";
             this.cmdGetDeviceStaus.UseVisualStyleBackColor = false;
             this.cmdGetDeviceStaus.Click += new System.EventHandler(this.cmdGetDeviceStaus_Click);
             // 
@@ -256,7 +256,7 @@
             this.Label1.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.Label1.Size = new System.Drawing.Size(97, 23);
             this.Label1.TabIndex = 21;
-            this.Label1.Text = "Status Value:";
+            this.Label1.Text = "상태 값:";
             // 
             // lblStatus
             // 
@@ -306,8 +306,8 @@
             this.Controls.Add(this.Label1);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.lblMessage);
-            this.Name = "frmSystemInfo";
-            this.Text = "frmSystemInfo";
+            this.Name = "시스템 정보";
+            this.Text = "시스템 정보";
             this.Load += new System.EventHandler(this.frmSystemInfo_Load);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmSystemInfo_FormClosed);
             this.ResumeLayout(false);

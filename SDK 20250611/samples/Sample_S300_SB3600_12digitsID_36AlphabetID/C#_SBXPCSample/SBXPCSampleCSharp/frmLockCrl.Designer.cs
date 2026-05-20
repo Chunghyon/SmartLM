@@ -51,7 +51,7 @@
             this.cmdWarnCancel.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdWarnCancel.Size = new System.Drawing.Size(125, 33);
             this.cmdWarnCancel.TabIndex = 15;
-            this.cmdWarnCancel.Text = "Warn Cancel";
+            this.cmdWarnCancel.Text = "경보 해제";
             this.cmdWarnCancel.UseVisualStyleBackColor = false;
             this.cmdWarnCancel.Click += new System.EventHandler(this.cmdWarnCancel_Click);
             // 
@@ -66,7 +66,7 @@
             this.cmdRestart.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdRestart.Size = new System.Drawing.Size(124, 32);
             this.cmdRestart.TabIndex = 14;
-            this.cmdRestart.Text = "Reboot";
+            this.cmdRestart.Text = "재시작";
             this.cmdRestart.UseVisualStyleBackColor = false;
             this.cmdRestart.Click += new System.EventHandler(this.cmdRestart_Click);
             // 
@@ -81,7 +81,7 @@
             this.cmdAutoRecover.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdAutoRecover.Size = new System.Drawing.Size(124, 34);
             this.cmdAutoRecover.TabIndex = 13;
-            this.cmdAutoRecover.Text = "Auto Recover";
+            this.cmdAutoRecover.Text = "자동 복구";
             this.cmdAutoRecover.UseVisualStyleBackColor = false;
             this.cmdAutoRecover.Click += new System.EventHandler(this.cmdAutoRecover_Click);
             // 
@@ -96,7 +96,7 @@
             this.cmdUncondClose.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdUncondClose.Size = new System.Drawing.Size(126, 33);
             this.cmdUncondClose.TabIndex = 12;
-            this.cmdUncondClose.Text = "Uncond Close";
+            this.cmdUncondClose.Text = "강제 잠금";
             this.cmdUncondClose.UseVisualStyleBackColor = false;
             this.cmdUncondClose.Click += new System.EventHandler(this.cmdUncondClose_Click);
             // 
@@ -111,7 +111,7 @@
             this.cmdUncondOpen.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdUncondOpen.Size = new System.Drawing.Size(126, 33);
             this.cmdUncondOpen.TabIndex = 11;
-            this.cmdUncondOpen.Text = "Uncond Open";
+            this.cmdUncondOpen.Text = "강제 열기";
             this.cmdUncondOpen.UseVisualStyleBackColor = false;
             this.cmdUncondOpen.Click += new System.EventHandler(this.cmdUncondOpen_Click);
             // 
@@ -126,7 +126,7 @@
             this.cmdGetDoorStatus.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdGetDoorStatus.Size = new System.Drawing.Size(122, 33);
             this.cmdGetDoorStatus.TabIndex = 10;
-            this.cmdGetDoorStatus.Text = "Get DoorStatus";
+            this.cmdGetDoorStatus.Text = "도어 상태 읽기";
             this.cmdGetDoorStatus.UseVisualStyleBackColor = false;
             this.cmdGetDoorStatus.Click += new System.EventHandler(this.cmdGetDoorStatus_Click);
             // 
@@ -141,7 +141,7 @@
             this.cmdDoorOpen.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.cmdDoorOpen.Size = new System.Drawing.Size(125, 33);
             this.cmdDoorOpen.TabIndex = 9;
-            this.cmdDoorOpen.Text = "Door Open";
+            this.cmdDoorOpen.Text = "도어 열기";
             this.cmdDoorOpen.UseVisualStyleBackColor = false;
             this.cmdDoorOpen.Click += new System.EventHandler(this.cmdDoorOpen_Click);
             // 
@@ -175,7 +175,7 @@
             this.Controls.Add(this.lblMessage);
             this.MaximizeBox = false;
             this.Name = "frmLockCtrl";
-            this.Text = "frmLockCrl";
+            this.Text = "잠금 제어";
             this.Load += new System.EventHandler(this.frmLockCrl_Load);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmLockCrl_FormClosed);
             this.ResumeLayout(false);

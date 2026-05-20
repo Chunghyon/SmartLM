@@ -1,7 +1,12 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "D:\\Documents\\Smart_LM_China\\SDK 20250611\\samples\\Sample_A3-8190\\C#_A3-8190_HTTPServer\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{8F3D29E1-5C2A-4B7D-9F1E-A6C0D3B4E5F8}|A3-8190_HTTPServer\\A3-8190_HTTPServer.csproj|d:\\documents\\smart_lm_china\\sdk 20250611\\samples\\sample_a3-8190\\c#_a3-8190_httpserver\\a3-8190_httpserver\\frmrecords.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8F3D29E1-5C2A-4B7D-9F1E-A6C0D3B4E5F8}|A3-8190_HTTPServer\\A3-8190_HTTPServer.csproj|solutionrelative:a3-8190_httpserver\\frmrecords.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,11 +14,20 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "frmRecords.Designer.cs",
+              "DocumentMoniker": "D:\\Documents\\Smart_LM_China\\SDK 20250611\\samples\\Sample_A3-8190\\C#_A3-8190_HTTPServer\\A3-8190_HTTPServer\\frmRecords.Designer.cs",
+              "RelativeDocumentMoniker": "A3-8190_HTTPServer\\frmRecords.Designer.cs",
+              "ToolTip": "D:\\Documents\\Smart_LM_China\\SDK 20250611\\samples\\Sample_A3-8190\\C#_A3-8190_HTTPServer\\A3-8190_HTTPServer\\frmRecords.Designer.cs",
+              "RelativeToolTip": "A3-8190_HTTPServer\\frmRecords.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-20T03:28:14.203Z",
+              "EditorCaption": ""
             }
           ]
         }
