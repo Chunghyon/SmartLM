@@ -100,10 +100,10 @@
 		<R55M>EquptImage\R55M</R55M>
 		<R55MLink>LinkImage\R55M</R55MLink>
 		<TypeList>8810T,8820T,8840T,9910T,9920T,9940T,9910R,9920R,9940R</TypeList>
-		<EquptTypeInfo_E32>32路%1控制器，可以支持32%2，也可以通过增加1个扩展板支持达到64%2。主板支持26000用户与10万笔记录。</EquptTypeInfo_E32>
-		<EquptTypeInfo_E16>16路%1控制器，可以支持16%2，也可以通过增加1个扩展板支持达到32%2。主板支持26000用户与10万笔记录。</EquptTypeInfo_E16>
-		<EquptTypeInfo_OE8>脱机8路%1控制器，可以支持8%2，也可以通过增加1个扩展板支持达到16%2。主板支持90000用户与10万笔记录。</EquptTypeInfo_OE8>
-		<EquptTypeInfo_OE16>脱机16路%1控制器，可以支持16%2。主板支持90000用户与10万笔记录。</EquptTypeInfo_OE16>
+		<EquptTypeInfo_E32>32채널 %1 콘트롤러. 32개 %2 지원, 확장 보드 추가 시 64개 %2까지 확장 가능. 메인보드 최대 26,000명 사용자, 100,000건 기록 지원.</EquptTypeInfo_E32>
+		<EquptTypeInfo_E16>16채널 %1 콘트롤러. 16개 %2 지원, 확장 보드 추가 시 32개 %2까지 확장 가능. 메인보드 최대 26,000명 사용자, 100,000건 기록 지원.</EquptTypeInfo_E16>
+		<EquptTypeInfo_OE8>오프라인 8채널 %1 콘트롤러. 8개 %2 지원, 확장 보드 추가 시 16개 %2까지 확장 가능. 메인보드 최대 90,000명 사용자, 100,000건 기록 지원.</EquptTypeInfo_OE8>
+		<EquptTypeInfo_OE16>오프라인 16채널 %1 콘트롤러. 16개 %2 지원. 메인보드 최대 90,000명 사용자, 100,000건 기록 지원.</EquptTypeInfo_OE16>
 		<FP1>EquptImage\FP\A102E</FP1>
 		<FP1Link>LinkImage\FP\A102</FP1Link>
 		<FP2>EquptImage\FP\A103E</FP2>
