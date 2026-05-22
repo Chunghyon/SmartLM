@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!--liyi-->
+﻿<?xml version="1.0" encoding="utf-8"?><!--liyi-->
 <Languages>
 	<System>
 		<System_Font_Name>맑은 고딕</System_Font_Name>
@@ -11563,8 +11563,8 @@ Do you want to continue?</ReuploadMsg>
 	</FrmEmplListSelect_MuchSearch>
 	<FrmEmplListInfo_PhotoDemo>
 		<FormCaption>Photo Demo</FormCaption>
-		<Close>닫기</Close>
-		<chkShow>Display for each</chkShow>
+       <Close>Close</Close>
+		<chkShow>NoTip</chkShow>
 		<PhotoTip>Tip:file size:20KB, please use solid background for photos;
 		Pixel range:240*320 -- 1920*1280,Best pixel:480 X 640.</PhotoTip>
 	</FrmEmplListInfo_PhotoDemo>
@@ -11618,11 +11618,11 @@ The photo file Pixel is out of range, Pixel range:240*320 -- 1920*1280!</ImageEr
 		<ImageTip>Note:Avoid lighting too bright or too dark when taking photos.</ImageTip>
 	</FrmEmplListInfo_ByFace>
 	<FrmEmplListInfo_ImageMinTip>
-		<FormCaption>사진 알림</FormCaption>
-		<cmdSave>사용</cmdSave>
-		<CmdExit>닫기</CmdExit>
-		<chkNotShow>다시 표시 안 함</chkNotShow>
-		<lblTipTitle>안내</lblTipTitle>
+        <FormCaption>Photo Tip</FormCaption>
+		<cmdSave>Use</cmdSave>
+		<CmdExit>Close</CmdExit>
+		<chkNotShow>NoTip</chkNotShow>
+		<lblTipTitle>Tip</lblTipTitle>
 		<LblTip>  The photo is not clear, and it can cause misidentification!
 Continue using this photo?</LblTip>
 	</FrmEmplListInfo_ImageMinTip>

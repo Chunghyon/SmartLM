@@ -13,6 +13,9 @@ AllowNoIcons=yes
 ; 전체 설치 파일 (Program Files 원본)
 Source: "C:\Program Files (x86)\Access Control System\*"; DestDir: "{app}"; Flags: recursesubdirs
 
+; 패치된 Card3500.exe (중국어 버튼 한국어 패치본으로 덮어쓰기)
+Source: "D:\Documents\Smart_LM_China\Inno_Setup\Card3500.exe"; DestDir: "{app}"; Flags: overwritereadonly
+
 ; 한글 언어 파일 (Inno_Setup 폴더의 수정본으로 덮어쓰기)
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\Korean.XML"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\SoftWareInfo_Korean.XML"; DestDir: "{app}"; Flags: overwritereadonly
