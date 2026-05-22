@@ -22,6 +22,8 @@ Source: "D:\Documents\Smart_LM_China\Inno_Setup\SoftWareInfo_Korean.XML"; DestDi
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\System.XML"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\ICCard_Editer.exe.config"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\Language\ICCardEditer\Korean.xml"; DestDir: "{app}\Language\ICCardEditer"; Flags: overwritereadonly
+Source: "D:\Documents\Smart_LM_China\Inno_Setup\AutoDismissPixelPopup.ps1"; DestDir: "{app}"; Flags: overwritereadonly
+Source: "D:\Documents\Smart_LM_China\Inno_Setup\AutoDismissPixelPopup.cmd"; DestDir: "{app}"; Flags: overwritereadonly
 
 [Tasks]
 ; 바탕화면 단축키 생성 여부를 사용자에게 묻는 옵션
@@ -75,6 +77,7 @@ Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\m
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\MSWINSCK.OCX"""; Flags: runhidden
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\richtx32.Ocx"""; Flags: runhidden
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\TABCTL32.OCX"""; Flags: runhidden
+Filename: "{app}\AutoDismissPixelPopup.cmd"; Flags: runhidden skipifsilent postinstall
 
 [UninstallRun]
 ; 언인스톨 시 OCX 등록 해제
