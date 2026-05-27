@@ -77,7 +77,7 @@ Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\m
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\MSWINSCK.OCX"""; Flags: runhidden
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\richtx32.Ocx"""; Flags: runhidden
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\Setup\Software\Package\TABCTL32.OCX"""; Flags: runhidden
-Filename: "{app}\AutoDismissPixelPopup.cmd"; Flags: runhidden skipifsilent postinstall
+Filename: "{app}\AutoDismissPixelPopup.cmd"; Flags: runhidden skipifsilent
 
 [UninstallRun]
 ; 언인스톨 시 OCX 등록 해제

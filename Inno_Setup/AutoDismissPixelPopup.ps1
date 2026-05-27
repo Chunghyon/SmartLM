@@ -20,7 +20,32 @@ public static class U32 {
 }
 "@
 
-$lastClick = Get-Date "2000-01-01"
+$clicked = New-Object 'System.Collections.Generic.HashSet[Int64]'
+
+function Has-ImageCutWindow {
+  $found = $false
+  [U32]::EnumWindows({
+    param($h,$p)
+    if (-not [U32]::IsWindowVisible($h)) { return $true }
+    $t = New-Object System.Text.StringBuilder 256
+    $c = New-Object System.Text.StringBuilder 64
+    [U32]::GetWindowText($h,$t,256) | Out-Null
+    [U32]::GetClassName($h,$c,64) | Out-Null
+    $title = $t.ToString()
+    if ($c.ToString() -eq 'ThunderRT6FormDC' -and ($title -eq '이미지 자르기' -or $title -eq 'Image Clip')) {
+      $script:foundImageCut = $true
+      return $false
+    }
+    return $true
+  }, [IntPtr]::Zero) | Out-Null
+
+  if ($script:foundImageCut) {
+    $script:foundImageCut = $false
+    return $true
+  }
+  return $false
+}
+
 while ($true) {
   $targets = New-Object System.Collections.ArrayList
   [U32]::EnumWindows({
@@ -36,7 +61,20 @@ while ($true) {
     return $true
   }, [IntPtr]::Zero) | Out-Null
 
+  $alive = New-Object 'System.Collections.Generic.HashSet[Int64]'
+  foreach ($w in $targets) { [void]$alive.Add($w.ToInt64()) }
+
+  $toRemove = New-Object System.Collections.ArrayList
+  foreach ($h in $clicked) {
+    if (-not $alive.Contains($h)) { [void]$toRemove.Add($h) }
+  }
+  foreach ($h in $toRemove) { [void]$clicked.Remove([Int64]$h) }
+
   foreach ($w in $targets) {
+    $wid = $w.ToInt64()
+    if ($clicked.Contains($wid)) { continue }
+    if (-not (Has-ImageCutWindow)) { continue }
+
     $buttons = New-Object System.Collections.ArrayList
     [U32]::EnumChildWindows($w, {
       param($ch,$p)
@@ -56,21 +94,18 @@ while ($true) {
     }, [IntPtr]::Zero) | Out-Null
 
     if ($buttons.Count -ge 2) {
-      $rightBtn = $buttons | Sort-Object Right | Select-Object -Last 1
-      $now = Get-Date
-      if (($now - $lastClick).TotalMilliseconds -gt 800) {
-        [U32]::SetForegroundWindow($w) | Out-Null
-        $x = [int](($rightBtn.Left + $rightBtn.Right) / 2)
-        $y = [int](($rightBtn.Top + $rightBtn.Bottom) / 2)
-        [U32]::SetCursorPos($x,$y) | Out-Null
-        Start-Sleep -Milliseconds 50
-        [U32]::mouse_event([U32]::MOUSEEVENTF_LEFTDOWN,0,0,0,[UIntPtr]::Zero)
-        Start-Sleep -Milliseconds 30
-        [U32]::mouse_event([U32]::MOUSEEVENTF_LEFTUP,0,0,0,[UIntPtr]::Zero)
-        $lastClick = $now
-      }
+      $leftBtn = $buttons | Sort-Object Left | Select-Object -First 1
+      [U32]::SetForegroundWindow($w) | Out-Null
+      $x = [int](($leftBtn.Left + $leftBtn.Right) / 2)
+      $y = [int](($leftBtn.Top + $leftBtn.Bottom) / 2)
+      [U32]::SetCursorPos($x,$y) | Out-Null
+      Start-Sleep -Milliseconds 50
+      [U32]::mouse_event([U32]::MOUSEEVENTF_LEFTDOWN,0,0,0,[UIntPtr]::Zero)
+      Start-Sleep -Milliseconds 30
+      [U32]::mouse_event([U32]::MOUSEEVENTF_LEFTUP,0,0,0,[UIntPtr]::Zero)
+      [void]$clicked.Add($wid)
     }
   }
 
-  Start-Sleep -Milliseconds 150
+  Start-Sleep -Milliseconds 120
 }
