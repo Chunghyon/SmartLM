@@ -861,7 +861,7 @@ Tip:If the database often damaged we recommended to use SQL Server database!</Da
 		<ListCaption_1>출입문</ListCaption_1>
 		<ListCaption_2>사용자 추가</ListCaption_2>
 		<ListCaption_3>자동 등록</ListCaption_3>
-		<ListCaption_A>출입문</ListCaption_A>
+		<ListCaption_A>접근레벨 관리</ListCaption_A>
 		<ListCaption_4>이벤트 기록</ListCaption_4>
 		<ListCaption_8>실시간 이벤트</ListCaption_8>
 		<ListCaption_9>전자 지도</ListCaption_9>
@@ -872,9 +872,9 @@ Tip:If the database often damaged we recommended to use SQL Server database!</Da
 		<ListCaption_5_1>근태 관리</ListCaption_5_1>
 		<ListCaption_6>순찰 보고서</ListCaption_6>
 		<ListCaption_7>엘리베이터 제어</ListCaption_7>
-		<TbrCaption_0>소프트웨어 설정</TbrCaption_0>
-		<TbrCaption_1>장치 설치</TbrCaption_1>
-		<TbrCaption_2>회사</TbrCaption_2>
+		<TbrCaption_0>시스템 설정</TbrCaption_0>
+		<TbrCaption_1>로비마스터 설치</TbrCaption_1>
+		<TbrCaption_2>단지 관리</TbrCaption_2>
 		<TbrCaption_3>출입 제어</TbrCaption_3>
 		<TbrCaption_4>근태</TbrCaption_4>
 		<TbrCaption_5>순찰</TbrCaption_5>
@@ -904,7 +904,7 @@ Tip:If the database often damaged we recommended to use SQL Server database!</Da
 		<mnuSetupEqupt_2>자동 검색</mnuSetupEqupt_2>
 		<mnuSetupEqupt_3>수동 추가</mnuSetupEqupt_3>
 		<mnuCorInfo_0>%1</mnuCorInfo_0>
-		<mnuCorInfo_1>%1</mnuCorInfo_1>
+		<mnuCorInfo_1>동호 관리</mnuCorInfo_1>
 		<mnuCorInfo_2>카드 데이터베이스</mnuCorInfo_2>
 		<mnuCorInfo_3>기본 정보</mnuCorInfo_3>
 		<mnuCorInfo_4>사용자 관리</mnuCorInfo_4>

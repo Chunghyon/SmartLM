@@ -19,6 +19,7 @@ Source: "D:\Documents\Smart_LM_China\Inno_Setup\Card3500.exe"; DestDir: "{app}";
 ; 한글 언어 파일 (Inno_Setup 폴더의 수정본으로 덮어쓰기)
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\Korean.XML"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\SoftWareInfo_Korean.XML"; DestDir: "{app}"; Flags: overwritereadonly
+Source: "D:\Documents\Smart_LM_China\Inno_Setup\SoftWareInfo_English.XML"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\System.XML"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\ICCard_Editer.exe.config"; DestDir: "{app}"; Flags: overwritereadonly
 Source: "D:\Documents\Smart_LM_China\Inno_Setup\Language\ICCardEditer\Korean.xml"; DestDir: "{app}\Language\ICCardEditer"; Flags: overwritereadonly
