@@ -858,10 +858,10 @@ Tip:If the database often damaged we recommended to use SQL Server database!</Da
 		<ListHeader_0>기능 메뉴</ListHeader_0>
 		<ListSeparatorTitle_0>기본 설정</ListSeparatorTitle_0>
 		<ListCaption_0>시스템 설정</ListCaption_0>
-		<ListCaption_1>출입 제어기</ListCaption_1>
+		<ListCaption_1>출입문</ListCaption_1>
 		<ListCaption_2>사용자 추가</ListCaption_2>
 		<ListCaption_3>자동 등록</ListCaption_3>
-		<ListCaption_A>출입 등급</ListCaption_A>
+		<ListCaption_A>출입문</ListCaption_A>
 		<ListCaption_4>이벤트 기록</ListCaption_4>
 		<ListCaption_8>실시간 이벤트</ListCaption_8>
 		<ListCaption_9>전자 지도</ListCaption_9>
@@ -907,16 +907,16 @@ Tip:If the database often damaged we recommended to use SQL Server database!</Da
 		<mnuCorInfo_1>%1</mnuCorInfo_1>
 		<mnuCorInfo_2>카드 데이터베이스</mnuCorInfo_2>
 		<mnuCorInfo_3>기본 정보</mnuCorInfo_3>
-		<mnuCorInfo_4>카드 사용자 DB</mnuCorInfo_4>
+		<mnuCorInfo_4>사용자 관리</mnuCorInfo_4>
 		<mnuCorInfo_5>-</mnuCorInfo_5>
-		<mnuCorInfo_6>Add New (%Empl%)</mnuCorInfo_6>
+		<mnuCorInfo_6>사용자 추가</mnuCorInfo_6>
 		<mnuCorInfo_7>자동 등록</mnuCorInfo_7>
 		<mnuCorInfo_8>가져오기</mnuCorInfo_8>
 		<mnuCorInfo_9>-</mnuCorInfo_9>
 		<mnuCorInfo_10>검색</mnuCorInfo_10>
 		<mnuCorInfo_11>카드 소지자 추적</mnuCorInfo_11>
 		
-		<mnuDoor_0>출입 제어기</mnuDoor_0>
+		<mnuDoor_0>출입문</mnuDoor_0>
 		<mnuDoor_1>독립형 출입</mnuDoor_1>
 		<mnuDoor_2>근태 단말기</mnuDoor_2>
 		<mnuDoor_3>업로드</mnuDoor_3>
@@ -1303,7 +1303,7 @@ Tip:If the database often damaged we recommended to use SQL Server database!</Da
 		<OptLanguage_2_Caption>English</OptLanguage_2_Caption>
 		<FamSoftwareType_0_Caption>Used At</FamSoftwareType_0_Caption>
 		<OptSoftwareMode_0_Caption>Office</OptSoftwareMode_0_Caption>
-		<OptSoftwareMode_1_Caption>Community</OptSoftwareMode_1_Caption>
+		<OptSoftwareMode_1_Caption>단지</OptSoftwareMode_1_Caption>
 		<OptSoftwareMode_2_Caption>Prison</OptSoftwareMode_2_Caption>
 		<OptSoftwareMode_3_Caption>School</OptSoftwareMode_3_Caption>
 		<FamWorkManage_1_Caption>Analyze Attendance Report</FamWorkManage_1_Caption>
@@ -1916,7 +1916,7 @@ Please operate in the menu:[Door Access - Uploading].</DeleteBlacklistOver>
 		<UpdateDeptLog>Reassign %1: %PName (%PCode)；new %1:%Dept.</UpdateDeptLog>
 	</FrmEmplListChanageDept>
 	<FrmEmplListInfo>
-		<DefaultValue_1>Han Nationality</DefaultValue_1>
+		<DefaultValue_1>무교</DefaultValue_1>
 		<DefaultValue_2>Staff</DefaultValue_2>
 		<DefCountry>Other</DefCountry>
 		<DefNativePlace>Other</DefNativePlace>
@@ -8024,7 +8024,7 @@ The photo file Pixel is out of range, Pixel range:240*320 -- 1920*1280!</ImageEr
 
 		<OptSoftwareMode_3_Caption>School</OptSoftwareMode_3_Caption>
 		<OptSoftwareMode_2_Caption>Prison</OptSoftwareMode_2_Caption>
-		<OptSoftwareMode_1_Caption>Community</OptSoftwareMode_1_Caption>
+		<OptSoftwareMode_1_Caption>단지</OptSoftwareMode_1_Caption>
 		<OptSoftwareMode_0_Caption>Office</OptSoftwareMode_0_Caption>
 		<ChkSelectAll_Caption>Select all\None</ChkSelectAll_Caption>
 		<Label34_Caption>(Note:This interface content effective only in the software the first time run!</Label34_Caption>
@@ -8415,7 +8415,7 @@ The photo file Pixel is out of range, Pixel range:240*320 -- 1920*1280!</ImageEr
 		<ModEnum_IniSoftwareModeTitle_3>User</ModEnum_IniSoftwareModeTitle_3>
 		<ModEnum_IniSoftwareModeTitle_4>Rank</ModEnum_IniSoftwareModeTitle_4>
 		<ModEnum_IniSoftwareModeTitle_5>Titles</ModEnum_IniSoftwareModeTitle_5>
-		<ModEnum_IniSoftwareModeTitle_6>Community</ModEnum_IniSoftwareModeTitle_6>
+		<ModEnum_IniSoftwareModeTitle_6>단지</ModEnum_IniSoftwareModeTitle_6>
 		<ModEnum_IniSoftwareModeTitle_7>Building</ModEnum_IniSoftwareModeTitle_7>
 		<ModEnum_IniSoftwareModeTitle_8>Tenant</ModEnum_IniSoftwareModeTitle_8>
 		<ModEnum_IniSoftwareModeTitle_9>Unit</ModEnum_IniSoftwareModeTitle_9>
