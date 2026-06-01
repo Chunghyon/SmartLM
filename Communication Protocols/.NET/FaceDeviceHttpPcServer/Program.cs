@@ -32,23 +32,36 @@ builder.Services.AddSingleton(sp =>
 
 var app = builder.Build();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapGet("/", () => Results.Ok(new
 {
     name = "FaceDeviceHttpPcServer",
-    purpose = "Phase-1 HTTP integration server for face-recognition terminals",
+    purpose = "Phase-2 HTTP integration server for face-recognition terminals",
     endpoints = new[]
     {
         "/Device/Keepalive",
         "/Device/UploadWorkSetting",
         "/Device/DownloadWorkSetting",
+        "/People/DownloadPeopleList",
+        "/DevicePass/SelectPassInfo",
+        "/DevicePass/SelectDeleteInfo",
+        "/People/SelectDeleteInfo",
         "/Record/UploadIdentifyRecord",
+        "/admin",
         "/admin/devices",
+        "/admin/people",
         "/admin/devices/{sn}",
+        "/admin/devices/{sn}/request-add-people",
+        "/admin/devices/{sn}/request-delete-people",
         "/admin/devices/{sn}/request-sync",
         "/admin/devices/{sn}/request-upload-work-setting",
         "/admin/devices/{sn}/work-setting"
     }
 }));
+
+app.MapGet("/admin", () => Results.Redirect("/admin/"));
 
 app.MapPost("/Device/Keepalive", (KeepaliveRequest request, StateStore store) =>
 {
@@ -96,6 +109,12 @@ app.MapPost("/Device/DownloadWorkSetting", async (HttpRequest request, StateStor
         : Results.Ok(workSetting);
 });
 
+app.MapPost("/People/DownloadPeopleList", DownloadPeopleList);
+app.MapPost("/DevicePass/SelectPassInfo", DownloadPeopleList);
+
+app.MapPost("/DevicePass/SelectDeleteInfo", SelectDeleteInfo);
+app.MapPost("/People/SelectDeleteInfo", SelectDeleteInfo);
+
 app.MapPost("/Record/UploadIdentifyRecord", async (HttpRequest request, StateStore store) =>
 {
     if (!request.HasFormContentType)
@@ -140,6 +159,34 @@ app.MapPost("/Record/UploadIdentifyRecord", async (HttpRequest request, StateSto
     return Results.Ok(ApiResponse.Ok());
 });
 
+app.MapGet("/admin/people", (StateStore store) => Results.Ok(store.GetPeople()));
+
+app.MapPost("/admin/people", (PersonInfo person, StateStore store) =>
+{
+    var normalized = NormalizePerson(person);
+    if (string.IsNullOrWhiteSpace(normalized.UserID))
+    {
+        return Results.BadRequest(new ApiResponse(400, "UserID is required."));
+    }
+
+    return store.TryAddPerson(normalized)
+        ? Results.Ok(ApiResponse.Ok($"Person {normalized.UserID} added and queued for device download."))
+        : Results.Conflict(new ApiResponse(409, $"Person {normalized.UserID} already exists."));
+});
+
+app.MapDelete("/admin/people/{userId}", (string userId, StateStore store) =>
+{
+    var normalizedUserId = userId.Trim();
+    if (string.IsNullOrWhiteSpace(normalizedUserId))
+    {
+        return Results.BadRequest(new ApiResponse(400, "UserID is required."));
+    }
+
+    return store.DeletePerson(normalizedUserId)
+        ? Results.Ok(ApiResponse.Ok($"Person {normalizedUserId} deleted and queued for device removal."))
+        : Results.NotFound(new ApiResponse(404, "Person not found."));
+});
+
 app.MapGet("/admin/devices", (StateStore store) => Results.Ok(store.GetDeviceSummaries()));
 
 app.MapGet("/admin/devices/{sn}", (string sn, StateStore store) =>
@@ -148,6 +195,21 @@ app.MapGet("/admin/devices/{sn}", (string sn, StateStore store) =>
     return device is null
         ? Results.NotFound(new ApiResponse(404, "Device not found."))
         : Results.Ok(device);
+});
+
+app.MapPost("/admin/devices/{sn}/request-add-people", (string sn, StateStore store) =>
+{
+    var count = store.MarkAddPeopleRequested(sn);
+    return Results.Ok(ApiResponse.Ok($"AddPeople={count} will be returned on the next keepalive for {sn}."));
+});
+
+app.MapPost("/admin/devices/{sn}/request-delete-people", (string sn, StateStore store) =>
+{
+    var count = store.MarkDeletePeopleRequested(sn);
+    return Results.Ok(ApiResponse.Ok(
+        count > 0
+            ? $"DeletePeople={count} will be returned on the next keepalive for {sn}."
+            : $"There are no pending deletions for {sn}."));
 });
 
 app.MapPost("/admin/devices/{sn}/request-sync", (string sn, StateStore store) =>
@@ -179,6 +241,61 @@ app.Run();
 
 static string? FirstNonEmpty(params string?[] values) =>
     values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+static IResult DownloadPeopleList(DownloadPeopleListRequest request, StateStore store)
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+    {
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    }
+
+    var people = store.GetPeopleForDownload(request.SN, request.Limit).ToList();
+    return Results.Ok(new DownloadPeopleListResponse
+    {
+        PeopleCount = people.Count,
+        PeopleList = people
+    });
+}
+
+static IResult SelectDeleteInfo(SelectDeleteInfoRequest request, StateStore store)
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+    {
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    }
+
+    return Results.Ok(new SelectDeleteInfoResponse
+    {
+        DeleteList = store.GetDeletePeople(request.SN).ToList()
+    });
+}
+
+static PersonInfo NormalizePerson(PersonInfo person) => new()
+{
+    UserID = person.UserID.Trim(),
+    Name = person.Name.Trim(),
+    Job = person.Job.Trim(),
+    Department = person.Department.Trim(),
+    IdentityCard = person.IdentityCard.Trim(),
+    Attachment = person.Attachment.Trim(),
+    Photo = person.Photo.Trim(),
+    PhotoMD5 = person.PhotoMD5.Trim(),
+    PhotoLen = person.PhotoLen,
+    Password = person.Password.Trim(),
+    CardNum = person.CardNum.Trim(),
+    QRCode = person.QRCode.Trim(),
+    AccessType = Math.Clamp(person.AccessType, 0, 2),
+    ExpirationDate = person.ExpirationDate,
+    OpenTimes = person.OpenTimes <= 0 ? 65535 : person.OpenTimes,
+    KeepOpen = person.KeepOpen,
+    Timegroup = person.Timegroup,
+    Holidays = person.Holidays.Trim(),
+    Elevators = person.Elevators.Trim(),
+    FaceFeature = person.FaceFeature.Trim(),
+    FaceFeatureMD5 = person.FaceFeatureMD5.Trim(),
+    Fingerprints = person.Fingerprints ?? new(),
+    Palmveins = person.Palmveins ?? new()
+};
 
 static async Task<string?> ReadMultipartValueAsync(IFormCollection form, string key)
 {

@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FaceDevice 관리자</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f5f7fb; color: #1f2937; }
+    main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .topbar, .panel-header, form, .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .topbar { justify-content: space-between; margin-bottom: 16px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 980px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .panel { background: #fff; border: 1px solid #d8deea; border-radius: 12px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); }
+    h1, h2 { margin: 0; }
+    form { margin: 16px 0; }
+    label { display: grid; gap: 6px; font-size: 14px; min-width: 140px; flex: 1; }
+    input, select, button { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #c7d2e5; }
+    button { background: #2563eb; color: #fff; border: none; cursor: pointer; }
+    button.secondary { background: #475569; }
+    button.danger { background: #dc2626; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+    .status { margin: 0 0 16px; padding: 12px 14px; border-radius: 10px; background: #dbeafe; color: #1d4ed8; }
+    .muted { color: #64748b; font-size: 13px; }
+    .empty { padding: 16px 0; color: #64748b; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <div>
+        <h1>FaceDevice 관리자</h1>
+        <div class="muted">사람 추가/삭제 예약과 디바이스 상태를 한 화면에서 확인합니다.</div>
+      </div>
+      <button id="refreshButton" type="button">새로고침</button>
+    </div>
+
+    <p id="status" class="status">데이터를 불러오는 중입니다.</p>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>디바이스</h2>
+          <span id="deviceCount" class="muted"></span>
+        </div>
+        <div class="muted">Add/Delete 재전송 버튼은 다음 Keepalive 응답에 플래그를 올립니다.</div>
+        <div id="devicesContainer"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>사람 목록</h2>
+          <span id="peopleCount" class="muted"></span>
+        </div>
+
+        <form id="personForm">
+          <label>사용자 ID
+            <input id="userId" name="userId" required maxlength="32">
+          </label>
+          <label>이름
+            <input id="name" name="name" maxlength="64">
+          </label>
+          <label>부서
+            <input id="department" name="department" maxlength="64">
+          </label>
+          <label>직무
+            <input id="job" name="job" maxlength="64">
+          </label>
+          <label>카드번호
+            <input id="cardNum" name="cardNum" maxlength="64">
+          </label>
+          <label>비밀번호
+            <input id="password" name="password" maxlength="16">
+          </label>
+          <label>권한
+            <select id="accessType" name="accessType">
+              <option value="0">일반</option>
+              <option value="1">관리자</option>
+              <option value="2">블랙리스트</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button id="submitButton" type="submit">사람 추가</button>
+          </div>
+        </form>
+
+        <div id="peopleContainer"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const deviceCountEl = document.getElementById("deviceCount");
+    const peopleCountEl = document.getElementById("peopleCount");
+    const devicesContainer = document.getElementById("devicesContainer");
+    const peopleContainer = document.getElementById("peopleContainer");
+    const personForm = document.getElementById("personForm");
+    const submitButton = document.getElementById("submitButton");
+    const refreshButton = document.getElementById("refreshButton");
+
+    async function requestJson(url, options) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.Message || data.message || `HTTP ${response.status}`);
+      }
+      return data;
+    }
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.style.background = isError ? "#fee2e2" : "#dbeafe";
+      statusEl.style.color = isError ? "#b91c1c" : "#1d4ed8";
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return "-";
+      }
+
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    function accessLabel(accessType) {
+      switch (accessType) {
+        case 1: return "관리자";
+        case 2: return "블랙리스트";
+        default: return "일반";
+      }
+    }
+
+    function createButton(label, className, handler) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      if (className) {
+        button.className = className;
+      }
+      button.addEventListener("click", handler);
+      return button;
+    }
+
+    async function refreshAll(message) {
+      const [devices, people] = await Promise.all([
+        requestJson("/admin/devices"),
+        requestJson("/admin/people")
+      ]);
+
+      renderDevices(devices);
+      renderPeople(people);
+      setStatus(message || `최근 새로고침: ${new Date().toLocaleTimeString()}`);
+    }
+
+    function renderDevices(devices) {
+      deviceCountEl.textContent = `총 ${devices.length}대`;
+      devicesContainer.textContent = "";
+
+      if (!devices.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "아직 Keepalive를 보낸 디바이스가 없습니다.";
+        devicesContainer.appendChild(empty);
+        return;
+      }
+
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["SN", "최근 Keepalive", "추가 대기", "삭제 대기", "기록 수", "동작"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      devices.forEach(device => {
+        const row = document.createElement("tr");
+        row.appendChild(cell(device.SN));
+        row.appendChild(cell(formatDate(device.LastKeepaliveAtUtc)));
+        row.appendChild(cell(String(device.PendingAddPeopleCount ?? 0)));
+        row.appendChild(cell(String(device.PendingDeletePeopleCount ?? 0)));
+        row.appendChild(cell(String(device.RecordCount ?? 0)));
+
+        const actionCell = document.createElement("td");
+        actionCell.appendChild(createButton("추가 재전송", "", async () => {
+          const result = await requestJson(`/admin/devices/${encodeURIComponent(device.SN)}/request-add-people`, { method: "POST" });
+          await refreshAll(result.Message || `${device.SN} AddPeople 예약 완료`);
+        }));
+        actionCell.appendChild(createButton("삭제 재전송", "secondary", async () => {
+          const result = await requestJson(`/admin/devices/${encodeURIComponent(device.SN)}/request-delete-people`, { method: "POST" });
+          await refreshAll(result.Message || `${device.SN} DeletePeople 예약 완료`);
+        }));
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      devicesContainer.appendChild(table);
+    }
+
+    function renderPeople(people) {
+      peopleCountEl.textContent = `총 ${people.length}명`;
+      peopleContainer.textContent = "";
+
+      if (!people.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "등록된 사람이 없습니다.";
+        peopleContainer.appendChild(empty);
+        return;
+      }
+
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["UserID", "이름", "부서", "직무", "권한", "카드번호", "동작"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      people.forEach(person => {
+        const row = document.createElement("tr");
+        row.appendChild(cell(person.UserID || ""));
+        row.appendChild(cell(person.Name || "-"));
+        row.appendChild(cell(person.Department || "-"));
+        row.appendChild(cell(person.Job || "-"));
+        row.appendChild(cell(accessLabel(person.AccessType ?? 0)));
+        row.appendChild(cell(person.CardNum || "-"));
+
+        const actionCell = document.createElement("td");
+        actionCell.appendChild(createButton("삭제", "danger", async () => {
+          if (!confirm(`${person.UserID} 사용자를 삭제할까요?`)) {
+            return;
+          }
+
+          const result = await requestJson(`/admin/people/${encodeURIComponent(person.UserID)}`, { method: "DELETE" });
+          await refreshAll(result.Message || `${person.UserID} 삭제 완료`);
+        }));
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      peopleContainer.appendChild(table);
+    }
+
+    function cell(text) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      return td;
+    }
+
+    personForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submitButton.disabled = true;
+
+      try {
+        const payload = {
+          UserID: document.getElementById("userId").value.trim(),
+          Name: document.getElementById("name").value.trim(),
+          Department: document.getElementById("department").value.trim(),
+          Job: document.getElementById("job").value.trim(),
+          CardNum: document.getElementById("cardNum").value.trim(),
+          Password: document.getElementById("password").value.trim(),
+          AccessType: Number(document.getElementById("accessType").value)
+        };
+
+        const result = await requestJson("/admin/people", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        personForm.reset();
+        document.getElementById("accessType").value = "0";
+        await refreshAll(result.Message || `${payload.UserID} 추가 완료`);
+      } catch (error) {
+        setStatus(error.message || "사람 추가 중 오류가 발생했습니다.", true);
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    refreshButton.addEventListener("click", async () => {
+      refreshButton.disabled = true;
+      try {
+        await refreshAll();
+      } catch (error) {
+        setStatus(error.message || "새로고침 중 오류가 발생했습니다.", true);
+      } finally {
+        refreshButton.disabled = false;
+      }
+    });
+
+    refreshAll().catch(error => setStatus(error.message || "초기 로드에 실패했습니다.", true));
+  </script>
+</body>
+</html>
