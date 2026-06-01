@@ -5,6 +5,9 @@ using System.Text.Json.Nodes;
 using FaceDeviceHttpPcServer.Models;
 using FaceDeviceHttpPcServer.Services;
 
+const byte GzipMagicByte1 = 0x1F;
+const byte GzipMagicByte2 = 0x8B;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -199,7 +202,7 @@ static async Task<string?> ReadMultipartValueAsync(IFormCollection form, string 
 }
 
 static bool LooksLikeGzip(byte[] bytes) =>
-    bytes.Length >= 2 && bytes[0] == 0x1F && bytes[1] == 0x8B;
+    bytes.Length >= 2 && bytes[0] == GzipMagicByte1 && bytes[1] == GzipMagicByte2;
 
 static byte[] DecompressGzip(byte[] bytes)
 {

@@ -6,6 +6,7 @@ namespace FaceDeviceHttpPcServer.Services;
 
 public sealed class StateStore
 {
+    private static readonly HashSet<char> InvalidFileNameChars = Path.GetInvalidFileNameChars().ToHashSet();
     private readonly object _sync = new();
     private readonly string _stateFilePath;
     private readonly string _recordsPath;
@@ -231,7 +232,6 @@ public sealed class StateStore
             return string.Empty;
         }
 
-        var invalidChars = Path.GetInvalidFileNameChars();
-        return string.Concat(value.Trim().Select(ch => invalidChars.Contains(ch) ? '_' : ch));
+        return string.Concat(value.Trim().Select(ch => InvalidFileNameChars.Contains(ch) ? '_' : ch));
     }
 }
