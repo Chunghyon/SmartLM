@@ -42,9 +42,100 @@ public sealed class StateStore
 
             return new KeepaliveResponse
             {
+                AddPeople = device.PendingAddPeopleCount > 0 ? device.PendingAddPeopleCount : null,
+                DeletePeople = device.PendingDeleteUserIds.Count > 0 ? device.PendingDeleteUserIds.Count : null,
                 SyncParameter = device.PendingSyncParameter ? 1 : null,
                 UploadWorkParameter = device.PendingUploadWorkParameter ? 1 : null
             };
+        }
+    }
+
+    public IReadOnlyCollection<PersonInfo> GetPeople()
+    {
+        lock (_sync)
+        {
+            return _state.People.Values
+                .OrderBy(person => person.UserID, StringComparer.OrdinalIgnoreCase)
+                .Select(Clone)
+                .ToArray();
+        }
+    }
+
+    public bool TryAddPerson(PersonInfo person)
+    {
+        lock (_sync)
+        {
+            if (_state.People.ContainsKey(person.UserID))
+            {
+                return false;
+            }
+
+            _state.People[person.UserID] = Clone(person);
+            _state.DeletedUserIds.RemoveAll(userId => string.Equals(userId, person.UserID, StringComparison.OrdinalIgnoreCase));
+            foreach (var device in _state.Devices.Values)
+            {
+                device.PendingAddPeopleCount = _state.People.Count;
+            }
+
+            SaveState();
+            return true;
+        }
+    }
+
+    public bool DeletePerson(string userId)
+    {
+        lock (_sync)
+        {
+            if (!_state.People.Remove(userId))
+            {
+                return false;
+            }
+
+            if (!_state.DeletedUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+            {
+                _state.DeletedUserIds.Add(userId);
+            }
+
+            foreach (var device in _state.Devices.Values)
+            {
+                if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                {
+                    device.PendingDeleteUserIds.Add(userId);
+                }
+            }
+
+            SaveState();
+            return true;
+        }
+    }
+
+    public IReadOnlyCollection<PersonInfo> GetPeopleForDownload(string deviceSn, int limit)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            var effectiveLimit = limit <= 0 ? 1000 : Math.Min(limit, 1000);
+            var people = _state.People.Values
+                .OrderBy(person => person.UserID, StringComparer.OrdinalIgnoreCase)
+                .Take(effectiveLimit)
+                .Select(Clone)
+                .ToArray();
+
+            device.PendingAddPeopleCount = 0;
+            SaveState();
+            return people;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetDeletePeople(string deviceSn)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            var deleteList = device.PendingDeleteUserIds.ToArray();
+            device.PendingDeleteUserIds.Clear();
+            SaveState();
+            return deleteList;
         }
     }
 
@@ -136,6 +227,8 @@ public sealed class StateStore
                     LastWorkSettingUploadAtUtc = device.LastWorkSettingUploadAtUtc,
                     PendingSyncParameter = device.PendingSyncParameter,
                     PendingUploadWorkParameter = device.PendingUploadWorkParameter,
+                    PendingAddPeopleCount = device.PendingAddPeopleCount,
+                    PendingDeletePeopleCount = device.PendingDeleteUserIds.Count,
                     RecordCount = device.Records.Count
                 })
                 .ToArray();
@@ -172,6 +265,35 @@ public sealed class StateStore
         }
     }
 
+    public int MarkAddPeopleRequested(string deviceSn)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.PendingAddPeopleCount = _state.People.Count;
+            SaveState();
+            return device.PendingAddPeopleCount;
+        }
+    }
+
+    public int MarkDeletePeopleRequested(string deviceSn)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            foreach (var userId in _state.DeletedUserIds)
+            {
+                if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                {
+                    device.PendingDeleteUserIds.Add(userId);
+                }
+            }
+
+            SaveState();
+            return device.PendingDeleteUserIds.Count;
+        }
+    }
+
     public void SetDesiredWorkSetting(string deviceSn, JsonObject workSetting)
     {
         lock (_sync)
@@ -204,7 +326,28 @@ public sealed class StateStore
         try
         {
             var json = File.ReadAllText(_stateFilePath);
-            return JsonSerializer.Deserialize<PersistedState>(json, _serializerOptions) ?? new PersistedState();
+            var state = JsonSerializer.Deserialize<PersistedState>(json, _serializerOptions) ?? new PersistedState();
+            state.Devices = new Dictionary<string, DeviceSnapshot>(
+                state.Devices ?? new Dictionary<string, DeviceSnapshot>(),
+                StringComparer.OrdinalIgnoreCase);
+            state.People = new Dictionary<string, PersonInfo>(
+                state.People ?? new Dictionary<string, PersonInfo>(),
+                StringComparer.OrdinalIgnoreCase);
+            state.DeletedUserIds ??= new();
+
+            foreach (var device in state.Devices.Values)
+            {
+                device.PendingDeleteUserIds ??= new();
+                device.Records ??= new();
+            }
+
+            foreach (var person in state.People.Values)
+            {
+                person.Fingerprints ??= new();
+                person.Palmveins ??= new();
+            }
+
+            return state;
         }
         catch (Exception ex)
         {
@@ -219,10 +362,10 @@ public sealed class StateStore
         File.WriteAllText(_stateFilePath, json);
     }
 
-    private DeviceSnapshot Clone(DeviceSnapshot snapshot)
+    private T Clone<T>(T value)
     {
-        var json = JsonSerializer.Serialize(snapshot, _serializerOptions);
-        return JsonSerializer.Deserialize<DeviceSnapshot>(json, _serializerOptions)!;
+        var json = JsonSerializer.Serialize(value, _serializerOptions);
+        return JsonSerializer.Deserialize<T>(json, _serializerOptions)!;
     }
 
     private static string SanitizeForFileName(string? value)
