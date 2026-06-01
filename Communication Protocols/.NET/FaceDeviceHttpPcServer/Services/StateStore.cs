@@ -71,6 +71,7 @@ public sealed class StateStore
             }
 
             _state.People[person.UserID] = Clone(person);
+            _state.DeletedUserIds.RemoveAll(userId => string.Equals(userId, person.UserID, StringComparison.OrdinalIgnoreCase));
             foreach (var device in _state.Devices.Values)
             {
                 device.PendingAddPeopleCount = _state.People.Count;
@@ -88,6 +89,11 @@ public sealed class StateStore
             if (!_state.People.Remove(userId))
             {
                 return false;
+            }
+
+            if (!_state.DeletedUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+            {
+                _state.DeletedUserIds.Add(userId);
             }
 
             foreach (var device in _state.Devices.Values)
@@ -274,6 +280,14 @@ public sealed class StateStore
         lock (_sync)
         {
             var device = GetOrCreateDevice(deviceSn);
+            foreach (var userId in _state.DeletedUserIds)
+            {
+                if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                {
+                    device.PendingDeleteUserIds.Add(userId);
+                }
+            }
+
             SaveState();
             return device.PendingDeleteUserIds.Count;
         }
@@ -318,6 +332,7 @@ public sealed class StateStore
             state.People = new Dictionary<string, PersonInfo>(
                 state.People ?? new Dictionary<string, PersonInfo>(),
                 StringComparer.OrdinalIgnoreCase);
+            state.DeletedUserIds ??= new();
 
             foreach (var device in state.Devices.Values)
             {

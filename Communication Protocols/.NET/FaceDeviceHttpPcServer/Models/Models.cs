@@ -141,4 +141,5 @@ public sealed class PersistedState
 {
     public Dictionary<string, DeviceSnapshot> Devices { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, PersonInfo> People { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public List<string> DeletedUserIds { get; set; } = new();
 }
