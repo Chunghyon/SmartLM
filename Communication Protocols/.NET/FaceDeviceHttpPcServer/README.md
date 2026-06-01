@@ -11,7 +11,8 @@ PC에서 실행할 수 있는 1단계 최소 HTTP 연동 서버 샘플입니다.
 
 ## 실행
 ```bash
-dotnet run --project "/tmp/workspace/Chunghyon/SmartLM/Communication Protocols/.NET/FaceDeviceHttpPcServer/FaceDeviceHttpPcServer.csproj"
+cd "Communication Protocols/.NET/FaceDeviceHttpPcServer"
+dotnet run
 ```
 
 기본 저장 위치는 프로젝트 내부 `App_Data` 폴더입니다.

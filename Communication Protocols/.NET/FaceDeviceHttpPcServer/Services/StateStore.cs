@@ -200,8 +200,16 @@ public sealed class StateStore
             return new PersistedState();
         }
 
-        var json = File.ReadAllText(_stateFilePath);
-        return JsonSerializer.Deserialize<PersistedState>(json, _serializerOptions) ?? new PersistedState();
+        try
+        {
+            var json = File.ReadAllText(_stateFilePath);
+            return JsonSerializer.Deserialize<PersistedState>(json, _serializerOptions) ?? new PersistedState();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[WARN] Failed to load persisted state from '{_stateFilePath}': {ex.Message}");
+            return new PersistedState();
+        }
     }
 
     private void SaveState()
