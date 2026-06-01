@@ -114,9 +114,10 @@ public sealed class StateStore
         lock (_sync)
         {
             var device = GetOrCreateDevice(deviceSn);
+            var effectiveLimit = limit <= 0 ? 1000 : Math.Min(limit, 1000);
             var people = _state.People.Values
                 .OrderBy(person => person.UserID, StringComparer.OrdinalIgnoreCase)
-                .Take(limit > 0 ? limit : int.MaxValue)
+                .Take(effectiveLimit)
                 .Select(Clone)
                 .ToArray();
 
