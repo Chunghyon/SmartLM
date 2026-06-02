@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Face recognition device browser UI interface document</title>
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument>
+  <w:View>Print</w:View>
+  <w:Zoom>100</w:Zoom>
+  <w:DoNotOptimizeForBrowser/>
+</w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #222; line-height: 1.45; margin: 24pt; }
+h1, h2, h3, h4, h5, h6 { color: #1f4e79; margin-top: 18pt; margin-bottom: 8pt; page-break-after: avoid; }
+h1 { font-size: 22pt; border-bottom: 2px solid #cfd8e3; padding-bottom: 6pt; }
+h2 { font-size: 17pt; border-left: 4px solid #5b9bd5; padding-left: 8pt; }
+h3 { font-size: 13pt; }
+h4 { font-size: 11.5pt; font-weight: bold; }
+p { margin: 6pt 0; }
+ul, ol { margin: 6pt 0 10pt 20pt; }
+li { margin: 3pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 10pt 0 14pt 0; table-layout: fixed; }
+th, td { border: 1px solid #b7c9e2; padding: 6pt 7pt; vertical-align: top; word-wrap: break-word; }
+th { background: #ddebf7; font-weight: bold; }
+.code-block { margin: 10pt 0 14pt 0; border: 1px solid #d9d9d9; background: #f7f7f7; }
+.code-lang { font-size: 9pt; color: #666; background: #ececec; padding: 4pt 8pt; border-bottom: 1px solid #d9d9d9; text-transform: uppercase; }
+pre { margin: 0; padding: 8pt 10pt; font-family: Consolas, 'Courier New', monospace; font-size: 9pt; white-space: pre-wrap; word-wrap: break-word; }
+.toc { background: #f8fbff; border: 1px solid #d9e2f3; padding: 12pt 14pt; margin: 16pt 0 22pt 0; }
+.toc h2 { border: none; padding-left: 0; margin-top: 0; }
+.toc-item { margin: 4pt 0; }
+.toc-item a { color: #2f5597; text-decoration: none; }
+.title-meta { margin: 4pt 0 14pt 0; color: #555; }
+strong { color: #000; }
+code { font-family: Consolas, 'Courier New', monospace; background: #f3f3f3; padding: 1pt 3pt; }
+</style>
+</head>
+<body>
+<h1>Face recognition device browser UI interface document</h1>
+<p class="title-meta">Formatted from <span style="font-family: Consolas, monospace;">Face recognition device browser UI interface document.md</span> for easier reading in Microsoft Word.</p>
+<div class="toc"><h2>Contents</h2><div class="toc-item" style="margin-left:0px"><a href="#face-recognition-device-browser-ui-interface-document">Face recognition device browser UI interface document</a></div><div class="toc-item" style="margin-left:18px"><a href="#updated-records">Updated Records</a></div><div class="toc-item" style="margin-left:0px"><a href="#http-protocol-description">HTTP Protocol Description</a></div><div class="toc-item" style="margin-left:0px"><a href="#api-unified-interface-return-format">API Unified interface return format</a></div><div class="toc-item" style="margin-left:36px"><a href="#returns-format-field-description">Returns format field description</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-format-example">Return format example</a></div><div class="toc-item" style="margin-left:0px"><a href="#heartbeat">Heartbeat</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description">Return value description</a></div><div class="toc-item" style="margin-left:0px"><a href="#obtain-device-sn">Obtain Device SN</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description-2">Return value description</a></div><div class="toc-item" style="margin-left:0px"><a href="#user-management">User Management</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-login">API-Login</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters">Request parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description-3">Return value description</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-log-out">API-log out</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters-2">Request parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description-4">Return value description</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-verify-whether-the-token-is-invalid">API-Verify whether the Token is invalid</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description-5">Return value description</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-renew-for-token">API-Renew for Token</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description-6">Return value description</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-modify-the-management-password">API-Modify the management password</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters-3">Request parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-value-description-7">Return value description</a></div><div class="toc-item" style="margin-left:0px"><a href="#device-management">Device Management</a></div><div class="toc-item" style="margin-left:18px"><a href="#device-working-parameters">Device Working Parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#basic-info-of-device-systeminfo">Basic Info of Device SystemInfo</a></div><div class="toc-item" style="margin-left:36px"><a href="#device-working-status-status">Device Working Status Status</a></div><div class="toc-item" style="margin-left:36px"><a href="#region-and-language-language">Region and language  Language</a></div><div class="toc-item" style="margin-left:36px"><a href="#human-machine-interaction-ui">Human-machine interaction UI</a></div><div class="toc-item" style="margin-left:36px"><a href="#data-storage-storage">Data Storage Storage</a></div><div class="toc-item" style="margin-left:36px"><a href="#face-recognition-face">Face Recognition Face</a></div><div class="toc-item" style="margin-left:36px"><a href="#body-temperature-detection-bodytemperature">Body Temperature Detection BodyTemperature</a></div><div class="toc-item" style="margin-left:36px"><a href="#server-parameter-networkserver">Server Parameter NetworkServer</a></div><div class="toc-item" style="margin-left:36px"><a href="#device-network-parameters-network">Device Network Parameters Network</a></div><div class="toc-item" style="margin-left:36px"><a href="#access-control-parameters-door">Access Control Parameters Door</a></div><div class="toc-item" style="margin-left:36px"><a href="#elevator-function-parameters-elevator">Elevator Function Parameters Elevator</a></div><div class="toc-item" style="margin-left:36px"><a href="#alarm-parameter-alarm">Alarm Parameter Alarm</a></div><div class="toc-item" style="margin-left:36px"><a href="#device-door-opening-time-period-timegroup">Device Door Opening time period Timegroup</a></div><div class="toc-item" style="margin-left:36px"><a href="#device-holidays-holiday">Device Holidays Holiday</a></div><div class="toc-item" style="margin-left:36px"><a href="#alarm-clock-alarmclock">Alarm Clock** AlarmClock</a></div><div class="toc-item" style="margin-left:54px"><a href="#up-to-24-groups-of-alarm-clock">Up to 24 groups of alarm clock</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-the-device-function-list">API-Obtain the device function list</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-example">Return example</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-device-operating-parameters">API-Obtain device operating parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameter">Request parameter</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-update-device-working-parameters">API-update device working parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters-4">Request Parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-example">Request example</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-example-2">Return example</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-send-device-control-command">API-send device control command</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters-5">Request Parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-example-2">Request example</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-example-3">Return example</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-update-device-firmware">API-update device firmware</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters-6">Request Parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-parameters-7">Request Parameters</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-example-3">.**Request example</a></div><div class="toc-item" style="margin-left:54px"><a href="#request-example-4">Request example</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-example-4">Return example</a></div><div class="toc-item" style="margin-left:0px"><a href="#personnel-management">Personnel Management</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-a-list-of-users">API-obtain a list of users</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-personnel-details">API-obtain personnel details</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-new-user-id">API-Obtain new user ID</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-add-new-user">API-Add new user</a></div><div class="toc-item" style="margin-left:54px"><a href="#peoplejson-personnel-data-format">PeopleJson Personnel Data Format</a></div><div class="toc-item" style="margin-left:72px"><a href="#holidays-holidays">Holidays Holidays</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-parameter">Return parameter</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-delete-user">API-Delete user</a></div><div class="toc-item" style="margin-left:0px"><a href="#department-management">Department Management</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-department-list">API-Obtain department list</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-obtain-new-department-id-details">API-Obtain new department ID details</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-add-newmodify-department">API-Add new/Modify department</a></div><div class="toc-item" style="margin-left:54px"><a href="#department-format">Department Format</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-parameter-2">Return parameter</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-delete-department">API-Delete department</a></div><div class="toc-item" style="margin-left:0px"><a href="#records-management">Records Management</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-query-punch-in-records">API-Query punch in records</a></div><div class="toc-item" style="margin-left:54px"><a href="#request-required-parameters">Request required parameters</a></div><div class="toc-item" style="margin-left:54px"><a href="#record-field-description">Record Field Description</a></div><div class="toc-item" style="margin-left:54px"><a href="#recordtype-event-type">RecordType Event Type</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-query-door-sensor-records">API-Query door sensor records</a></div><div class="toc-item" style="margin-left:54px"><a href="#request-required-parameters-2">Request required parameters</a></div><div class="toc-item" style="margin-left:54px"><a href="#record-field-description-2">Record field description</a></div><div class="toc-item" style="margin-left:54px"><a href="#recordtype-event-type-2">RecordType Event Type</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-query-system-record">API-Query system record</a></div><div class="toc-item" style="margin-left:54px"><a href="#request-required-parameter">Request required parameter</a></div><div class="toc-item" style="margin-left:54px"><a href="#record-field-description-3">Record Field Description</a></div><div class="toc-item" style="margin-left:54px"><a href="#recordtype-event-type-3">RecordType Event Type</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-clear-all-records">API-Clear all records</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-example-5">Return example</a></div><div class="toc-item" style="margin-left:18px"><a href="#api-clear-records-of-the-specified-type">API-Clear records of the specified type</a></div><div class="toc-item" style="margin-left:36px"><a href="#request-example-5">Request example</a></div><div class="toc-item" style="margin-left:36px"><a href="#return-example-6">Return example</a></div><div class="toc-item" style="margin-left:0px"><a href="#return-error-code">Return error code</a></div></div>
+<h1 id="face-recognition-device-browser-ui-interface-document">Face recognition device browser UI interface document</h1><ul><li><strong>Based on  HTTP  Protocol Communication</strong></li></ul><ul><li><strong>Document Revision	2.0</strong></li></ul><ul><li><strong>Release Date	December 9th, 2022</strong></li></ul><ul><li><strong>Modifier Lai Jinjie</strong></li></ul><h2 id="updated-records">Updated Records</h2><table><thead><tr><th><strong>Version No.</strong></th><th><strong>Modify the date</strong></th><th>**Description*</th></tr></thead><tbody><tr><td></td><td></td><td></td></tr></tbody></table><h1 id="http-protocol-description">HTTP Protocol Description</h1><ul><li>**Support HTTP 1.1</li></ul><ul><li><strong>GZIP Compression Techniques</strong></li></ul><h1 id="api-unified-interface-return-format">API Unified interface return format</h1><h3 id="returns-format-field-description">Returns format field description</h3><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>result</td><td>bool</td><td>5</td><td>Yes</td><td>Return result status true/false</td></tr><tr><td>content</td><td>object</td><td>1</td><td>Yes</td><td>Return result load</td></tr><tr><td>errCode</td><td>int</td><td>4</td><td>Yes</td><td>Return the error code when the operation is wrong</td></tr><tr><td>error</td><td>string</td><td></td><td>No</td><td>Error description text</td></tr></tbody></table><h3 id="return-format-example">Return format example</h3><div class="code-block"><div class="code-lang">json</div><pre>{
+  &quot;result&quot;: false, 
+  &quot;content&quot;: null,
+  &quot;errCode&quot;: 401,
+  &quot;error&quot;: &quot;Unauthorized&quot;
+}</pre></div><h1 id="heartbeat">Heartbeat</h1><p><strong>Brief Description：</strong></p><ul><li>Heartbeat interface, used to check whether the network connection is normal.</li></ul><p><strong>Request URL:</strong></p><ul><li>示例：http://192.168.1.150/api/heartBeat</li></ul><ul><li>http://Device IP:port/api/heartBeat</li><li>Example: http://192.168.1.150/api/heartBeat</li></ul><p><strong>Request Mode</strong></p><ul><li>GET</li></ul><h3 id="return-value-description">Return value description</h3><p><strong>Content-Type</strong></p><ul><li>application/json; charset=utf-8</li></ul><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;result&quot;: true,
+    &quot;content&quot;: &quot;OK&quot;
+}</pre></div><h1 id="obtain-device-sn">Obtain Device SN</h1><p><strong>Brief Description:</strong></p><ul><li>Heartbeat interface, used to check whether the device network connection is normal</li></ul><p><strong>Request URL：</strong></p><ul><li>http://Device IP:port/api/GetDeviceSN</li><li>Example：http://192.168.1.150/api/GetDeviceSN</li></ul><p><strong>Request Mode:</strong></p><ul><li>GET</li></ul><h3 id="return-value-description-2">Return value description</h3><p><strong>Content-Type</strong></p><ul><li>application/json; charset=utf-8</li></ul><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;result&quot;: true,
+    &quot;content&quot;: &quot;Device SN&quot;
+}</pre></div><h1 id="user-management">User Management</h1><h2 id="api-login">API-Login</h2><p><strong>Breif Description</strong></p><ul><li>When you first open the device browser page, call this interface to generate a Login Token for subsequent access to the API interface.</li><li>The Token after login will remain valid for 24 hours</li><li>If you enter the wrong password 5 times during login, the system will prohibit you from logging in within 5 minutes</li><li>The device can store up to 100 tokens</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Device IP:port/api/User/Login</li><li>Example: http://192.168.1.150/api/User/Login</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><h3 id="request-parameters">Request parameters</h3><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td>password</td><td>int</td><td>1</td><td>Yes</td><td>The device login password <br> is also the menu management password</td></tr></tbody></table><p><strong>Request parameter example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;password&quot;:&quot;admin&quot;
+}</pre></div><h3 id="return-value-description-3">Return value description</h3><p>Returns the JWT Token for subsequent access</p><p><strong>Return Value Example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+{
+  &quot;result&quot;: true, 
+  &quot;content&quot;: {
+      &quot;token&quot;:&quot;eyJhbGciOiJodHRwOi8vd3&quot;, //token character string
+
+      
+      &quot;expiration&quot;:123456789 //token expiration time
+  }
+}</pre></div><div class="code-block"><div class="code-lang">json</div><pre>//Return if validation fails
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 1,
+  &quot;error&quot;: &quot;Wrong Password!&quot;
+}</pre></div><p><strong>Wrong Code</strong></p><table><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody><tr><td>1</td><td>Wrong Password!</td></tr><tr><td>2</td><td>Password error too many times, locked!</td></tr><tr><td>10001</td><td>Wrong method requested</td></tr><tr><td>10002</td><td>Request Content-Type error</td></tr><tr><td>10003</td><td>Request body, gzip decompression error</td></tr><tr><td>10004</td><td>The Json format in the request body is incorrect</td></tr></tbody></table><h2 id="api-log-out">API-log out</h2><p><strong>Brief Description:</strong></p><ul><li>When you need to log out of the system, calling the logout function will delete the corresponding Token.</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Device IP:port/api/User/Logout</li><li>Example: http://192.168.1.150/api/User/Logout</li></ul><p><strong>Request Mode:</strong></p><ul><li>Get</li></ul><h3 id="request-parameters-2">Request parameters</h3><ul><li>None</li></ul><h3 id="return-value-description-4">Return value description</h3><p><strong>Return value example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+{
+  &quot;result&quot;: true, 
+  &quot;content&quot;: &quot;ok&quot;
+}</pre></div><h2 id="api-verify-whether-the-token-is-invalid">API-Verify whether the Token is invalid</h2><p><strong>Brief Description:</strong></p><ul><li>API for checking if the token has expired after login</li></ul><p><strong>Request URL：</strong></p><ul><li>http://Device IP:port/api/User/CheckLoginToken</li><li>Example: http://192.168.1.150/api/User/CheckLoginToken</li></ul><p><strong>Request Mode:</strong></p><ul><li>GET</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="return-value-description-5">Return value description</h3><p>Return Token expiration time, unix timestamp</p><p><strong>Return value example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+
+{
+  &quot;result&quot;: true, 
+  &quot;content&quot;: 1234567899
+}</pre></div><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification fails
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 10000,
+  &quot;error&quot;: &quot;Token is invalid&quot;
+}</pre></div><p><strong>Wrong Code</strong></p><table><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody><tr><td>10000</td><td>token is expired, please log in again</td></tr><tr><td>10001</td><td>Wrong request method</td></tr></tbody></table><p>|       |                          |</p><h2 id="api-renew-for-token">API-Renew for Token</h2><p><strong>Brief Description:</strong></p><ul><li>Renew the Token that is about to expire</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Device IP:port/api/User/TokenExtension</li><li>Example: http://192.168.1.150/api/User/TokenExtension</li></ul><p><strong>Request Mode:</strong></p><ul><li>GET</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="return-value-description-6">Return value description</h3><p>Return Token expiration time, unix timestamp</p><p><strong>**Return value example</strong>**</p><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+{
+  &quot;result&quot;: true, 
+  &quot;content&quot;: 
+}</pre></div><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification fails
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 10000,
+  &quot;error&quot;: &quot;Token is invalid&quot;
+}</pre></div><p><strong>Wrong Code</strong></p><table><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody><tr><td>10000</td><td>token is expired, please log in again</td></tr><tr><td>10001</td><td>Wrong request method</td></tr></tbody></table><h2 id="api-modify-the-management-password">API-Modify the management password</h2><p><strong>Brief Description:</strong></p><ul><li>Changing the device's management password will also change the menu password</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Device IP:port/api/User/EditPassword</li><li>Example:http://192.168.1.150/api/User/EditPassword</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="request-parameters-3">Request parameters</h3><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>OldPassword</td><td>int</td><td>8</td><td>Yes</td><td>Old login password</td></tr><tr><td>NewPassword</td><td>int</td><td>8</td><td>Yes</td><td>New login password</td></tr></tbody></table><p>**Request parameter example</p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;OldPassword&quot;:&quot;123456&quot;,
+    &quot;NewPassword&quot;:&quot;888888&quot;
+}</pre></div><h3 id="return-value-description-7">Return value description</h3><p><strong>Return value example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+
+{
+  &quot;result&quot;: true, 
+}</pre></div><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification fails
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 1,
+  &quot;error&quot;: &quot;old password error&quot;
+}</pre></div><p><strong>Wrong Code</strong></p><table><thead><tr><th>Code</th><th>Description</th></tr></thead><tbody><tr><td>10000</td><td>token is expired, please log in again</td></tr><tr><td>10001</td><td>Wrong request method</td></tr><tr><td>10002</td><td>Request Content-Type error</td></tr><tr><td>10003</td><td>Request body, gzip decompression error</td></tr><tr><td>10004</td><td>The Json format in the request body is incorrect</td></tr><tr><td>1</td><td>Old password error</td></tr><tr><td>2</td><td>The new password format is incorrect, it must be a number<br> and cannot be more than 8 digits, cannot be less than 4 digits, and cannot be empty</td></tr></tbody></table><h1 id="device-management">Device Management</h1><h2 id="device-working-parameters">Device Working Parameters</h2><h3 id="basic-info-of-device-systeminfo">Basic Info of Device SystemInfo</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>DeviceSN</td><td>string</td><td>Serial No.</td></tr><tr><td>DeviceName</td><td>string</td><td>Device Name</td></tr><tr><td></td><td></td><td></td></tr><tr><td>FirmwareVerson</td><td>string</td><td>Firmware Version</td></tr><tr><td>FingerprintVerson</td><td>string</td><td>Fingerprint Algorithm Version</td></tr><tr><td>FaceVerson</td><td>string</td><td>Face Algorithm Version</td></tr><tr><td></td><td></td><td></td></tr><tr><td>Manufacturer</td><td>string</td><td>Manufacturer</td></tr><tr><td></td><td></td><td></td></tr><tr><td>ManufacturerPhone</td><td>string</td><td>Manufacturer Telephone</td></tr><tr><td>Website</td><td>string</td><td>Website</td></tr><tr><td>ProductionDate</td><td>string</td><td>Production Date</td></tr><tr><td>OEMText</td><td>string</td><td>OEM custom text, up to 200 characters can be filled in</td></tr><tr><td></td><td></td><td></td></tr><tr><td>AutoRestart</td><td>int</td><td>Daily automatic restart switch</td></tr><tr><td>AutoRestartTime</td><td>string</td><td>Automatic restart time every day, format  HH:mm</td></tr></tbody></table><h3 id="device-working-status-status">Device Working Status Status</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>RunDays</td><td>int</td><td>Days of system operation</td></tr><tr><td>FormatCount</td><td>int</td><td>Formatting times</td></tr><tr><td>WatchDogCount</td><td>int</td><td>Number of watchdog reset times</td></tr><tr><td>BootTime</td><td>int</td><td>Boot Time Unix timestamp (seconds)</td></tr><tr><td>RelayStatus</td><td>int</td><td>Relay status<br>0--indicates COM and NC are normally closed<br>1--indicates COM and NO are normally closed</td></tr><tr><td>KeepOpenStatus</td><td>int</td><td>Normally open state<br>0--indicates normally closed<br>1--indicates normally open</td></tr><tr><td>DoorSensorStatus</td><td>int</td><td>Door sensor status<br>0--indicates closed<br>1--indicates open</td></tr><tr><td>LockDoorStatus</td><td>int</td><td>Lock status<br>0--indicates unlocked<br>1--indicates locked</td></tr><tr><td>AlarmStatus</td><td>string</td><td>Door alarm status<br>Empty string means no alarm, otherwise there will be a specific alarm name<br/>fire--fire alarm<br/>blacklist--blacklist alarm<br>anti--anti-dismantling alarm<br/>illegal--illegal authentication<br/>password--duress alarm password<br/>openTimeout--door opening timeout alarm<br/>doorSensor--door magnetic alarm<br>When there are multiple alarms, use commas to separate fire,blacklist</td></tr></tbody></table><h3 id="region-and-language-language">Region and language  Language</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>Language</td><td>int</td><td>Language 1 - Chinese；<br>2 - English；3 - Traditional Chinese;4 - French;5 - Russian<br>6 - Portuguese;7 - Spanish;8 - Italian;9 - Japanese<br>10 - Korean;11 - Thai ;12 - Arabic;13 - Portugal<br>14 - Turkish ,15 - Indonesian,16 - Ukrainian,17-Vietnamese</td></tr><tr><td>SystemTime</td><td>int</td><td>Device time Unix timestamp (seconds)</td></tr><tr><td>UseNTP</td><td>int</td><td>Enable NTP automatic time calibration 1--enable; 0--disable</td></tr><tr><td>TimeZone</td><td>int</td><td>Device time zone, value range:-12  -  +14</td></tr><tr><td>Volume</td><td>int</td><td>Volume (range 0-10)</td></tr><tr><td>Voice</td><td>int</td><td>Voice playback switch 0, no playback; 1, playback</td></tr></tbody></table><h3 id="human-machine-interaction-ui">Human-machine interaction UI</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>DisplayBrightness</td><td>int</td><td>Screen brightness Settings 1-10</td></tr><tr><td>MenuPassword</td><td>string</td><td>Menu password, pure numbers, 4-8 digits or blank</td></tr><tr><td>ShowIR</td><td>int</td><td>Display infrared images on the device 1-- Enable; 0-- Disable</td></tr><tr><td>ShowPersonPhoto</td><td>int</td><td>Display the person's portrait after recognition 1--enable; 0--disable</td></tr><tr><td>PlayPersonName</td><td>int</td><td>Announce the name of the person after recognition 1--enable; 0--disable</td></tr><tr><td>RecognitionButon</td><td>int</td><td>Click the recognition button before recognition 1--Enable; 0--Disable</td></tr><tr><td>UnregisteredWarn</td><td>int</td><td>Unregistered personnel reminder 1--Enable; 0--Disable</td></tr><tr><td>ShowPersonName</td><td>int</td><td>Whether to display the person's name after identification 1--Enable; 0--Disable</td></tr><tr><td>FillLight</td><td>int</td><td>Fill light mode: 0: Normally closed; 1: Normally open; 2: Automatic;</td></tr><tr><td>UseQRCode</td><td>int</td><td>QR code recognition switch 1--Enable; 0--Disable</td></tr></tbody></table><h3 id="data-storage-storage">Data Storage Storage</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>RecordAutoCycle</td><td>int</td><td>Record full  cycle 1--record full cycle, 0--record full no cycle, waiting to be cleared</td></tr><tr><td>SaveUnregistered</td><td>int</td><td>Save unregistered personnel records, 0: do not store, 1: store<br>Unregistered personnel refers to personnel who are not registered in the system during face recognition,<br>or card numbers that are not registered in the system when swiping a card</td></tr><tr><td>SaveRecordPicture</td><td>int</td><td>Save the scene picture 0, do not save; 1, save</td></tr><tr><td>PeopleStorageInfo</td><td>class</td><td>Personnel storage details</td></tr><tr><td>RecordStorageInfo</td><td>class</td><td>Record storage details</td></tr></tbody></table><ul><li><strong>Personnel Storage Info peopleInfo </strong></li></ul><div class="code-block"><div class="code-lang">json</div><pre>{
+
+{
+&quot;Person&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Personnel storage capacity   Max maximum capacity;  Current current storage quantity
+&quot;Face&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Face Storage Capacity
+&quot;Card&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Card Capacity Storage
+&quot;Fingerprint&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Fingerprint storage capacity
+&quot;PalmVein&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Palm print storage capacity
+&quot;Pasword&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Password storage capacity
+&quot;Admin&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 }//Administrator storage capacity
+}</pre></div><ul><li><strong>Record storage information recordInfo</strong></li></ul><div class="code-block"><div class="code-lang">json</div><pre>{
+
+&quot;VerifyRecord&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Access record storage capacity
+&quot;DoorRecord&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//Door sensor record storage info
+&quot;SystemRecord&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 },//System record storage capacity
+&quot;RecordPhoto&quot;: {&quot;Max“: 5000, &quot;Current&quot;:0 }//On-site photo storage capacity
+}</pre></div><h3 id="face-recognition-face">Face Recognition Face</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>FaceIR</td><td>int</td><td>Liveness detection, 1 on, 0 off</td></tr><tr><td>FaceIRThreshold</td><td>int</td><td>Liveness detection threshold 1-99</td></tr><tr><td>FaceDistance</td><td>int</td><td>Recognition Distance 1--Short Distance(0.2-0.5m); 2--Middle Distance(0.2-1.5m);3--Long Distance(0.2-1.5m or above)</td></tr><tr><td>FaceThreshold</td><td>int</td><td>Face recognition threshold 1-99 The larger the face recognition threshold, the higher the accuracy</td></tr><tr><td>FPComparison</td><td>int</td><td>Fingerprint comparison threshold  Value range:1-100</td></tr><tr><td>FaceMask</td><td>int</td><td>Mask Detection</td></tr><tr><td>FaceMaskThreshold</td><td>int</td><td>Mask threshold 1-99, the larger the face recognition threshold, the higher the accuracy</td></tr></tbody></table><h3 id="body-temperature-detection-bodytemperature">Body Temperature Detection BodyTemperature</h3><table><thead><tr><th>Field</th><th>Type</th><th>Decription</th></tr></thead><tbody><tr><td>UseBodyTemperature</td><td>Int</td><td>Temperature measurement mode switch. 0: Non-temperature measurement mode 1: Temperature measurement mode</td></tr><tr><td>UseFahrenheitDisplay</td><td>int</td><td>Turn on Fahrenheit temperature display, 1: on, 0: off</td></tr><tr><td>TemperatureCompensate</td><td>float</td><td>Temperature compensation value -10.0  -- +10.0</td></tr><tr><td>TemperatureAlarmThreshold</td><td>float</td><td>Temperature alarm threshold  example 37.5</td></tr><tr><td>TemperatureDisplay</td><td>int</td><td>Whether to display body temperature `` 0-disable; 1-enable</td></tr></tbody></table><h3 id="server-parameter-networkserver">Server Parameter NetworkServer</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>UseTCPClient</td><td>Int</td><td>Use TCPClient to connect to the server 1--enable; 0--disable;</td></tr><tr><td>UseUDPClient</td><td>Int</td><td>Use UDPClient to connect to the server 1--enable; 0--disable;</td></tr><tr><td>ServerAddress</td><td>string</td><td>Server address TCP or UDP protocol server address</td></tr><tr><td>ServerPort</td><td>int</td><td>Server port number</td></tr><tr><td>KeepaliveTime</td><td>int</td><td>Keep-alive packet interval 1-65535 seconds</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseHTTPClient</td><td>int</td><td>Whether to enable HTTPClient protocol 1--enable; 0--disable;</td></tr><tr><td>HTTPClient_ServerAddr</td><td>string</td><td>HTTP protocol server address</td></tr><tr><td>HTTPClient_KeepaliveTime</td><td>int</td><td>HTTP protocol keep-alive packet interval</td></tr><tr><td>HTTPClient_UseGZIP</td><td>int</td><td>Whether to use GZIP compression when requesting HTTP protocol 0--do not use; 1--use</td></tr><tr><td>HTTPClient_ProtocolType</td><td>int</td><td>HTTPClient Protocol Type<br>100 --- HTTPv1<br>200 ---HTTPv2</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseMQTTClient</td><td>int</td><td>Whether to start the MQTTClient protocol 1--enable; 0--disable;</td></tr><tr><td>UseMQTTSSL</td><td>int</td><td>Whether to enable SSL secure socket for MQTT 1--enable; 0--disable;</td></tr><tr><td>MQTTServerAddr</td><td>string</td><td>MQTT Server Address   www.abc.com</td></tr><tr><td>MQTTPort</td><td>int</td><td>MQTT Server port number</td></tr><tr><td>MQTTLoginName</td><td>string</td><td>User name for logging in to the MQTT protocol</td></tr><tr><td>MQTTLoginPassword</td><td>string</td><td>Password for logging in to MQTT protocol</td></tr><tr><td>MQTTPublishTopic</td><td>string</td><td>The topic used by devices to send data in the MQTT protocol</td></tr><tr><td>MQTTSubscribeTopic</td><td>string</td><td>Topic In the MQTT protocol, the topic that the device needs to subscribe to in order to receive data</td></tr><tr><td>MQTT_KeepaliveTime</td><td>int</td><td>The keep-alive packet interval of the MQTT protocol</td></tr><tr><td>MQTT_UseGZIP</td><td>int</td><td>Whether to use GZIP compression for mqtt 0--do not use; 1--use</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseWebsocketClient</td><td>int</td><td>Whether to start WebsocketClient protocol 1--enable; 0--disable;</td></tr><tr><td>WebsocketClient_ServerAddr</td><td>string</td><td>Websocket protocol server address<br>  ws://192.168.1.1/websocket   or  wss://192.168.1.1/websocket</td></tr><tr><td>WebsocketClient_KeepaliveTime</td><td>int</td><td>WebsocketClient protocol keepalive packet interval</td></tr><tr><td>WebsocketClient_UseGZIP</td><td>int</td><td>Websocket Whether to use GZIP compression 0--do not use; 1--use</td></tr><tr><td>WebsocketClient_ProtocolType</td><td>int</td><td>Websocket protocol type</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseYZW</td><td>int</td><td>Whether to enable Yunzhu network HTTPClient protocol 1-- Enable; 0-- Disable;</td></tr><tr><td>YZWAddr</td><td>string</td><td>Yunzhu network protocol server address</td></tr></tbody></table><h3 id="device-network-parameters-network">Device Network Parameters Network</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>ConnectPassword</td><td>string</td><td>Device communication password 32 characters</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseWired</td><td>int</td><td>Wired network switch, 1: on, 0: off</td></tr><tr><td>WiredDHCP</td><td>int</td><td>Wired network automatic ip, 1: on, 0: off</td></tr><tr><td>WiredIP</td><td>string</td><td>Wired network IP address (“//192.168.0.110”)</td></tr><tr><td>WiredIPMask</td><td>string</td><td>Wired network subnet mask ("//255.255.255.0")</td></tr><tr><td>WiredGteway</td><td>string</td><td>Wired network gateway (“//192.168.0.1”)</td></tr><tr><td>WiredDNS</td><td>string</td><td>Dns(“//192.168.0.1”)</td></tr><tr><td>WiredMAC</td><td>string</td><td>Wired network MAC address</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseWIFI</td><td>int</td><td>Wireless network switch, 1: on, 0: off</td></tr><tr><td>WIFIAPName</td><td>string</td><td>Wireless network account</td></tr><tr><td>WIFIAPPassword</td><td>string</td><td>Wireless network password</td></tr><tr><td>WIFIMAC</td><td>string</td><td>Wireless network MAC address</td></tr><tr><td>WIFIDHCP</td><td>int</td><td>Wireless network automatic ip, 1: on, 0: off</td></tr><tr><td>WIFIIP</td><td>string</td><td>Wireless network IP address(“//192.168.0.110”)</td></tr><tr><td>WIFIIPMask</td><td>string</td><td>Wireless network subnet mask(“//255.255.255.0”)</td></tr><tr><td>WIFIGteway</td><td>string</td><td>Wireless network gateway (“//192.168.0.1”)</td></tr><tr><td>WIFIDNS</td><td>string</td><td>Wireless network Dns (“//192.168.0.1”)</td></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseWebPage</td><td>int</td><td>Web page management switch, 1: on, 0: off</td></tr><tr><td>HTTPPort</td><td>int</td><td>Web management page port number, 1-65534</td></tr><tr><td>HTTPSPort</td><td>int</td><td>Web management page port number, 1-65534</td></tr><tr><td>WebPageUseSSL</td><td>int</td><td>Enable SSL on the device web page. Use OpenSSL self-signed SSL certificate</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseUDP</td><td>int</td><td>UDP port switch, 1: on, 0: off</td></tr><tr><td>UDPPort</td><td>int</td><td>UDP port number (used by UDP protocol)</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseTelnet</td><td>int</td><td>Linux Telnet function switch, 1: on, 0: off</td></tr><tr><td>TelnetPort</td><td>int</td><td>Telnet Port Number</td></tr><tr><td></td><td></td><td></td></tr><tr><td>UseRTSP</td><td>int</td><td>RTSP video stream, 1: on, 0: off</td></tr><tr><td>RTSPPort</td><td>int</td><td>RTSP Port Number</td></tr><tr><td>RTSPUser</td><td>string</td><td>RTSP User Name</td></tr><tr><td>RTSPPassword</td><td>string</td><td>RTSP Password</td></tr></tbody></table><h3 id="access-control-parameters-door">Access Control Parameters Door</h3><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>CardBytes</td><td>int</td><td>Yes</td><td>Card number byte; 3, 4, 8; 0--disable card reading</td></tr><tr><td>AccessType</td><td>int</td><td>Yes</td><td>Entry and exit type 0, entry; 1, exit</td></tr><tr><td>WgFormat</td><td>int</td><td>Yes</td><td>WG output format 26 / 34/ 66</td></tr><tr><td>WGContent</td><td>int</td><td>Yes</td><td>WG output content: 1--User ID,2--Card Number</td></tr><tr><td>ReleaseTime</td><td>int</td><td>Yes</td><td>Door open hold time 0-65535 (s). 0 means 0.5 seconds</td></tr><tr><td>DelayOpenDoorTime</td><td>int</td><td>Yes</td><td>Delay unlocking time 0-65535 (s). 0 -- disable</td></tr><tr><td>FreeOpen</td><td>int</td><td>Yes</td><td>Open door without verification 1--Enable; 0--Disable</td></tr><tr><td>OpenInterval</td><td>int</td><td>Yes</td><td>Repeat recognition interval 0--disabled; 1-65535（ms）</td></tr><tr><td>OpenInterval_SaveRecord</td><td>int</td><td>Yes</td><td>Repeat interval record storage setting 0, do not save; 1, save</td></tr><tr><td>Relay</td><td>int</td><td>Yes</td><td>Whether the relay supports bistable state. 1 -- support, 0 -- not support</td></tr><tr><td>ShortMessage</td><td>string</td><td>Yes</td><td>Short message after legal verification</td></tr><tr><td>VerificationType</td><td>int</td><td>Yes</td><td>Verification method<br> 1. Standard mode; 2. <strong>Face</strong><strong>/Fingerprint/Palm vein/Card</strong> <strong>+</strong> <strong>Password</strong> .... For details, please see the description below</td></tr><tr><td>OverdueRemind</td><td>int</td><td>Yes</td><td>Access level expiration reminder 1--enable; 0--disable</td></tr><tr><td>OverdueRemind_Day</td><td>int</td><td>Yes</td><td>Access level expiration reminder validity threshold, the minimum remaining valid days. If the number is lower than this, a prompt will be displayed after recognition that the validity period is about to expire. The value range is: 1-255. 0--means closed.</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>TimingOpen</td><td>int</td><td>Yes</td><td>Timed normally open function 1--Enable; 0--Disable</td></tr><tr><td>TimingOpen_mode</td><td>int</td><td>Yes</td><td>Timed normally open. Automatic opening mode: `<code>1. After legal authentication, it can be normally open within the specified time period</code><code>2. If the authorization is marked as normally open, it can be normally open after authentication within the specified time period</code>`3. Automatic opening and closing, automatically opening and closing the door at the time</td></tr><tr><td>TimingOpen_timegroup</td><td>object</td><td>Yes</td><td>Timed normally open.  Normally Open Period  Use Weekly Period Structure</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>TimingLocked</td><td>int</td><td>Yes</td><td>Timing lock function 1--Enable; 0--Disable</td></tr><tr><td>TimingLocked_timegroup</td><td>object</td><td>Yes</td><td>Timed lock.  Lock period  Use weekly period structure</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>VisitorRootPassword</td><td>string</td><td>Yes</td><td>Visitor Root Password</td></tr><tr><td>MultiPerson</td><td>int</td><td>Yes</td><td>Multi-group door opening ,number of people ;1-50；</td></tr></tbody></table><ul><li>VerificationType Verification Method</li></ul><div class="code-block"><pre>  
+  1. Standard Mode  Default Value
+  2. Face/Fingerprint/Palm Print/Card + Password
+  3. Card+Face/Fingerprint/Palm Print/Password
+  4. Multiple People Attendance
+  5. Person and Identification Comparison
+  6. Card + Face/Fingerprint/Palm Print + Password
+  7. Card + Fingerprint/Palm Print + Face
+  8. Fingerprint/Palm Print + Face + Password
+  9. Fingerprint + Palm Print + Face
+  10. Palm Print + Face
+  11. Fingerpint + Face
+  12. Only use palm print
+  13. Only use fingerprint
+  14. Only use card
+  15. Only use passsword
+  16.  Person and Identification Comparison Open + Registered Person (Identification card + face + registered)</pre></div><ul><li>**Weekly Time Period Format*</li></ul><div class="code-block"><div class="code-lang">json</div><pre>  {
+  
+  		Week1:&quot;00:00-23:59&quot;, //Monday	
+  		Week2:&quot;00:00-23:59&quot;,
+  		Week3:&quot;00:00-23:59&quot;,
+  		Week4:&quot;00:00-23:59&quot;,
+  		Week5:&quot;00:00-23:59&quot;,
+  		week6:&quot;00:00-23:59&quot;,
+  		week7:&quot;00:00-23:59&quot; //Sunday		
+		
+  }</pre></div><ul><li>Week1 means Monday</li><li>Week2 means Tuesday</li><li>Week3 means Wednesday</li><li>Week4 means Thursday</li><li>Week5 means Friday</li><li>Week6 means Saturday</li><li>Week7 means Sunday</li><li>Each week field represents the time period of a day.</li><li>Can set 8 sub-periods in one day, and the format is start time-end time/start time-end time/.....</li></ul><div class="code-block"><pre>  &quot;01:00-01:59/02:00-02:59/03:00-03:59/04:00-04:59/05:00-05:59/06:00-06:59/07:00-07:59/08:00-08:59&quot;
+  The string above defines 8 sub-periods in a day. A maximum of 8 sub-periods can be defined in a day.
+  
+  &quot;01:00-01:59/02:00--02:59&quot;
+  The above string defines two sub-periods of the day, and the other six periods are empty and invalid.
+  </pre></div><ul><li>If the week of the day is empty and the time period is not set, this field can be omitted</li></ul><div class="code-block"><div class="code-lang">json</div><pre>  {
+  		//This period is defined only week1 and week7  Other time periods are empty  
+		
+  		Week1:&quot;01:00-02:00&quot;,
+  		Week7:&quot;03:00-04:00&quot;
+  }</pre></div><h3 id="elevator-function-parameters-elevator">Elevator Function Parameters Elevator</h3><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>UseElevator</td><td>int</td><td>Yes</td><td>Elevator function switch, 1: on, 0: off</td></tr><tr><td>ElevatorPorts</td><td>[] Array of Objects</td><td>Yes</td><td>ElevatorPort Array of Objects Define a list of elevator ports</td></tr></tbody></table><p>Elevator Port Object</p><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Num</td><td>int</td><td>Yes</td><td>Elevator port number 1-64</td></tr><tr><td>RelayType</td><td>int</td><td>Yes</td><td>Elevator relay (COM&amp;NO normally closed, COM&amp;NC normally closed)<code><br></code>Value range: 1. COM&amp;NC normally closed (default value); 2. COM&amp;NO normally closed</td></tr><tr><td>ReleaseTime</td><td>int</td><td>Yes</td><td>Output duration when unlocking. Maximum 65535 seconds. 0 means 0.5 seconds</td></tr><tr><td>TimingOpen</td><td>obj</td><td>Yes</td><td>Timed normally open function structure</td></tr></tbody></table><ul><li>timingOpen Timed normally open function</li></ul><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Use</td><td>int</td><td>Yes</td><td>Function switch, 0-disable; 1-enable</td></tr><tr><td>Open</td><td>int</td><td>Yes</td><td>Automatic opening mode: <code><br></code>1. After passing the legal authentication, the door can be opened normally within the specified time period. <code><br></code>2. If the authorization is marked as the normally open privilege, the door can be opened normally within the specified time period after passing the authentication. <code><br></code>3. Automatic opening and closing, automatically opening and closing the door at the specified time</td></tr><tr><td>Timegroup</td><td>obj</td><td>Yes</td><td>Normally opening period, using weekly period structure</td></tr></tbody></table><h3 id="alarm-parameter-alarm">Alarm Parameter Alarm</h3><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>FireAlarm</td><td>int</td><td>Yes</td><td>Fire alarm, 0, Disable; 1, Enable</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>DoorLongOpenAlarm</td><td>int</td><td>Yes</td><td>Door opening timeout alarm switch, 1: Enable, 0: Disable</td></tr><tr><td>DoorLongOpenTime</td><td>int</td><td>Yes</td><td>Door opening timeout, alarm will be triggered if the door is opened for more than this time	1-65535（s）</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>DoorSensorAlarm</td><td>int</td><td>Yes</td><td>Door sensor alarm, 0, Disable; 1, Enable</td></tr><tr><td>DoorSensorAlarmTimegroup</td><td>class</td><td>Yes</td><td>Door sensor alarm or non-alarm period, weekly period format</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>BlacklistAlarm</td><td>int</td><td>Yes</td><td>Blacklist alarm, 0, Disable; 1, Enable</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>AntiDisassemblyAlarm</td><td>int</td><td>Yes</td><td>Tamper Alarm Function Switch,0,Disable;1,Enable</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>IllegalVerificationAlarm</td><td>int</td><td>Yes</td><td>Illegal verification alarm function, 0, Disable; 1, Enable</td></tr><tr><td>IllegalVerificationAlarmLimit</td><td>int</td><td>Yes</td><td>Illegal verification alarm function-number of illegal authentications,1-255</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>UseUserCloseAlarm</td><td>int</td><td>Yes</td><td>Allow the user to verify the alarm release switch, 0, Disable; 1, Enable</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>PasswordAlarm</td><td>int</td><td>Yes</td><td>Duress alarm password function, 0, Disable; 1, Enable</td></tr><tr><td>PasswordAlarm_Password</td><td>string</td><td>Yes</td><td>Duress alarm password. An alarm will occur when enter this password. The password only supports numbers and can contain 0.</td></tr><tr><td>PasswordAlarm_Mode</td><td>string</td><td>Yes</td><td>Working mode when duress alarm occurs `<code>1--Do not open the door, alarm output</code><code>2--Open the door, alarm output </code><code>3--Lock the door, alarm, can only be unlocked by software</code>`</td></tr></tbody></table><h3 id="device-door-opening-time-period-timegroup">Device Door Opening time period Timegroup</h3><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>TimeGroups</td><td>[] Array of objects</td><td>Yes</td><td>Device Opening Time Period</td></tr></tbody></table><p><strong>Device opening door time period format description</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Parameter
+
+TimeGroups:[
+	{
+		Num:1,
+		Week1:&quot;00:00-23:59&quot;, //Monday
+		
+		Week2:&quot;00:00-23:59&quot;,
+		Week3:&quot;00:00-23:59&quot;,
+		Week4:&quot;00:00-23:59&quot;,
+		Week5:&quot;00:00-23:59&quot;,
+		Week6:&quot;00:00-23:59&quot;,
+		Week7:&quot;00:00-23:59&quot; //Sunday
+	},
+	{
+		Num:2,
+		Week1:&quot;01:00-01:59/02:00-02:59/01:00-01:59/02:00-02:59&quot;,
+		..
+		Week7:&quot;00:00-00:00&quot;
+	},
+	......
+	{
+		Num:64,
+		Week1:&quot;00:00-00:00&quot;,
+		..
+		Week7:&quot;00:00-00:00&quot;
+	}
+]</pre></div><ul><li>The maximum num of device opening time periods is 64, which means the device has a maximum of 64 sets of opening time periods.</li><li>week1 means Monday</li><li>week1 means Monday</li><li>week2 means Tuesday</li><li>week3 means Wednesday</li><li>week4 means Thursday</li><li>week5 means Friday</li><li>week6 means Saturday</li><li>week7 mean Sunday</li><li>Each week field indicates the time period of a day</li><li>Can set 8 sub-periods in a day. The format is start time-end time/start time-end time/.....</li></ul><div class="code-block"><pre>  &quot;01:00-01:59/02:00-02:59/03:00-03:59/04:00-04:59/05:00-05:59/06:00-06:59/07:00-07:59/08:00-08:59&quot;
+  The string above defines 8 sub-periods in a day. A maximum of 8 sub-periods can be defined in a day.
+  
+  &quot;01:00-01:59/02:00-02:59&quot;
+  The above string defines two sub-periods of the day, and the other six periods are empty and invalid.</pre></div><ul><li>If the week is empty and the time period is not set, this field can be omitted</li></ul><div class="code-block"><pre>  {
+		Num:64,  //This time period is defined only week1 and week7 other time periods are empty. 
+  		Week1:&quot;01:00-02:00&quot;,
+  		Week7:&quot;03:00-04:00&quot;
+  	}</pre></div><h3 id="device-holidays-holiday">Device Holidays Holiday</h3><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Holidays</td><td>[]</td><td>Yes</td><td>Holidays</td></tr></tbody></table><div class="code-block"><div class="code-lang">json</div><pre>[
+ {&quot;Num&quot;:1,&quot;Date&quot;:&quot;2020-10-01&quot;,&quot;Type&quot;:1,&quot;Cycle&quot;:1},
+ {&quot;Num&quot;:2,&quot;Date&quot;:&quot;2020-10-02&quot;,&quot;Type&quot;:2,&quot;Cycle&quot;:0},
+...
+]</pre></div><p>Holidays use an object array format, and each object contains two fields, num and date.</p><p>The device currently supports 360 groups of holidays</p><p>On holidays, it is forbidden to open the door (can set access level for holidays)</p><p><strong>Holiday object field description</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Num</td><td>int</td><td>Yes</td><td>The serial number of holidays, use when binding personnel access level</td></tr><tr><td>Date</td><td>string</td><td>Yes</td><td>Holiday Date Year-Month-Day Example:2020-10-01</td></tr><tr><td>Type</td><td>int</td><td>No</td><td>Holiday control range, 1--all day; 2--00:00-12:00 in the morning; 3--afternoon (12:00-23:59), the default value is 1;</td></tr><tr><td>Cycle</td><td>int</td><td>No</td><td>Whether to cycle every year, 1--cycle every year; 0--no cycle; the default value is 0;</td></tr></tbody></table><h3 id="alarm-clock-alarmclock">Alarm Clock** AlarmClock</h3><h4 id="up-to-24-groups-of-alarm-clock">Up to 24 groups of alarm clock</h4><p>| Field     | Type | Required | Description   |</p><p>| :------- | :--- | :--- | :----- |</p><p>| AlarmClocks | []   | Yes   | Alarm Clock |</p><div class="code-block"><div class="code-lang">json</div><pre>[
+ {&quot;Num&quot;:1,&quot;Clock&quot;:&quot;12:00&quot;,&quot;Times&quot;:10},
+ {&quot;Num&quot;:2,&quot;Clock&quot;:&quot;13:00&quot;,&quot;Times&quot;:10},
+ {&quot;Num&quot;:3,&quot;Clock&quot;:&quot;14:00&quot;,&quot;Times&quot;:10},
+...
+]</pre></div><p>The alarm clock uses an object array format, and each object contains three fields: Num, Clock, and Times.</p><p>The device currently supports 24 sets of alarm clock</p><p><strong>Alarm clock object field description</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Num</td><td>int</td><td>Yes</td><td>Alarm clock serial number, value range1-24</td></tr><tr><td>Clock</td><td>int</td><td>Yes</td><td>Alarm clock time point  HHmm format example: 1230 means 12:30</td></tr><tr><td>Times</td><td>int</td><td>No</td><td>Alarm ringing duration, unit: seconds, value range: 0-255</td></tr></tbody></table><h2 id="api-obtain-the-device-function-list">API-Obtain the device function list</h2><p><strong>Brief description:</strong></p><ul><li>After logging in, call this interface to obtain the function list of the device and adjust the interface accordingly.</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Device/FunctionList</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="return-example">Return example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Return function list supported by the device
+{ 
+    &quot;result&quot;: true , 
+    &quot;content&quot;: {
+        //Body Temperature Detection
+		
+        &quot;BodyTemperature&quot;: true,
+        //Fingerprint
+	
+        &quot;Fingerprint&quot;: true,
+        //Palm Print
+	
+        &quot;Palmvein&quot;: true,
+        //Face Recognition
+	
+        &quot;Face&quot;: true,
+        //QR Code
+	
+        &quot;QRCode&quot;: true,
+        //Mask Detection
+	
+        &quot;FaceMask&quot;: true,
+        //Helmet Detection
+	
+        &quot;SafetyHelmet&quot;: true,
+        //Elevator
+	
+        &quot;Lift&quot;: true,
+        //Alarm Clock
+	
+        &quot;AlarmClock&quot;: true,
+        //excel export and import
+	
+        &quot;ExcelFile&quot;: true,
+        //zip import
+	
+        &quot;ZipFile&quot;: true,
+        //Number of time period
+	
+        &quot;TimeGreoup&quot;: true,
+        //Wireless Network
+	
+        &quot;WIFI&quot;: true,
+        //HTTPClient v1
+        &quot;HTTPClient_V1&quot;: true,
+        //HTTPClient v2
+        &quot;HTTPClient_V2&quot;: true,
+        //MQTT
+        &quot;MQTT&quot;: true,
+        //Yunzhu Network
+	
+        &quot;YZW&quot;: true,
+        //Websocket V1
+        &quot;Websocket_V1&quot;: true,
+        //Websocket V2
+        &quot;Websocket_V2&quot;: true
+    }
+}
+
+//Log Out
+
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 401,
+  &quot;error&quot;: &quot;token verification failed&quot;
+  
+}
+</pre></div><h2 id="api-obtain-device-operating-parameters">API-Obtain device operating parameters</h2><p><strong>Brief Description:</strong></p><ul><li>After logging in, call this interface to obtain the working status of the device</li></ul><p><strong>Reques URL:</strong></p><ul><li>http://server IP:port/api/Device/GetDetail</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="request-parameter">Request parameter</h3><table><thead><tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>SystemInfo</td><td>bool</td><td>No</td><td>Device Basic Info</td></tr><tr><td>Status</td><td>bool</td><td>No</td><td>Device Working Status</td></tr><tr><td>Language</td><td>bool</td><td>No</td><td>Region and language</td></tr><tr><td>UI</td><td>bool</td><td>No</td><td>Man-machine ineraction</td></tr><tr><td>Storage</td><td>bool</td><td>No</td><td>Data storage</td></tr><tr><td>Face</td><td>bool</td><td>No</td><td>Face recognition</td></tr><tr><td>BodyTemperature</td><td>bool</td><td>No</td><td>Body temperature detection</td></tr><tr><td>NetworkServer</td><td>bool</td><td>No</td><td>Server Parameter</td></tr><tr><td>Network</td><td>bool</td><td>No</td><td>Device Network Parameter</td></tr><tr><td>Door</td><td>bool</td><td>No</td><td>Access Control Parameter</td></tr><tr><td>Elevator</td><td>bool</td><td>No</td><td>Elevator Function Parameter</td></tr><tr><td>Alarm</td><td>bool</td><td>No</td><td>Alarm Parameter</td></tr><tr><td>TimeGroups</td><td>bool</td><td>No</td><td>Device Opening Time Period</td></tr><tr><td>Holidays</td><td>bool</td><td>No</td><td>Device Holidays</td></tr><tr><td>AlarmClocks</td><td>bool</td><td>No</td><td>Alarm Clock</td></tr></tbody></table><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;SystemInfo&quot;: true,
+    &quot;Status&quot;: true,
+    &quot;Language&quot;: true,
+    &quot;UI&quot;: true,
+    &quot;Storage&quot;: true,
+    &quot;Face&quot;: true,
+    &quot;BodyTemperature&quot;: true,
+    &quot;NetworkServer&quot;: true,
+    &quot;Network&quot;: true,
+    &quot;Door&quot;: true,
+    &quot;Elevator&quot;: true,
+    &quot;Alarm&quot;: true,
+    &quot;TimeGroups&quot;: true,
+    &quot;Holidays&quot;: true,
+    &quot;AlarmClocks&quot;: true
+}</pre></div><p><strong>Return Parameter Description</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th><th></th></tr></thead><tbody><tr><td>deviceId</td><td>string</td><td>Yes</td><td>Device ID</td><td></td></tr><tr><td>Other function parameters of the device</td><td></td><td></td><td></td><td>{</td></tr></tbody></table><div class="code-block"><div class="code-lang">json</div><pre>//Return on successful verification
+
+{
+  &quot;result&quot;: true, 
+  &quot;content&quot;: {
+  
+	//Alarm Parameters Alarm
+
+	&quot;FireAlarm&quot;:	1,
+	&quot;DoorLongOpenAlarm&quot;:	1,
+	&quot;DoorLongOpenTime&quot;:	60,
+	&quot;DoorSensorAlarm&quot;:	1,
+	&quot;DoorSensorAlarmTimegroup&quot;:	{
+		&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+		&quot;Week2&quot;:	&quot;01:01-01:51/02:01-02:51/03:01-03:51/04:01-04:51/05:01-05:51/06:01-06:51/07:01-07:51/08:01-08:51&quot;,
+		&quot;Week3&quot;:	&quot;02:02-02:52/03:02-03:52/04:02-04:52/05:02-05:52/06:02-06:52/07:02-07:52/08:02-08:52/09:02-09:52&quot;,
+		&quot;Week4&quot;:	&quot;03:03-03:53/04:03-04:53/05:03-05:53/06:03-06:53/07:03-07:53/08:03-08:53/09:03-09:53/10:03-10:53&quot;,
+		&quot;Week5&quot;:	&quot;04:04-04:54/05:04-05:54/06:04-06:54/07:04-07:54/08:04-08:54/09:04-09:54/10:04-10:54/11:04-11:54&quot;,
+		&quot;Week6&quot;:	&quot;05:05-05:55/06:05-06:55/07:05-07:55/08:05-08:55/09:05-09:55/10:05-10:55/11:05-11:55/12:05-12:55&quot;,
+		&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+	},
+	&quot;BlacklistAlarm&quot;:	1,
+	&quot;AntiDisassemblyAlarm&quot;:	1,
+	&quot;IllegalVerificationAlarm&quot;:	1,
+	&quot;IllegalVerificationAlarmLimit&quot;:	5,
+	&quot;UseUserCloseAlarm&quot;:	1,
+	&quot;PasswordAlarm&quot;:	1,
+	&quot;PasswordAlarm_Password&quot;:	&quot;110110&quot;,
+	&quot;PasswordAlarm_Mode&quot;:	2,
+	
+	
+	
+	//Alarm Clock AlarmClock
+
+	&quot;AlarmClocks&quot;:	[{
+			&quot;Num&quot;:	1,
+			&quot;Clock&quot;:	&quot;00:01&quot;,
+			&quot;Times&quot;:	1
+		}, {
+			&quot;Num&quot;:	24,
+			&quot;Clock&quot;:	&quot;23:24&quot;,
+			&quot;Times&quot;:	24
+		}],
+		
+		
+	
+	//BodyTemperature Detection BodyTemperature
+
+	&quot;UseBodyTemperature&quot;:	1,
+	&quot;UseFahrenheitDisplay&quot;:	1,
+	&quot;TemperatureCompensate&quot;:	-1.5,
+	&quot;TemperatureAlarmThreshold&quot;:	37.5,
+	&quot;TemperatureDisplay&quot;:	1,
+	
+	
+	
+	
+	//Access Control Parameters Door
+
+	&quot;CardBytes&quot;:	4,
+	&quot;AccessType&quot;:	0,
+	&quot;WgFormat&quot;:	34,
+	&quot;WGContent&quot;:	1,
+	&quot;ReleaseTime&quot;:	3,
+	&quot;FreeOpen&quot;:	1,
+	&quot;OpenInterval&quot;:	30,
+	&quot;OpenInterval_SaveRecord&quot;:	1,
+	&quot;Relay&quot;:	1,
+	&quot;ShortMessage&quot;:	&quot;Good morning&quot;,
+
+	&quot;VerificationType&quot;:	1,
+	&quot;OverdueRemind&quot;:	1,
+	&quot;OverdueRemind_Day&quot;:	3,
+	&quot;TimingOpen&quot;:	1,
+	&quot;TimingOpen_mode&quot;:	3,
+	&quot;TimingOpen_timegroup&quot;:	{
+		&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+		&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+	},
+	&quot;TimingLocked&quot;:	1,
+	&quot;TimingLocked_timegroup&quot;:	{
+		&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+		&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+	},
+	&quot;VisitorRootPassword&quot;:	&quot;123456&quot;,
+	&quot;MultiPerson&quot;:	1,
+		
+	
+	
+	
+	//Elevator Function Parameter Elevator
+
+	&quot;UseElevator&quot;:	1,
+	&quot;ElevatorPorts&quot;:	[{
+			&quot;Num&quot;:	1,
+			&quot;RelayType&quot;:	0,
+			&quot;ReleaseTime&quot;:	3,
+			&quot;TimingOpen&quot;:	{
+				&quot;Use&quot;:	1,
+				&quot;Open&quot;:	3,
+				&quot;Timegroup&quot;:	{
+					&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+					&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+				}
+			}
+		}, {
+			&quot;Num&quot;:	64,
+			&quot;RelayType&quot;:	0,
+			&quot;ReleaseTime&quot;:	3,
+			&quot;TimingOpen&quot;:	{
+				&quot;Use&quot;:	1,
+				&quot;Open&quot;:	3,
+				&quot;Timegroup&quot;:	{
+					&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+					&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+				}
+			}
+		}],
+		
+		
+	
+	//Face Recogmnition Face
+	&quot;FaceIR&quot;:	1,
+	&quot;FaceIRThreshold&quot;:	80,
+	&quot;FaceDistance&quot;:	1,
+	&quot;FaceThreshold&quot;:	65,
+	&quot;FPComparison&quot;:	80,
+	&quot;FaceMask&quot;:	0,
+	&quot;FaceMaskThreshold&quot;:	65,
+	
+	
+	
+	
+	//Device Holidays Holiday
+	&quot;Holidays&quot;:	[{
+			&quot;Num&quot;:	1,
+			&quot;Date&quot;:	&quot;2024-01-01&quot;,
+			&quot;Type&quot;:	1,
+			&quot;Cycle&quot;:	1
+		}, {
+			&quot;Num&quot;:	30,
+			&quot;Date&quot;:	&quot;2024-01-30&quot;,
+			&quot;Type&quot;:	1,
+			&quot;Cycle&quot;:	1
+		}],
+		
+	
+	//Region &amp; Language  Language
+	&quot;Language&quot;:	1,
+	&quot;SystemTime&quot;:	1710489007,
+	&quot;TimeZone&quot;:	8,
+	&quot;Volume&quot;:	10,
+	&quot;Voice&quot;:	1,
+	
+	
+	//Device Networking Parameters Network
+
+	&quot;ConnectPassword&quot;:	&quot;12345678&quot;,
+	&quot;UseWired&quot;:	1,
+	&quot;WiredDHCP&quot;:	1,
+	&quot;WiredIP&quot;:	&quot;192.168.1.150&quot;,
+	&quot;WiredIPMask&quot;:	&quot;255.255.255.0&quot;,
+	&quot;WiredGteway&quot;:	&quot;192.168.1.1&quot;,
+	&quot;WiredDNS&quot;:	&quot;8.8.8.8&quot;,
+	&quot;WiredMAC&quot;:	&quot;01-02-03-04-05-06&quot;,
+	&quot;UseWIFI&quot;:	1,
+	&quot;WIFIDHCP&quot;:	1,
+	&quot;WIFIIP&quot;:	&quot;192.168.1.150&quot;,
+	&quot;WIFIIPMask&quot;:	&quot;255.255.255.0&quot;,
+	&quot;WIFIGteway&quot;:	&quot;192.168.1.1&quot;,
+	&quot;WIFIDNS&quot;:	&quot;8.8.8.8&quot;,
+	&quot;WIFIMAC&quot;:	&quot;01-02-03-04-05-06&quot;,
+	&quot;WIFIAPName&quot;:	&quot;abcd&quot;,
+	&quot;WIFIAPPassword&quot;:	&quot;12345678&quot;,
+	&quot;UseWebPage&quot;:	1,
+	&quot;WebPagePort&quot;:	80,
+	&quot;WebPageUseSSL&quot;:	1,
+	&quot;UseUDP&quot;:	1,
+	&quot;UDPPort&quot;:	8101,
+	&quot;UseTelnet&quot;:	1,
+	&quot;TelnetPort&quot;:	23,
+	&quot;UseRTSP&quot;:	1,
+	&quot;RTSPPort&quot;:	554,
+	&quot;RTSPUser&quot;:	&quot;admin&quot;,
+	&quot;RTSPPassword&quot;:	&quot;12345678&quot;,
+	
+	
+	
+	//Server Parameters NetworkServer
+
+		&quot;ServerAddress&quot;:	&quot;www.pc15.net&quot;,
+		&quot;ServerPort&quot;:	9003,
+		&quot;KeepaliveTime&quot;:	30,
+		&quot;ServerProtocol&quot;:	1,
+		&quot;HttpRequestUseGZIP&quot;:	1,
+		
+		
+	
+	//Device Working Status Status
+
+	&quot;RunDays&quot;:	10,
+	&quot;FormatCount&quot;:	66,
+	&quot;WatchDogCount&quot;:	13,
+	&quot;BootTime&quot;:	1710489007,
+	&quot;RelayStatus&quot;:	1,
+	&quot;KeepOpenStatus&quot;:	1,
+	&quot;DoorSensorStatus&quot;:	1,
+	&quot;LockDoorStatus&quot;:	1,
+	&quot;AlarmStatus&quot;:	&quot;fire,blacklist&quot;,
+	
+	//Data Storage Storage
+
+	
+	&quot;RecordAutoCycle&quot;:	1,
+	&quot;SaveUnregistered&quot;:	1,
+	&quot;SaveRecordPicture&quot;:	1,
+	&quot;PeopleStorageInfo&quot;:	{
+		&quot;Person&quot;:	{
+			&quot;Max&quot;:	10000,
+			&quot;Current&quot;:	100
+		},
+		&quot;Face&quot;:	{
+			&quot;Max&quot;:	20000,
+			&quot;Current&quot;:	200
+		},
+		&quot;Card&quot;:	{
+			&quot;Max&quot;:	30000,
+			&quot;Current&quot;:	300
+		},
+		&quot;Fingerprint&quot;:	{
+			&quot;Max&quot;:	40000,
+			&quot;Current&quot;:	400
+		},
+		&quot;PalmVein&quot;:	{
+			&quot;Max&quot;:	50000,
+			&quot;Current&quot;:	500
+		},
+		&quot;Pasword&quot;:	{
+			&quot;Max&quot;:	60000,
+			&quot;Current&quot;:	600
+		},
+		&quot;Admin&quot;:	{
+			&quot;Max&quot;:	70000,
+			&quot;Current&quot;:	700
+		}
+	},
+	&quot;RecordStorageInfo&quot;:	{
+		&quot;VerifyRecord&quot;:	{
+			&quot;Max&quot;:	80000,
+			&quot;Current&quot;:	800
+		},
+		&quot;DoorRecord&quot;:	{
+			&quot;Max&quot;:	90000,
+			&quot;Current&quot;:	900
+		},
+		&quot;SystemRecord&quot;:	{
+			&quot;Max&quot;:	11000,
+			&quot;Current&quot;:	110
+		},
+		&quot;RecordPhoto&quot;:	{
+			&quot;Max&quot;:	12000,
+			&quot;Current&quot;:	120
+		}
+	},
+	
+	
+	
+	//Device Basic Info SystemInfo
+
+	&quot;DeviceSN&quot;:	&quot;FC-8190H12345678&quot;,
+	&quot;DeviceName&quot;:	&quot;FC-8190H&quot;,
+	&quot;FirmwareVerson&quot;:	&quot;8.23&quot;,
+	&quot;FingerprintVerson&quot;:	&quot;8.23&quot;,
+	&quot;FaceVerson&quot;:	&quot;6.01&quot;,
+	&quot;Manufacturer&quot;:	&quot;Guangzhou XXXXXXXXXX Technology Co., Ltd.&quot;,
+	&quot;ManufacturerPhone&quot;:	&quot;020-12345678&quot;,
+	&quot;Website&quot;:	&quot;www.abc123.com&quot;,
+	&quot;ProductionDate&quot;:	&quot;2024-01-01&quot;,
+	&quot;OEMText&quot;:	&quot;abcdefg12345 Hi&quot;,
+	&quot;AutoRestart&quot;:	0,
+	&quot;AutoRestartTime&quot;:	0,
+	
+	
+	//Device Opening Time Period Timegroup
+
+	&quot;TimeGroups&quot;:	[{
+			&quot;Num&quot;:	1,
+			&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+			&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+		},  {
+			&quot;Num&quot;:	64,
+			&quot;Week1&quot;:	&quot;00:00-00:50/01:00-01:50/02:00-02:50/03:00-03:50/04:00-04:50/05:00-05:50/06:00-06:50/07:00-07:50&quot;,
+			&quot;Week7&quot;:	&quot;06:06-06:56/07:06-07:56/08:06-08:56/09:06-09:56/10:06-10:56/11:06-11:56/12:06-12:56/13:06-13:56&quot;
+		}],
+	
+	
+	
+	//Man-machine interaction UI
+	&quot;DisplayBrightness&quot;:	10,
+	&quot;MenuPassword&quot;:	&quot;123456&quot;,
+	&quot;ShowIR&quot;:	1,
+	&quot;ShowPersonPhoto&quot;:	1,
+	&quot;PlayPersonName&quot;:	1,
+	&quot;RecognitionButon&quot;:	1,
+	&quot;UnregisteredWarn&quot;:	1,
+	&quot;ShowPersonName&quot;:	1,
+	&quot;FillLight&quot;:	2
+	
+	}
+
+}</pre></div><div class="code-block"><div class="code-lang">json</div><pre>//Log out
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 401,
+  &quot;error&quot;: &quot;token verification failed&quot;
+}</pre></div><h2 id="api-update-device-working-parameters">API-update device working parameters</h2><p><strong>Brief Description:：</strong></p><ul><li>When the user modifies the device working parameters, use this interface to upload the modified working parameters</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Device/UpdateParameter</li></ul><p><strong>Request Mode</strong></p><ul><li>POST</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="request-parameters-4">Request Parameters</h3><ul><li>Device working parameter fields that need to be updated</li></ul><h3 id="request-example">Request example</h3><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;DeviceSN&quot;: &quot;FC-8190H12345678&quot;,
+    &quot;DeviceName&quot;: &quot;FC-8190H&quot;,
+    &quot;Manufacturer&quot;: &quot;Manufacturer Manufacturer Manufacturer&quot;,
+    &quot;ManufacturerPhone&quot;: &quot;020-12345678&quot;,
+    &quot;Website&quot;: &quot;www.abc123.com&quot;,
+    &quot;ProductionDate&quot;: &quot;2024-01-01&quot;,
+    &quot;OEMText&quot;: &quot;OEMText OEMText OEMText&quot;,
+    &quot;AutoRestartTime&quot;: &quot;23:59&quot;,
+    &quot;RecordAutoCycle&quot;: 1,
+    &quot;SaveUnregistered&quot;: 1,
+    &quot;SaveRecordPicture&quot;: 1,
+    &quot;AutoRestart&quot;: 0
+}</pre></div><h3 id="return-example-2">Return example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Update success return
+
+{ &quot;result&quot;: true , &quot;content&quot;: &quot;OK&quot; }
+
+//Log out
+
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 401,
+  &quot;error&quot;: &quot;token verification failed&quot;
+
+}
+
+//Parameter error return
+
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 1,
+  &quot;error&quot;: &quot;parameter error:  ..... &quot;
+}</pre></div><h2 id="api-send-device-control-command">API-send device control command</h2><p><strong>Brief Description ：</strong></p><ul><li>Send when the user clicks on a remote control command on the device page</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Device/Remote</li></ul><p><strong>Request Mode</strong></p><ul><li>POST</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="request-parameters-5">Request Parameters</h3><table><thead><tr><th>Command</th><th>Type</th><th>Description</th><th>Required</th></tr></thead><tbody><tr><td>OpenDoor</td><td>bool</td><td>Remote door opening</td><td>No</td></tr><tr><td>CloseDoor</td><td>bool</td><td>Remote door closing</td><td>No</td></tr><tr><td>KeepOpen</td><td>bool</td><td>Remote normally open</td><td>No</td></tr><tr><td>LockDoor</td><td>bool</td><td>Remote lock</td><td>No</td></tr><tr><td>UnlockDoor</td><td>bool</td><td>Remote unlock</td><td>No</td></tr><tr><td>FireAlarm</td><td>bool</td><td>Let the device have a fire alarm</td><td>No</td></tr><tr><td>CloseAlarm</td><td>bool</td><td>Disable alarm</td><td>No</td></tr><tr><td>Restart</td><td>bool</td><td>Restart the device</td><td>No</td></tr><tr><td>Recover</td><td>bool</td><td>Reset the device to factory default</td><td>No</td></tr></tbody></table><h3 id="request-example-2">Request example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Remote door opening
+{
+  &quot;OpenDoor&quot;: true
+}</pre></div><h3 id="return-example-3">Return example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Return when verification succeeds
+{
+  &quot;result&quot;: true
+}
+
+//Log out
+
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 401,
+  &quot;error&quot;: &quot;token verification failed&quot;
+
+}
+
+//Parameter error return
+
+{
+  &quot;result&quot;: false, 
+  &quot;errCode&quot;: 1,
+  &quot;error&quot;: &quot;no action to be performed&quot;
+}</pre></div><h2 id="api-update-device-firmware">API-update device firmware</h2><p><strong>Brief Description：</strong></p><ul><li>When the user is on the device page, called when uploading new firmware</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Device/UploadSoftware</li></ul><p><strong>Request Mode</strong></p><ul><li>POST</li></ul><p><strong>Verify Toekn</strong></p><ul><li>Verify</li></ul><p><strong>Content-Type</strong></p><ul><li>multipart/form-data</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="request-parameters-6">Request Parameters</h3><h3 id="request-parameters-7">Request Parameters</h3><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>SoftwareMD5</td><td>string</td><td>30</td><td>Yes</td><td>MD5 value of the firmware</td></tr><tr><td>SoftwareFile</td><td>application/octet-stream</td><td>30</td><td>Yes</td><td>Firmware File<br/>This field must contain Content-Type: application/octet-stream</td></tr></tbody></table><h3 id="request-example-3">.**Request example</h3><h4 id="request-example-4">Request example</h4><div class="code-block"><pre>POST /note/insertNoteFace HTTP/1.1
+Accept: */*
+Host: localhost:5000
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: multipart/form-data; boundary=--------------------------506873351428002157394455
+Content-Length: 17842
+
+----------------------------506873351428002157394455
+Content-Disposition: form-data; name=&quot;softwareMD5&quot;
+
+abcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefg
+----------------------------506873351428002157394455
+Content-Disposition: form-data; name=&quot;softwareFile&quot;; filename=&quot;softwareFile.pkg&quot;
+Content-Type: application/octet-stream
+
+*****jpeg file binary content*****
+
+----------------------------506873351428002157394455--</pre></div><h3 id="return-example-4">Return example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Return when verification succeeds
+
+{
+  &quot;result&quot;: true
+}</pre></div><h1 id="personnel-management">Personnel Management</h1><h2 id="api-obtain-a-list-of-users">API-obtain a list of users</h2><p><strong>Brief Description:</strong></p><ul><li>When querying users on thr UI, call this interface</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/People/Search</li></ul><p><strong>Request mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Request required parameters</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>PageIndex</td><td>uint32</td><td></td><td>Yes</td><td>Current page index, starting from 1</td></tr><tr><td>PageSize</td><td>uint32</td><td></td><td>Yes</td><td>Number of people per page requested</td></tr></tbody></table><p><strong>Request optional parameters</strong></p><ul><li>Optional parameters for filtering queries</li></ul><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>UserID</td><td>string</td><td>No</td><td>User ID (characters &lt; 32 bits)</td><td></td></tr><tr><td>Name</td><td>string</td><td>No</td><td>User Name (characters &lt; 32 bits)</td><td></td></tr><tr><td>Job</td><td>string</td><td>No</td><td>Position (characters &lt; 32 bits)</td><td></td></tr><tr><td>Department</td><td>string</td><td>No</td><td>Department (characters &lt; 32 bits)</td><td></td></tr><tr><td>AccessType</td><td>int</td><td>No</td><td>Role 0--Staff;1--Admin;2--Blacklist</td><td></td></tr><tr><td>Timegroup</td><td>int</td><td>No</td><td>Opening time group 1-64</td><td></td></tr><tr><td>Photo</td><td>int</td><td>No</td><td>Are there any photos? 1--Yes;0--No</td><td></td></tr><tr><td>CardNum</td><td>string</td><td>No</td><td>IC card number pure number maximum support uint64</td><td></td></tr><tr><td>IdentityCard</td><td>string</td><td>No</td><td>Identity Card Number (Can be empty)</td><td></td></tr><tr><td>Fingerprint</td><td>int</td><td>No</td><td>Are there any fingerprints? 1--Yes;0--No</td><td></td></tr><tr><td>Palmprint</td><td>int</td><td>No</td><td>Are there any palm prints? 1--Yes;0--No</td><td></td></tr><tr><td>OrderByColumn</td><td>string</td><td>No</td><td>The column to sort by, the default is UserID<br> The optional contains UserID,Name,Department，Job，CardNum</td><td></td></tr><tr><td>OrderByType</td><td>string</td><td>No</td><td>ASC or  DESC    Sort ordering, ascending or descending order<br> Default is ASC</td><td></td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;PageIndex&quot;:1,
+	&quot;PageSize&quot;:20,
+	&quot;UserName&quot;:&quot;Wang&quot; //This field indicates that you are searching for people whose usernames contain &quot;Wang&quot;
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true,
+	&quot;errCode&quot;:0,
+	&quot;msg&quot;:&quot;&quot;,
+
+	&quot;content&quot;: {
+		&quot;TotalCount&quot;: 2000,//The total number of users queried
+
+		&quot;PageIndex&quot;:1,//Current page index
+
+		&quot;PageSize&quot;:20,//Number of users currently on the page
+
+		&quot;DataList&quot;:[//Returned User List
+
+			{
+                &quot;UserID&quot;: &quot;1&quot;,
+		&quot;Name&quot;: &quot;Test Name1&quot;,
+                &quot;Job&quot;: &quot;&quot;,
+		&quot;Department&quot;: &quot;Sales Department&quot;,
+                &quot;Password&quot;: &quot;&quot;,
+                &quot;CardNum&quot;: &quot;0&quot;,
+                &quot;AccessType&quot;: 0,
+                &quot;ExpirationDate&quot;: 4102415940,
+                &quot;OpenTimes&quot;: 65535,
+                &quot;KeepOpen&quot;: 0,
+                &quot;Timegroup&quot;: 1,
+                &quot;FaceFeature&quot;: 0,
+                &quot;photo&quot;: &quot;&quot;,
+                &quot;Fingerprint&quot;: 0,
+                &quot;Palmprint&quot;: 0
+            },
+            {
+                &quot;UserID&quot;: &quot;10&quot;,
+                &quot;Name&quot;: &quot;11&quot;,
+		&quot;Job&quot;: &quot;None&quot;,
+		&quot;Department&quot;: &quot;Default Department&quot;,
+
+                &quot;Password&quot;: &quot;&quot;,
+                &quot;CardNum&quot;: &quot;0&quot;,
+                &quot;AccessType&quot;: 0,
+                &quot;ExpirationDate&quot;: 1909065540,
+                &quot;OpenTimes&quot;: 65535,
+                &quot;KeepOpen&quot;: 0,
+                &quot;Timegroup&quot;: 1,
+                &quot;FaceFeature&quot;: 1,
+                &quot;photo&quot;: &quot;/data/attend_data/photo/frame_1711509862529292.jpg&quot;,
+                &quot;Fingerprint&quot;: 0,
+                &quot;Palmprint&quot;: 0
+            }
+		]
+
+	}
+}</pre></div><h2 id="api-obtain-personnel-details">API-obtain personnel details</h2><p><strong>Brief Description:：</strong></p><ul><li>Call this interface when modifying a user on the UI</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/People/GetDetail</li></ul><p><strong>Request Mode:</strong></p><ul><li>Post</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Parameter:</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>UserID</td><td>string</td><td>32</td><td>Yes</td><td>The User ID to be obtained</td></tr><tr><td>PhotoBase64</td><td>int</td><td>1</td><td>No</td><td>Request to return the base64 encoding of the photo</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;UserID&quot;: &quot;3007465&quot;,
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;result&quot;: true,
+    &quot;content&quot;: {
+        &quot;UserID&quot;: &quot;3&quot;,
+        &quot;Name&quot;: &quot;888888&quot;,
+        &quot;Job&quot;: &quot;Developing&quot;,	
+	
+        &quot;Department&quot;: &quot;Sales Department&quot;,	
+
+        &quot;IdentityCard&quot;: &quot;&quot;,
+        &quot;Attachment&quot;: &quot;&quot;,
+        &quot;PhotoMD5&quot;: &quot;613D870CA99EDF074BEE4387BAB09070&quot;,
+        &quot;PhotoLen&quot;: 55020,
+        &quot;Password&quot;: &quot;2222&quot;,
+        &quot;CardNum&quot;: &quot;6666&quot;,
+        &quot;AccessType&quot;: 0,
+        &quot;ExpirationDate&quot;: 0,
+        &quot;OpenTimes&quot;: 65535,
+        &quot;KeepOpen&quot;: 1,
+        &quot;Timegroup&quot;: 6,
+        &quot;Holidays&quot;: &quot;1,3,9,10,11,17,21,25,27,30&quot;,
+        &quot;Elevators&quot;: &quot;1,2,3,4,5&quot;,
+        &quot;FaceFeature&quot;: &quot;AxwtAQEbRcY3HDIu9A/9AP/46Q7dT ....&quot;,
+        &quot;Fingerprints&quot;: [],
+        &quot;Palmveins&quot;: [],
+        &quot;Photo&quot;: &quot;/9//4AAQSkZJRgABAQAAAQABAA//4g/YS.....&quot;
+    }
+}</pre></div><h2 id="api-obtain-new-user-id">API-Obtain new user ID</h2><p><strong>Brief Description:</strong></p><ul><li>Call this interface to get the available person ID before adding people on the UI</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/People/GetNewID</li></ul><p><strong>Request Mode:</strong></p><ul><li>Post</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;result&quot;: true,
+    &quot;content&quot;: {
+        &quot;NewUserID&quot;: 3
+    }
+}</pre></div><h2 id="api-add-new-user">API-Add new user</h2><p><strong>Brief Description:</strong></p><ul><li>This interface is called when adding a new person on the UI. If a person with the same number already exists, it will be overwritten.</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/People/New</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Content-Type</strong></p><ul><li>multipart/form-data</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Parameter:</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>PeopleJson</td><td>string</td><td></td><td>Yes</td><td>Personnel details, Json string</td></tr><tr><td>Photo</td><td>file</td><td>500KB</td><td>No</td><td>This parameter is required only when the person has a photo</td></tr></tbody></table><h4 id="peoplejson-personnel-data-format">PeopleJson Personnel Data Format</h4><table><thead><tr><th>Parameter</th><th>Type</th><th>Required?</th><th>Description</th></tr></thead><tbody><tr><td>UserID</td><td>string</td><td>Yes</td><td>User ID (number, maximum value 4294967295, type UINT32)</td></tr><tr><td>Name</td><td>string</td><td>No</td><td>User Name(Characters &lt; 64 bits)</td></tr><tr><td>Job</td><td>string</td><td>No</td><td>Position(character &lt; 64 bits)</td></tr><tr><td>Department</td><td>string</td><td>No</td><td>Department(character &lt; 64 bits)）</td></tr><tr><td>IdentityCard</td><td>string</td><td>No</td><td>Identity Card Number (Can be empty) (characters &lt; 64)</td></tr><tr><td>Attachment</td><td>string</td><td>No</td><td>Other users info (characters &lt; 200)</td></tr><tr><td>Photo</td><td>string</td><td></td><td>User photo, can be empty<br>Support base64 encoding of photo files or file upload</td></tr><tr><td>PhotoMD5</td><td>string</td><td>No</td><td>MD5 hexadecimal string format of the photo (character = 32 bits)</td></tr><tr><td>PhotoLen</td><td>int</td><td>No</td><td>The maximum supported photo length is 400KB</td></tr><tr><td>Password</td><td>string</td><td>No</td><td>Password, pure numbers, length: (0 / 4-8）</td></tr><tr><td>CardNum</td><td>string</td><td>No</td><td>Card number (number, maximum value 18446744073709551615, type UINT62)</td></tr><tr><td>QRCode</td><td>string</td><td>No</td><td>User QR code info (characters &lt;128 bits)</td></tr><tr><td>AccessType</td><td>int</td><td>No</td><td>Role 0--Staff; 1--Admin; 2--Blacklist</td></tr><tr><td>ExpirationDate</td><td>uint32</td><td>No</td><td>Access Level Expiration Date<br> unix Timestamp Second      0 means no time limit</td></tr><tr><td>OpenTimes</td><td>int</td><td>No</td><td>Opening Times 0-65535； <br>65535--no limit，0--no entry</td></tr><tr><td>KeepOpen</td><td>int</td><td>No</td><td>Is the normally open card? 1--Yes; 0--No</td></tr><tr><td>Timegroup</td><td>int</td><td>No</td><td>Door opening time group 1-64; 0--restricted</td></tr><tr><td>Holidays</td><td>string</td><td>No</td><td>Holidays Limit<br/>Comma Separated:1,2,3,4,5</td></tr><tr><td>Fingerprints</td><td>[]</td><td>No</td><td>Fingerprint object</td></tr><tr><td>Palmveins</td><td>[]</td><td>No</td><td>Palmprint object</td></tr><tr><td>Elevators</td><td>string</td><td>No</td><td>Elevator Port Access Level Group<br/>Comma Separated:1,2,3,4,5</td></tr><tr><td>FaceFeature</td><td>string</td><td>No</td><td>Face feature code base64 encoded face feature code</td></tr><tr><td>FaceFeatureMD5</td><td>string</td><td>No</td><td>MD5 value of the face feature code HEX character string format</td></tr></tbody></table><p><strong>Characters refer to bytes. A Chinese character occupies 3-4 bytes (utf8 encoding), and an English character occupies 1 byte.</strong></p><h5 id="holidays-holidays">Holidays Holidays</h5><ul><li>Empty string or no such field means no holiday restriction</li><li>Number the specific restricted holidays,Comma Separated:1,2,3,4,5</li><li>* means all holidays are subject to restrictions</li></ul><ul><li><strong>Fingerprint Fingerprint object</strong></li></ul><table><thead><tr><th>Serial Number</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Num</td><td>int</td><td>Yes</td><td>Fingerprint index number</td></tr><tr><td>Data</td><td>string</td><td>Yes</td><td>Base64 encoded value of the fingerprint feature code</td></tr><tr><td>MD5</td><td>string</td><td>No</td><td>MD5 value of the feature code</td></tr></tbody></table><div class="code-block"><div class="code-lang">json</div><pre>[ //Structure Example
+    {
+        Num: 1,
+        Data: &quot;asdfasdfasfdasdfafsd&quot;,
+    },
+    {
+        Num: 2,
+        Data: &quot;asdfasdfasfdasdfafsd&quot;,
+    }
+]</pre></div><ul><li><strong>Palmvein Palmprint object</strong></li></ul><table><thead><tr><th>Serial Number</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>Num</td><td>int</td><td>Yes</td><td>Palmprint index number</td></tr><tr><td>Data</td><td>string</td><td>Yes</td><td>base64 encoded value of palmprint feature code</td></tr><tr><td>MD5</td><td>string</td><td>No</td><td>MD5 value of the feature code</td></tr></tbody></table><div class="code-block"><div class="code-lang">json</div><pre>[ //Structure Example
+    {
+        Num: 1,
+        Data: &quot;asdfasdfasfdasdfafsd&quot;,
+    },
+    {
+        Num: 2,
+        Data: &quot;asdfasdfasfdasdfafsd&quot;,
+    }
+]</pre></div><ul><li><strong>Elevator Elevator Access Control</strong></li></ul><div class="code-block"><div class="code-lang">json</div><pre>  //Indicates that this person has elevator access to floors 1-5
+ [
+     1,2,3,4,5
+ ]
+ //Indicates that this person does not have elevator access level
+ 
+ [
+   
+ ]
+  //Indicates that this person only has access to one elevator on the 10th floor
+ 
+ [
+     10
+ ]</pre></div><p><strong>Request example</strong></p><div class="code-block"><pre>POST /api/People/New HTTP/1.1
+Accept: */*
+Host: localhost:5000
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: multipart/form-data; boundary=--------------------------506873351428002157394455
+Content-Length: 17842
+
+----------------------------506873351428002157394455
+Content-Disposition: form-data; name=&quot;PeopleJson&quot;
+
+{
+	&quot;UserID&quot;: 3007465,
+	&quot;UserName&quot;: &quot;User 3007465&quot;,
+	&quot;Job&quot;: &quot;Staff&quot;,
+	&quot;Password&quot;: &quot;123456&quot;,
+	&quot;PhotoMD5&quot;: &quot;rgssPASg5/rG4HYlUwb6CA==&quot;,
+	&quot;AccessType&quot;: 0,
+	&quot;Timegroup&quot;: 2
+}
+----------------------------506873351428002157394455
+Content-Disposition: form-data; name=&quot;Photo&quot;; filename=&quot;Postman_file.jpg&quot;
+Content-Type: image/jpeg
+
+*****jpeg file binary content*****
+
+----------------------------506873351428002157394455--</pre></div><h3 id="return-parameter">Return parameter</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>result</td><td>bool</td><td>Operation result, true means success and false means failure</td></tr><tr><td>errCode</td><td>int</td><td>Error code, including common code<br>2--System busy, please try again later<br>3--Request parameter error<br>4--Request payload is too large and exceeds the limit<br>10--JSON parsing failed<br>11--Personnel parameter verification failed<br>12--Photo md5 verification failed<br>13--Photo size verification failed<br>20--Face feature code duplicated<br>21--Fingerprint feature code duplicated<br>22--Palm vein feature code duplicated<br>23--Card number duplicated<br>24--Personnel storage is full<br>25--Error in querying data<br>26--Error in saving personnel photos<br>27--Face feature code format error<br>28--Fingerprint feature code format error<br>29--Palm vein feature code format error<br>30--Photo cannot be recognized<br>31--Error in saving fingerprint feature code<br>32--Error in saving palm vein feature code</td></tr><tr><td>RepetitionUserID</td><td>string</td><td>Duplicate user ID<br>Can be empty, only returned when the face or card is repeated<br>Indicates who the card or face is repeated with</td></tr></tbody></table><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Added successfully
+//Add
+
+{
+	&quot;result&quot;: true
+}</pre></div><h2 id="api-delete-user">API-Delete user</h2><p><strong>Brief  Description:</strong></p><ul><li>Call this interface when modifying a user on the UI</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/People/Delete</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Parameter:</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>UserIDs</td><td>[]</td><td></td><td>No</td><td>User ID list of the user to be deleted</td></tr><tr><td>DeleteALL</td><td>int</td><td></td><td>No</td><td>Clear all users, 1- means clear all users; 0- means only delete the specified user</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><pre>//Delete the specified user
+{
+	&quot;UserIDs&quot;:[
+		1,
+		2,
+		3,
+		4
+	]
+}</pre></div><div class="code-block"><pre>//Delete all users
+
+{
+	&quot;DeleteALL&quot;:1
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true
+}</pre></div><h1 id="department-management">Department Management</h1><h2 id="api-obtain-department-list">API-Obtain department list</h2><p><strong>Brief Desccription:</strong></p><ul><li>Call this interface when querying departments on the UI</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Department/Search</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Request required parameters</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>PageIndex</td><td>uint32</td><td></td><td>Yes</td><td>Index of the current page, starting with 1</td></tr><tr><td>PageSize</td><td>uint32</td><td></td><td>Yes</td><td>Number of departments per page requested</td></tr></tbody></table><p><strong>Request optional parameters</strong></p><ul><li>Optional parameters for filtering queries</li></ul><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>DeptID</td><td>int</td><td>No</td><td>Department ID 1-1024</td><td></td></tr><tr><td>Name</td><td>string</td><td>No</td><td>Department Name(Characters &lt; 20 bits)</td><td></td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;PageIndex&quot;:1,
+	&quot;PageSize&quot;:20,
+	&quot;Name&quot;:&quot;Development Department&quot;
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true,
+	&quot;errCode&quot;:0,
+	&quot;msg&quot;:&quot;&quot;,
+
+	&quot;content&quot;: {
+		&quot;TotalCount&quot;: 20,//Total number of departments queried
+		&quot;PageIndex&quot;:1,//Current page index
+		&quot;PageSize&quot;:20,//Current page department number
+		&quot;DataList&quot;:[//List of returned departments
+			{
+                &quot;DeptID&quot;: &quot;1&quot;,
+		&quot;Name&quot;: &quot;Department1&quot;,
+
+            },
+            {
+                &quot;UserID&quot;: &quot;2&quot;,
+		&quot;Name&quot;: &quot;Department2&quot;
+
+            }
+		]
+
+	}
+}</pre></div><h2 id="api-obtain-new-department-id-details">API-Obtain new department ID details</h2><p><strong>Brief Description:</strong></p><ul><li>Call this interface to obtain the available department ID before adding a department on the UI.</li></ul><p><strong>请求URL：</strong> <strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Department/GetNewID</li></ul><p><strong>Request Mode:</strong></p><ul><li>Post</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;result&quot;: true,
+    &quot;content&quot;: {
+        &quot;NewDeptID&quot;: 3
+    }
+}</pre></div><h2 id="api-add-newmodify-department">API-Add new/Modify department</h2><p><strong>Brief Description:</strong></p><ul><li>When calling this interface to add a new department on the UI, if the department with the same number already exists, it will be overwritten.</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Department/New</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Content-Type</strong></p><ul><li>multipart/form-data</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Parameter:</strong></p><h4 id="department-format">Department Format</h4><table><thead><tr><th>Parameter Name</th><th>Type</th><th>Required?</th><th>Description</th></tr></thead><tbody><tr><td>DeptID</td><td>int</td><td>Yes</td><td>Department ID</td></tr><tr><td>Name</td><td>string</td><td>No</td><td>User Name (characters &lt; 32 bits)</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><pre>{
+	&quot;DeptID&quot;: 1,
+	&quot;Name&quot;: &quot;Department1&quot;
+}</pre></div><h3 id="return-parameter-2">Return parameter</h3><table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>result</td><td>bool</td><td>Operation result, true means success, false means failure</td></tr><tr><td>errCode</td><td>int</td><td>Error code, including common code<br>2--System busy, please try again later<br>3--Request parameter error<br>4--Department name duplicated</td></tr></tbody></table><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>//Added successfully
+
+{
+	&quot;result&quot;: true
+}</pre></div><h2 id="api-delete-department">API-Delete department</h2><p><strong>Brief Description:</strong></p><ul><li>Call this interface when deleting a department on the UI.</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Department/Delete</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Content-Type</strong></p><ul><li>application/json</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Parameter:</strong></p><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>DeptIDs</td><td>[]</td><td></td><td>No</td><td>ID list of the department to be deleted</td></tr><tr><td>DeleteALL</td><td>int</td><td></td><td>No</td><td>Clear all departments, 1- means clear all departments; 0- means only delete the specified department</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><pre>//Delete specified user
+
+{
+	&quot;DeptIDs&quot;:[
+		1,
+		2,
+		3,
+		4
+	]
+}</pre></div><div class="code-block"><pre>//Delete all users
+
+{
+	&quot;DeleteALL&quot;:1
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true
+}</pre></div><h1 id="records-management">Records Management</h1><h2 id="api-query-punch-in-records">API-Query punch in records</h2><p><strong>Brief Description:</strong></p><ul><li>Call this interface when querying records&amp;events on the UI</li></ul><p><strong>Request URL：</strong></p><ul><li>http://Server IP:port/api/Record/Identify/Search</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h4 id="request-required-parameters">Request required parameters</h4><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>PageIndex</td><td>uint32</td><td></td><td>Yes</td><td>Current page index, starting from 1</td></tr><tr><td>PageSize</td><td>uint32</td><td></td><td>Yes</td><td>Request the number of records per page   1-1000</td></tr><tr><td>BeginDate</td><td>uint32</td><td></td><td>Yes</td><td>Start time Unix timestamp milliseconds</td></tr><tr><td>EndDate</td><td>uint32</td><td></td><td>Yes</td><td>End time Unix timestamp milliseconds</td></tr></tbody></table><p><strong>Request optional parameter</strong></p><ul><li>Optional parameters for filtering queries</li></ul><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>UserID</td><td>string</td><td>No</td><td>User ID (characters &lt; 32 bits)</td></tr><tr><td>Name</td><td>string</td><td>No</td><td>User Name (characters &lt; 32 bits)</td></tr><tr><td>Department</td><td>string</td><td>No</td><td>Department (characters &lt; 32 bits)</td></tr><tr><td>Job</td><td>string</td><td>No</td><td>Position (characters &lt; 32 bits)</td></tr><tr><td>CardNum</td><td>string</td><td>No</td><td>IC card number Pure numbers Maximum supported: uint64</td></tr><tr><td>IdentityCard</td><td>string</td><td>No</td><td>Identity Card Number (Can be empty)</td></tr><tr><td>RecordTypes</td><td>string</td><td>No</td><td>List of record types Comma separated, example: 1,2,3</td></tr><tr><td>PhotoBase64</td><td>int</td><td>No</td><td>Whether the image uses Base64 encoding, 1 - use Base64, 0 - do not use;</td></tr><tr><td>RecordID</td><td>int</td><td>No</td><td>Query records that are greater than or equal to a certain record number. The operator is &gt;=</td></tr><tr><td>OrderByColumn</td><td>string</td><td>No</td><td>Sorted columns, default is RecordDate<br> The alternatives are RecordID,RecordDate,UserID,Name,Department，Job，CardNum</td></tr><tr><td>OrderByType</td><td>string</td><td>No</td><td>ASC or  DESC    Sort order, ascending or descending order<br>Default is ASC</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;PageIndex&quot;:1,
+	&quot;PageSize&quot;:20,
+	&quot;UserName&quot;:&quot;Wang&quot;//This field indicates that the record with the username containing Wang is searched
+
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true,
+	&quot;errCode&quot;:0,
+	&quot;msg&quot;:&quot;&quot;,
+	&quot;content&quot;: {
+		&quot;TotalCount&quot;: 2000,//The total number of records queried
+		&quot;PageIndex&quot;:1,//Current page index
+		&quot;PageSize&quot;:20,//Number of current page records
+		&quot;DataList&quot;:[//List of returned records
+
+			{
+				&quot;RecordID&quot;: 1000,//Record ID,each record should have an ID
+
+				 &quot;UserID&quot;: &quot;1&quot;,
+		  &quot;Name&quot;: &quot;Test Name 1&quot;,
+
+                  &quot;IdentityCard&quot;: &quot;&quot;,
+                  &quot;Job&quot;: &quot;&quot;,                
+                  &quot;Department&quot;: &quot;Sales Department&quot;,
+
+                  &quot;CardNum&quot;: &quot;0&quot;,
+				&quot;RecordType&quot;: 1,
+				&quot;IsEntry&quot;: 0,//Is it an entry record?
+
+				&quot;RecordDate&quot;: 1710467919,
+				&quot;BodyTemp&quot;: 0,//Body Temperature
+
+				&quot;PhotoLen&quot;: 17842,
+				&quot;Photo&quot;: &quot;/RecordImage/1000.jpg&quot;, //The address of the on-site photo
+
+			}
+		]
+
+	}
+}</pre></div><h4 id="record-field-description">Record Field Description</h4><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Description</th></tr></thead><tbody><tr><td>RecordID</td><td>long</td><td>10</td><td>Record serial number</td></tr><tr><td>UserID</td><td>long</td><td>20</td><td>User number, user ID</td></tr><tr><td>Name</td><td>string</td><td>30</td><td>User Name</td></tr><tr><td>IdentityCard</td><td>string</td><td>30</td><td>Identity Card</td></tr><tr><td>Job</td><td>string</td><td>30</td><td>Position</td></tr><tr><td>Department</td><td>string</td><td>30</td><td>Department</td></tr><tr><td>CardNum</td><td>string</td><td>10</td><td>Card Number</td></tr><tr><td>QRCode</td><td>string</td><td>128</td><td>QR Code</td></tr><tr><td>RecordType</td><td>int</td><td>5</td><td>Event Type</td></tr><tr><td>IsEntry</td><td>int</td><td>1</td><td>Whether to enter, 1 means entering, 0 means leaving</td></tr><tr><td>RecordDate</td><td>string</td><td>20</td><td>Record time unix timestamp Second</td></tr><tr><td>BodyTemp</td><td>float</td><td>5</td><td>Body Temperature Measurement</td></tr><tr><td>PhotoLen</td><td>int</td><td>10</td><td>Image file length 0 indicates that there is no image</td></tr><tr><td>Photo</td><td>string</td><td></td><td>Photo address or base64</td></tr></tbody></table><h4 id="recordtype-event-type">RecordType Event Type</h4><table><thead><tr><th>Value</th><th>Explanation</th></tr></thead><tbody><tr><td>1</td><td>Card</td></tr><tr><td>2</td><td>Fingerprint</td></tr><tr><td>3</td><td>Face</td></tr><tr><td>4</td><td>Card + Fingerprint</td></tr><tr><td>5</td><td>Face + Fingerprint</td></tr><tr><td>6</td><td>Card + Face</td></tr><tr><td>7</td><td>Card + Password</td></tr><tr><td>8</td><td>Face + Password</td></tr><tr><td>9</td><td>Fingerprint + Password</td></tr><tr><td>10</td><td>Password verification  User ID+Password</td></tr><tr><td>11</td><td>Card + Fingerprint + Password</td></tr><tr><td>12</td><td>Card + Face + Password</td></tr><tr><td>13</td><td>Fingerprint + Face + Password</td></tr><tr><td>14</td><td>Card + Fingerprint + Face</td></tr><tr><td>15</td><td>Repeat Verification</td></tr><tr><td>16</td><td>Expiration date has expired</td></tr><tr><td>17</td><td>Opening period expired</td></tr><tr><td>18</td><td>Not open on holidays</td></tr><tr><td>19</td><td>Unregistered user</td></tr><tr><td>20</td><td>Detection lock</td></tr><tr><td>21</td><td>The valid times have been used up</td></tr><tr><td>22</td><td>Verify when locked, prohibit opening the door</td></tr><tr><td>23</td><td>Report lost card</td></tr><tr><td>24</td><td>Blacklist card</td></tr><tr><td>25</td><td>Open door without verification -- When press the fingerprint, the user number is 0, and when swipe the card, the user number is the card number</td></tr><tr><td>26</td><td>Disable card swiping verification -- When card swiping is disabled in [Authorization Method]</td></tr><tr><td>27</td><td>Disable fingerprint verification -- When fingerprint is disabled in [Authorization Method]</td></tr><tr><td>28</td><td>Controller expired</td></tr><tr><td>29</td><td>Verification passed—validity period is about to expire</td></tr><tr><td>30</td><td>Abnormal body temperature, entry denied</td></tr><tr><td>31</td><td>Visitor password to open the door</td></tr><tr><td>32</td><td>Scan the dynamic QR code to open the door</td></tr><tr><td>33</td><td>Add a new user in the device menu</td></tr><tr><td>34</td><td>Modify user in the device menu</td></tr><tr><td>35</td><td>Delete user in the device menu</td></tr><tr><td>36</td><td>Palmprint</td></tr><tr><td>37</td><td>Card + Palmprint + Face</td></tr><tr><td>38</td><td>Palmprint + Password</td></tr><tr><td>39</td><td>Card + Palmprint</td></tr><tr><td>40</td><td>Face + Palmprint</td></tr><tr><td>41</td><td>Card + Palmprint + Password</td></tr><tr><td>42</td><td>Palmprint + Face + Password</td></tr><tr><td>43</td><td>Fingerprint + Palmprint + Face</td></tr><tr><td>44</td><td>Combined verification--wait for the next person</td></tr><tr><td>45</td><td>Combination verification failed</td></tr><tr><td>46</td><td>Combination verification completed</td></tr><tr><td>47</td><td>Person and identity card comparison</td></tr></tbody></table><h2 id="api-query-door-sensor-records">API-Query door sensor records</h2><p><strong>Brief Description:</strong></p><ul><li>Call this interface when querying record events on the UI</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Record/DoorSensor/Search</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h4 id="request-required-parameters-2">Request required parameters</h4><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>PageIndex</td><td>uint32</td><td></td><td>Yes</td><td>Current page index, starting from 1</td></tr><tr><td>PageSize</td><td>uint32</td><td></td><td>Yes</td><td>Request the number of records per page</td></tr><tr><td>BeginDate</td><td>uint32</td><td></td><td>Yes</td><td>Start time unix timestamp milliseconds</td></tr><tr><td>EndDate</td><td>uint32</td><td></td><td>Yes</td><td>End time unix timestamp milliseconds</td></tr></tbody></table><p><strong>Request optional parameter</strong></p><ul><li>Optional parameters for filtering queries</li></ul><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>RecordTypes</td><td>string</td><td>No</td><td>List of record types, comma-separated, example: 1,2,3</td></tr><tr><td>RecordID</td><td>int</td><td>No</td><td>Query records larger than a certain record number</td></tr><tr><td>OrderByColumn</td><td>string</td><td>No</td><td>Sorted column,default is RecordDate<br> The alternatives are RecordID,RecordDate</td></tr><tr><td>OrderByType</td><td>string</td><td>No</td><td>ASC or  DESC    Sort order, ascending or descending order<br> The default is ASC</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;PageIndex&quot;:1,
+	&quot;PageSize&quot;:20
+}</pre></div><p><strong>return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true,
+	&quot;errCode&quot;:0,
+	&quot;msg&quot;:&quot;&quot;,
+	&quot;content&quot;: {
+		&quot;TotalCount&quot;: 2000,//The total number of records queried
+		&quot;PageIndex&quot;:1,//Current page index
+		&quot;PageSize&quot;:20,//Number of current page records
+		&quot;DataList&quot;:[//List of returned records
+			{
+				&quot;RecordID&quot;: 1000,//record ID, each record should have an ID
+				&quot;RecordType&quot;: 1,
+				&quot;RecordDate&quot;: 1710467919,
+			}
+		]
+
+	}
+}</pre></div><h4 id="record-field-description-2">Record field description</h4><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Description</th></tr></thead><tbody><tr><td>RecordID</td><td>long</td><td>10</td><td>Record Number</td></tr><tr><td>RecordType</td><td>int</td><td>5</td><td>Events Type</td></tr><tr><td>RecordDate</td><td>string</td><td>20</td><td>Recording time unix timestamp seconds</td></tr></tbody></table><h4 id="recordtype-event-type-2">RecordType Event Type</h4><table><thead><tr><th>Value</th><th>Explanation</th></tr></thead><tbody><tr><td>1</td><td>Door Sensor-open the door</td></tr><tr><td>2</td><td>Door Sensor-close the door</td></tr><tr><td>3</td><td>Enter the door status sensor alarm detection state</td></tr><tr><td>4</td><td>Exit the door status sensor alarm detection state</td></tr><tr><td>5</td><td>Door open</td></tr><tr><td>6</td><td>Open the door with a button</td></tr><tr><td>7</td><td>The door is locked when the button opens</td></tr><tr><td>8</td><td>The controller has expired when the button opens the door</td></tr></tbody></table><h2 id="api-query-system-record">API-Query system record</h2><p><strong>Brief Description:</strong> -Call this interface when querying record events on the UI <strong>Request UR: </strong></p><ul><li>http://Server IP:port/api/Record/System/Search</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h4 id="request-required-parameter">Request required parameter</h4><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>PageIndex</td><td>uint32</td><td></td><td>Yes</td><td>Index of the current page, starting with 1</td></tr><tr><td>PageSize</td><td>uint32</td><td></td><td>Yes</td><td>Request the number of records per page</td></tr><tr><td>BeginDate</td><td>uint32</td><td></td><td>Yes</td><td>Start Time unix timestamp in milliseconds</td></tr><tr><td>EndDate</td><td>uint32</td><td></td><td>Yes</td><td>End Time unix timestamp in milliseconds</td></tr></tbody></table><p><strong>Request optional parameter</strong></p><ul><li>Optional parameters for filter queries</li></ul><table><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr><td>RecordTypes</td><td>string</td><td>No</td><td>List of record types,comma separated, example: 1,2,3</td></tr><tr><td>RecordID</td><td>int</td><td>No</td><td>Query records larger than a certain record number</td></tr><tr><td>OrderByColumn</td><td>string</td><td>No</td><td>Sorted column,default is RecordDate<br> The alternatives are RecordID,RecordDate</td></tr><tr><td>OrderByType</td><td>string</td><td>No</td><td>ASC or  DESC    Sort order, ascending or descending order <br> The default is ASC</td></tr></tbody></table><p><strong>Request example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+    &quot;PageIndex&quot;:1,
+	&quot;PageSize&quot;:20
+}</pre></div><p><strong>Return example</strong></p><div class="code-block"><div class="code-lang">json</div><pre>{
+	&quot;result&quot;: true,
+	&quot;errCode&quot;:0,
+	&quot;msg&quot;:&quot;&quot;,
+	&quot;content&quot;: {
+		&quot;TotalCount&quot;: 2000,//The total number of records queried
+		&quot;PageIndex&quot;:1,//Current page index
+		&quot;PageSize&quot;:20,//Number of current page records
+
+		&quot;DataList&quot;:[//List of returned records
+			{
+				&quot;RecordID&quot;: 1000,//Record ID, Each record should have an ID
+
+
+				&quot;RecordType&quot;: 1,
+				&quot;RecordDate&quot;: 1710467919,
+			}
+		]
+
+	}
+}</pre></div><h4 id="record-field-description-3">Record Field Description</h4><table><thead><tr><th>Field</th><th>Type</th><th>Length</th><th>Description</th></tr></thead><tbody><tr><td>RecordID</td><td>long</td><td>10</td><td>Record serial number</td></tr><tr><td>RecordType</td><td>int</td><td>5</td><td>Event Type</td></tr><tr><td>RecordDate</td><td>string</td><td>20</td><td>Record time unix timestamp seconds</td></tr></tbody></table><h4 id="recordtype-event-type-3">RecordType Event Type</h4><table><thead><tr><th>Value</th><th>Explanation</th></tr></thead><tbody><tr><td>1</td><td>Software Opening</td></tr><tr><td>2</td><td>Software Closing</td></tr><tr><td>3</td><td>Software Normally Open</td></tr><tr><td>4</td><td>The controller automatically enters the normally open state</td></tr><tr><td>5</td><td>Controller automatically closes the door</td></tr><tr><td>6</td><td>Long press the exit button to open normally</td></tr><tr><td>7</td><td>Long press the exit button to close normally</td></tr><tr><td>8</td><td>Software locked</td></tr><tr><td>9</td><td>Software unlocked</td></tr><tr><td>10</td><td>Controller timed lock - automatically lock when the time comes</td></tr><tr><td>11</td><td>Controller timed lock - automatically unlock when the time comes</td></tr><tr><td>12</td><td>Alarm--Locked</td></tr><tr><td>13</td><td>Alarm--Unlocked</td></tr><tr><td>14</td><td>Illegal Authentication Alarm</td></tr><tr><td>15</td><td>Door Sensor Alarm</td></tr><tr><td>16</td><td>Duress Alarm</td></tr><tr><td>17</td><td>Door Opening Timeout Alarm</td></tr><tr><td>18</td><td>Blacklist Alarm</td></tr><tr><td>19</td><td>Fire Alarm</td></tr><tr><td>20</td><td>Tamper Alarm</td></tr><tr><td>21</td><td>Remove illegal authentication alarm</td></tr><tr><td>22</td><td>Remove door sensor alarm</td></tr><tr><td>23</td><td>Remove duress alarm</td></tr><tr><td>24</td><td>Remove door opening timeout alarm</td></tr><tr><td>25</td><td>Remove blacklist alarm</td></tr><tr><td>26</td><td>Remove fire alarm</td></tr><tr><td>27</td><td>Remove tamper alarm</td></tr><tr><td>28</td><td>System Power On</td></tr><tr><td>29</td><td>System error reset (watchdog)</td></tr><tr><td>30</td><td>Device format record</td></tr><tr><td>31</td><td>Card reader connected reversely</td></tr><tr><td>32</td><td>The card reader line is not connected properly</td></tr><tr><td>33</td><td>Unrecognized card reader</td></tr><tr><td>34</td><td>Network cable disconnected</td></tr><tr><td>35</td><td>Network cable is inserted</td></tr><tr><td>36</td><td>WIFI connected</td></tr><tr><td>37</td><td>WIFI disconnected</td></tr><tr><td>38</td><td>Bluetooth door opening</td></tr><tr><td>39</td><td>Roll Call Timeout</td></tr><tr><td>40</td><td>Clear all users in the device menu</td></tr><tr><td>41</td><td>Back up users to USB flash drive in the device menu</td></tr><tr><td>42</td><td>Import users from USB flash drive in the device menu</td></tr><tr><td>43</td><td>Indoor unit remote door opening</td></tr><tr><td>44</td><td>Delete all records</td></tr><tr><td>45</td><td>Delete all users</td></tr></tbody></table><h2 id="api-clear-all-records">API-Clear all records</h2><p><strong>Brief Description:</strong></p><ul><li>Call this interface, when clear all records</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Record/Delete/All</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><h3 id="return-example-5">Return example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+
+{
+  &quot;result&quot;: true
+}</pre></div><h2 id="api-clear-records-of-the-specified-type">API-Clear records of the specified type</h2><p><strong>Brief Description:</strong></p><ul><li>Clearing all records is invoked by this interface</li></ul><p><strong>Request URL:</strong></p><ul><li>http://Server IP:port/api/Record/Delete/ByType</li></ul><p><strong>Request Mode:</strong></p><ul><li>POST</li></ul><p><strong>Authorization</strong></p><ul><li>Bearer token character string</li></ul><p><strong>Request required parameter</strong></p><p>| Field       | Type | Required | Description                                                      |</p><p>| :--------- | :--- | :--- | :-------------------------------------------------------- |</p><p>| RecordType | int  | Yes   | Record Type<br>1--Identify punch records<br>2--Door sensor records<br>3--System records |</p><h3 id="request-example-5">Request example</h3><div class="code-block"><div class="code-lang">json</div><pre>{
+  &quot;RecordType&quot;: 1 //Clear identification punch record
+
+}</pre></div><h3 id="return-example-6">Return example</h3><div class="code-block"><div class="code-lang">json</div><pre>//Returned when verification succeeds
+
+{
+  &quot;result&quot;: true
+}</pre></div><h1 id="return-error-code">Return error code</h1><p><strong>Common error code</strong></p><p>| Code Value | Description                    |</p><p>| :----- | :---------------------- |</p><p>| 10000  | Authorization error     |</p><p>| 10001  | method error            |</p><p>| 10002  | Content-Type error      |</p><p>| 10003  | Content-Encoding  error |</p><p>| 10004  | json parse error        |</p><p>| 10005  | Content-Length error    |</p>
+</body>
+</html>
