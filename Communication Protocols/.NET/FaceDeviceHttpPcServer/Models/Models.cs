@@ -71,6 +71,12 @@ public sealed class PalmveinItem
     public string MD5 { get; set; } = string.Empty;
 }
 
+public sealed class DepartmentInfo
+{
+    public int DeptID { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
 public sealed class DownloadPeopleListRequest
 {
     public string SN { get; set; } = string.Empty;
@@ -90,6 +96,7 @@ public sealed record DownloadPeopleListResponse : ApiResponse
 public sealed class SelectDeleteInfoRequest
 {
     public string SN { get; set; } = string.Empty;
+    public int Limit { get; set; }
 }
 
 public sealed record SelectDeleteInfoResponse : ApiResponse
@@ -98,7 +105,35 @@ public sealed record SelectDeleteInfoResponse : ApiResponse
     {
     }
 
+    public int DeleteAll { get; set; }
+    public int DeleteCount { get; set; }
     public List<string> DeleteList { get; set; } = new();
+}
+
+public sealed class BrowserSession
+{
+    public string Token { get; set; } = string.Empty;
+    public string DeviceSN { get; set; } = string.Empty;
+    public DateTimeOffset ExpiresAtUtc { get; set; }
+}
+
+public sealed class FirmwareSnapshot
+{
+    public string FileName { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public string SoftwareMD5 { get; set; } = string.Empty;
+    public DateTimeOffset UploadedAtUtc { get; set; }
+}
+
+public sealed class RecordSnapshot
+{
+    public string Id { get; set; } = string.Empty;
+    public string DeviceSN { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public DateTimeOffset ReceivedAtUtc { get; set; }
+    public string RecordJsonPath { get; set; } = string.Empty;
+    public string? PhotoPath { get; set; }
+    public JsonNode? RecordDetail { get; set; }
 }
 
 public sealed class DeviceSnapshot
@@ -112,17 +147,15 @@ public sealed class DeviceSnapshot
     public bool PendingSyncParameter { get; set; }
     public bool PendingUploadWorkParameter { get; set; }
     public int PendingAddPeopleCount { get; set; }
+    public bool PendingDeleteAllPeople { get; set; }
     public List<string> PendingDeleteUserIds { get; set; } = new();
+    public JsonObject? PendingRemoteCommand { get; set; }
+    public DateTimeOffset? LastRemoteCommandQueuedAtUtc { get; set; }
+    public JsonObject? LastPeopleDownloadResult { get; set; }
+    public JsonObject? LastDeletePeopleResult { get; set; }
+    public FirmwareSnapshot? LastFirmware { get; set; }
+    public string ManagementPassword { get; set; } = "admin";
     public List<RecordSnapshot> Records { get; set; } = new();
-}
-
-public sealed class RecordSnapshot
-{
-    public string Id { get; set; } = string.Empty;
-    public DateTimeOffset ReceivedAtUtc { get; set; }
-    public string RecordJsonPath { get; set; } = string.Empty;
-    public string? PhotoPath { get; set; }
-    public JsonNode? RecordDetail { get; set; }
 }
 
 public sealed class DeviceSummary
@@ -141,5 +174,7 @@ public sealed class PersistedState
 {
     public Dictionary<string, DeviceSnapshot> Devices { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, PersonInfo> People { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<int, DepartmentInfo> Departments { get; set; } = new();
+    public Dictionary<string, BrowserSession> Sessions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<string> DeletedUserIds { get; set; } = new();
 }
