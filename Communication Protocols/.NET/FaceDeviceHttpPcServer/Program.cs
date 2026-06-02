@@ -8,6 +8,7 @@ using FaceDeviceHttpPcServer.Services;
 const byte GzipMagicByte1 = 0x1F;
 const byte GzipMagicByte2 = 0x8B;
 var browserSessionLifetime = TimeSpan.FromHours(24);
+const long UnixMillisecondsThreshold = 10_000_000_000;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -923,13 +924,18 @@ static async Task<JsonObject?> ReadJsonObjectAsync(HttpRequest request)
         request.Body.Position = 0;
     }
 
-    var payload = await JsonNode.ParseAsync(request.Body);
-    if (request.Body.CanSeek)
+    try
     {
-        request.Body.Position = 0;
+        var payload = await JsonNode.ParseAsync(request.Body);
+        return payload as JsonObject;
     }
-
-    return payload as JsonObject;
+    finally
+    {
+        if (request.Body.CanSeek)
+        {
+            request.Body.Position = 0;
+        }
+    }
 }
 
 static async Task<JsonObject?> ReadJsonObjectFromFormAsync(HttpRequest request)
@@ -1166,7 +1172,7 @@ static DateTimeOffset ParseUnix(string? value, DateTimeOffset fallback)
         return fallback;
     }
 
-    if (unix > 10_000_000_000)
+    if (unix > UnixMillisecondsThreshold)
     {
         return DateTimeOffset.FromUnixTimeMilliseconds(unix);
     }

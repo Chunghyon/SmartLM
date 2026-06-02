@@ -8,6 +8,8 @@ namespace FaceDeviceHttpPcServer.Services;
 public sealed class StateStore
 {
     public const string DefaultDeviceSn = "SIM-DEVICE";
+    private const int DefaultDeleteLimit = 50;
+    private const int MaxDeleteLimit = 1000;
 
     private static readonly HashSet<char> InvalidFileNameChars = Path.GetInvalidFileNameChars().ToHashSet();
     private readonly object _sync = new();
@@ -57,9 +59,7 @@ public sealed class StateStore
             return new KeepaliveResponse
             {
                 AddPeople = device.PendingAddPeopleCount > 0 ? device.PendingAddPeopleCount : null,
-                DeletePeople = device.PendingDeleteAllPeople || device.PendingDeleteUserIds.Count > 0
-                    ? Math.Max(device.PendingDeleteUserIds.Count, device.PendingDeleteAllPeople ? 1 : 0)
-                    : null,
+                DeletePeople = GetPendingDeleteCount(device),
                 SyncParameter = device.PendingSyncParameter ? 1 : null,
                 Remote = device.PendingRemoteCommand is not null ? 1 : null,
                 UploadWorkParameter = device.PendingUploadWorkParameter ? 1 : null
@@ -212,7 +212,7 @@ public sealed class StateStore
         lock (_sync)
         {
             var device = GetOrCreateDevice(deviceSn);
-            var effectiveLimit = limit <= 0 ? 50 : Math.Min(limit, 1000);
+            var effectiveLimit = limit <= 0 ? DefaultDeleteLimit : Math.Min(limit, MaxDeleteLimit);
             var deleteList = device.PendingDeleteUserIds.Take(effectiveLimit).ToList();
             if (deleteList.Count > 0)
             {
@@ -816,6 +816,12 @@ public sealed class StateStore
     {
         return _state.Devices.Values.OrderByDescending(device => device.LastKeepaliveAtUtc ?? DateTimeOffset.MinValue).FirstOrDefault()
                ?? GetOrCreateDevice(DefaultDeviceSn);
+    }
+
+    private static int? GetPendingDeleteCount(DeviceSnapshot device)
+    {
+        var deleteCount = Math.Max(device.PendingDeleteUserIds.Count, device.PendingDeleteAllPeople ? 1 : 0);
+        return deleteCount > 0 ? deleteCount : null;
     }
 
     private DeviceSnapshot GetOrCreateDevice(string deviceSn)
