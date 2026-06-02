@@ -929,6 +929,10 @@ static async Task<JsonObject?> ReadJsonObjectAsync(HttpRequest request)
         var payload = await JsonNode.ParseAsync(request.Body);
         return payload as JsonObject;
     }
+    catch (JsonException)
+    {
+        return null;
+    }
     finally
     {
         if (request.Body.CanSeek)
@@ -1143,7 +1147,7 @@ static dynamic ToBrowserRecord(RecordSnapshot record, IReadOnlyDictionary<string
     var bodyTemp = ParseDouble(detail?["BodyTemp"]?.ToString(), 0);
     var isEntry = ParseInt(detail?["IsEntry"]?.ToString(), 0);
     var photo = detail?["Photo"]?.ToString() ?? record.PhotoPath ?? string.Empty;
-    var photoLen = ParseInt(detail?["PhotoLen"]?.ToString(), !string.IsNullOrWhiteSpace(record.PhotoPath) && File.Exists(record.PhotoPath) ? (int)new FileInfo(record.PhotoPath).Length : 0);
+    var photoLen = ParseInt(detail?["PhotoLen"]?.ToString(), record.PhotoLength);
 
     return new
     {

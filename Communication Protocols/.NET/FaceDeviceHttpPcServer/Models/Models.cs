@@ -133,6 +133,7 @@ public sealed class RecordSnapshot
     public DateTimeOffset ReceivedAtUtc { get; set; }
     public string RecordJsonPath { get; set; } = string.Empty;
     public string? PhotoPath { get; set; }
+    public int PhotoLength { get; set; }
     public JsonNode? RecordDetail { get; set; }
 }
 

@@ -222,14 +222,9 @@ public sealed class StateStore
             var response = new SelectDeleteInfoResponse
             {
                 DeleteAll = device.PendingDeleteAllPeople ? 1 : 0,
-                DeleteCount = device.PendingDeleteAllPeople ? Math.Max(deleteList.Count, 1) : deleteList.Count,
+                DeleteCount = deleteList.Count > 0 ? deleteList.Count : device.PendingDeleteAllPeople ? 1 : 0,
                 DeleteList = deleteList
             };
-
-            if (device.PendingDeleteAllPeople && deleteList.Count == 0)
-            {
-                response.DeleteCount = 1;
-            }
 
             device.PendingDeleteAllPeople = false;
             SaveState();
@@ -411,7 +406,7 @@ public sealed class StateStore
                 {
                     person.Photo = SavePhotoUnlocked(deviceSn, person.UserID, photo);
                     person.PhotoLen = (int)photo.Length;
-                    person.PhotoMD5 = ComputeMd5Hex(person.Photo);
+                    person.PhotoMD5 = ComputeMd5HexFromFile(person.Photo);
                 }
 
                 UpsertPersonUnlocked(person);
@@ -859,6 +854,7 @@ public sealed class StateStore
             ReceivedAtUtc = DateTimeOffset.UtcNow,
             RecordJsonPath = recordFile,
             PhotoPath = photoPath,
+            PhotoLength = photo is null ? 0 : (int)photo.Length,
             RecordDetail = recordNode?.DeepClone()
         };
 
@@ -1015,10 +1011,11 @@ public sealed class StateStore
         }
     }
 
-    private static string ComputeMd5Hex(string value)
+    private static string ComputeMd5HexFromFile(string path)
     {
         using var md5 = MD5.Create();
-        var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(value));
+        using var stream = File.OpenRead(path);
+        var hash = md5.ComputeHash(stream);
         return Convert.ToHexString(hash);
     }
 
