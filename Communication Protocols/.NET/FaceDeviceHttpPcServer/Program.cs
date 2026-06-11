@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -497,6 +496,70 @@ app.MapPost("/api/Device/Search", async (DeviceDiscoveryService discoveryService
     catch (Exception ex)
     {
         return Results.Ok(BrowserApiResponse.Fail(500, $"Search failed: {ex.Message}"));
+    }
+});
+
+// ── /api/Device/SearchStream ──────────────────────────────────────────────────
+app.MapPost("/api/Device/SearchStream", async (DeviceDiscoveryService discoveryService, JsonNode? body, HttpContext context) =>
+{
+    try
+    {
+        var searchType = body?["SearchType"]?.GetValue<string>() ?? "broadcast";
+        var subnet = body?["Subnet"]?.GetValue<string>();
+
+        context.Response.ContentType = "text/event-stream";
+        context.Response.Headers.Add("Cache-Control", "no-cache");
+        context.Response.Headers.Add("Connection", "keep-alive");
+
+        await context.Response.Body.FlushAsync();
+
+        if (searchType.Equals("scan", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(subnet))
+        {
+            // IP 범위 스캔 - 실시간 스트리밍
+            await foreach (var device in discoveryService.ScanNetworkStreamAsync(subnet, context.RequestAborted))
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    result = true,
+                    content = device
+                });
+
+                var message = $"data: {json}\n\n";
+                await context.Response.WriteAsync(message);
+                await context.Response.Body.FlushAsync();
+            }
+        }
+        else
+        {
+            // UDP 브로드캐스트
+            var devices = await discoveryService.SearchDevicesAsync(context.RequestAborted);
+            foreach (var device in devices)
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    result = true,
+                    content = device
+                });
+
+                var message = $"data: {json}\n\n";
+                await context.Response.WriteAsync(message);
+                await context.Response.Body.FlushAsync();
+            }
+        }
+
+        // 완료 시그널
+        await context.Response.WriteAsync("data: {\"result\":true,\"content\":null,\"done\":true}\n\n");
+        await context.Response.Body.FlushAsync();
+    }
+    catch (Exception ex)
+    {
+        var errorJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            result = false,
+            error = ex.Message
+        });
+        await context.Response.WriteAsync($"data: {errorJson}\n\n");
+        await context.Response.Body.FlushAsync();
     }
 });
 

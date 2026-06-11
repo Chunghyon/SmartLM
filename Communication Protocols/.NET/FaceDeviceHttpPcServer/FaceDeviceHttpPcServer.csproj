@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
+    <DefaultItemExcludes>$(DefaultItemExcludes);FaceDeviceDesktopClient\**</DefaultItemExcludes>
   </PropertyGroup>
 
 </Project>

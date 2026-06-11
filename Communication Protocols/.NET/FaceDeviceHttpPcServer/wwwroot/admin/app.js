@@ -106,16 +106,63 @@ async function startNetworkScan() {
     showStatus(`Scanning network ${subnet}.1-254...`, 'info');
     cancelNetworkScan();
 
-    const response = await apiPost('/api/Device/Search', { 
-      SearchType: 'scan',
-      Subnet: subnet
+    // 실시간 스트리밍으로 결과 수신
+    discoveredDevices = [];
+    renderDiscoveredDevices(); // 초기화
+
+    const response = await fetch('/api/Device/SearchStream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        SearchType: 'scan',
+        Subnet: subnet
+      })
     });
 
-    if (response.result && response.content) {
-      discoveredDevices = response.content;
-      renderDiscoveredDevices();
-      showStatus(`Scan complete: Found ${discoveredDevices.length} device(s)`, 'success');
-    } else {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE 메시지 파싱 (data: ... 형식)
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop() || ''; // 마지막 불완전한 메시지는 버퍼에 유지
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.substring(6);
+          try {
+            const data = JSON.parse(jsonStr);
+
+            if (data.done) {
+              // 완료 시그널
+              showStatus(`Scan complete: Found ${discoveredDevices.length} device(s)`, 'success');
+            } else if (data.result && data.content) {
+              // 새 디바이스 발견
+              discoveredDevices.push(data.content);
+              renderDiscoveredDevices();
+              showStatus(`Scanning... Found ${discoveredDevices.length} device(s) so far`, 'info');
+            }
+          } catch (e) {
+            console.error('Failed to parse SSE message:', e);
+          }
+        }
+      }
+    }
+
+    if (discoveredDevices.length === 0) {
       showStatus('No devices found', 'error');
     }
   } catch (error) {
