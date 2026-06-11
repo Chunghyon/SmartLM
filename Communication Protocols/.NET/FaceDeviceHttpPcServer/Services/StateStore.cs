@@ -224,6 +224,12 @@ public sealed class StateStore
                 .Select(device => new DeviceSummary
                 {
                     SN = device.SN,
+                    IpAddress = device.IpAddress,
+                    HttpPort = device.HttpPort,
+                    DeviceName = device.DeviceName,
+                    Model = device.Model,
+                    FirmwareVersion = device.FirmwareVersion,
+                    ConnectedAtUtc = device.ConnectedAtUtc,
                     LastKeepaliveAtUtc = device.LastKeepaliveAtUtc,
                     LastWorkSettingUploadAtUtc = device.LastWorkSettingUploadAtUtc,
                     PendingSyncParameter = device.PendingSyncParameter,
@@ -454,6 +460,27 @@ public sealed class StateStore
         }
 
         return device;
+    }
+
+    public bool ConnectDevice(string deviceSn, string ipAddress, int httpPort, string? deviceName = null, string? model = null, string? firmwareVersion = null)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.IpAddress = ipAddress;
+            device.HttpPort = httpPort;
+            device.DeviceName = deviceName;
+            device.Model = model;
+            device.FirmwareVersion = firmwareVersion;
+
+            if (!device.ConnectedAtUtc.HasValue)
+            {
+                device.ConnectedAtUtc = DateTimeOffset.UtcNow;
+            }
+
+            SaveState();
+            return true;
+        }
     }
 
     private PersistedState LoadState()

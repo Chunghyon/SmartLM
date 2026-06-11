@@ -1,309 +1,413 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FaceDevice 관리자</title>
+  <title>FaceDevice PC Client</title>
   <style>
-    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    body { margin: 0; background: #f5f7fb; color: #1f2937; }
-    main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-    .topbar, .panel-header, form, .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .topbar { justify-content: space-between; margin-bottom: 16px; }
-    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-    @media (min-width: 980px) { .grid { grid-template-columns: 1fr 1fr; } }
-    .panel { background: #fff; border: 1px solid #d8deea; border-radius: 12px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); }
-    h1, h2 { margin: 0; }
-    form { margin: 16px 0; }
-    label { display: grid; gap: 6px; font-size: 14px; min-width: 140px; flex: 1; }
-    input, select, button { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #c7d2e5; }
-    button { background: #2563eb; color: #fff; border: none; cursor: pointer; }
-    button.secondary { background: #475569; }
-    button.danger { background: #dc2626; }
-    button:disabled { opacity: 0.6; cursor: wait; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
-    .status { margin: 0 0 16px; padding: 12px 14px; border-radius: 10px; background: #dbeafe; color: #1d4ed8; }
-    .muted { color: #64748b; font-size: 13px; }
-    .empty { padding: 16px 0; color: #64748b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: "Segoe UI", "맑은 고딕", Malgun Gothic, sans-serif; 
+      background: #f0f2f5; 
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header .subtitle { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+
+    .nav-tabs {
+      background: white;
+      border-bottom: 2px solid #e0e0e0;
+      display: flex;
+      padding: 0 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .nav-tab {
+      padding: 14px 24px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover { color: #667eea; background: #f8f9fa; }
+    .nav-tab.active { color: #667eea; border-bottom-color: #667eea; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      background: #fafbfc;
+      border-bottom: 1px solid #e1e4e8;
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-body { padding: 20px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 500; color: #555; }
+    .form-group input, .form-group select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5568d3; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .table-container { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead { background: #f8f9fa; }
+    th {
+      padding: 12px 10px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+    tbody tr:hover { background: #f8f9fa; }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: #d4edda; color: #155724; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .badge-danger { background: #f8d7da; color: #721c24; }
+    .badge-info { background: #d1ecf1; color: #0c5460; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .alert-info { background: #d1ecf1; border-left: 4px solid #17a2b8; color: #0c5460; }
+    .alert-success { background: #d4edda; border-left: 4px solid #28a745; color: #155724; }
+    .alert-error { background: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-bar input {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
-  <main>
-    <div class="topbar">
-      <div>
-        <h1>FaceDevice 관리자</h1>
-        <div class="muted">사람 추가/삭제 예약과 디바이스 상태를 한 화면에서 확인합니다.</div>
+  <div class="header">
+    <h1>🔐 FaceDevice PC Client</h1>
+    <div class="subtitle">Face Recognition Terminal Management System</div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="software">⚙️ Software Setting</button>
+    <button class="nav-tab" data-tab="device">📱 Device Install</button>
+    <button class="nav-tab" data-tab="corporate">🏢 Corporate</button>
+    <button class="nav-tab" data-tab="dooraccess">🚪 Door Access</button>
+    <button class="nav-tab" data-tab="attendance">📋 Attendance</button>
+    <button class="nav-tab" data-tab="record">📊 Record</button>
+  </div>
+
+  <div class="container">
+    <div id="statusAlert" class="alert alert-info" style="display:none;"></div>
+
+    <!-- Software Setting Tab -->
+    <div id="software-tab" class="tab-content active">
+      <div class="panel">
+        <div class="panel-header">System Information</div>
+        <div class="panel-body">
+          <table>
+            <tr><th style="width:200px;">Server URL</th><td id="serverUrl">http://localhost:8100</td></tr>
+            <tr><th>Total Devices</th><td id="totalDevices">0</td></tr>
+            <tr><th>Total Personnel</th><td id="totalPersonnel">0</td></tr>
+            <tr><th>Total Records</th><td id="totalRecords">0</td></tr>
+            <tr><th>Total Departments</th><td id="totalDepartments">0</td></tr>
+          </table>
+        </div>
       </div>
-      <button id="refreshButton" type="button">새로고침</button>
     </div>
 
-    <p id="status" class="status">데이터를 불러오는 중입니다.</p>
-
-    <div class="grid">
-      <section class="panel">
+    <!-- Device Install Tab -->
+    <div id="device-tab" class="tab-content">
+      <div class="panel">
         <div class="panel-header">
-          <h2>디바이스</h2>
-          <span id="deviceCount" class="muted"></span>
-        </div>
-        <div class="muted">Add/Delete 재전송 버튼은 다음 Keepalive 응답에 플래그를 올립니다.</div>
-        <div id="devicesContainer"></div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <h2>사람 목록</h2>
-          <span id="peopleCount" class="muted"></span>
-        </div>
-
-        <form id="personForm">
-          <label>사용자 ID
-            <input id="userId" name="userId" required maxlength="32">
-          </label>
-          <label>이름
-            <input id="name" name="name" maxlength="64">
-          </label>
-          <label>부서
-            <input id="department" name="department" maxlength="64">
-          </label>
-          <label>직무
-            <input id="job" name="job" maxlength="64">
-          </label>
-          <label>카드번호
-            <input id="cardNum" name="cardNum" maxlength="64">
-          </label>
-          <label>비밀번호
-            <input id="password" name="password" maxlength="16">
-          </label>
-          <label>권한
-            <select id="accessType" name="accessType">
-              <option value="0">일반</option>
-              <option value="1">관리자</option>
-              <option value="2">블랙리스트</option>
-            </select>
-          </label>
-          <div class="actions">
-            <button id="submitButton" type="submit">사람 추가</button>
+          <span>Auto Search</span>
+          <div class="btn-group">
+            <button class="btn-success btn-sm" onclick="autoSearchDevices()">🔍 Broadcast Search</button>
+            <button class="btn-primary btn-sm" onclick="showNetworkScanDialog()">🌐 Network Scan</button>
+            <button class="btn-secondary btn-sm" onclick="refreshDevices()">🔄 Refresh</button>
           </div>
-        </form>
+        </div>
+        <div class="panel-body">
+          <!-- Network Scan Dialog -->
+          <div id="networkScanDialog" style="display:none; margin-bottom:20px; padding:15px; background:#f8f9fa; border-radius:4px;">
+            <h4 style="margin-bottom:10px;">Network Scan Settings</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Subnet (e.g., 192.168.0)</label>
+                <input type="text" id="scanSubnet" value="192.168.0" placeholder="192.168.0">
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:10px;">
+              <button class="btn-success" onclick="startNetworkScan()">Start Scan</button>
+              <button class="btn-secondary" onclick="cancelNetworkScan()">Cancel</button>
+            </div>
+          </div>
 
-        <div id="peopleContainer"></div>
-      </section>
+          <div id="discoveredDevicesContainer"></div>
+          <div id="connectedDevicesContainer"></div>
+        </div>
+      </div>
     </div>
-  </main>
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const deviceCountEl = document.getElementById("deviceCount");
-    const peopleCountEl = document.getElementById("peopleCount");
-    const devicesContainer = document.getElementById("devicesContainer");
-    const peopleContainer = document.getElementById("peopleContainer");
-    const personForm = document.getElementById("personForm");
-    const submitButton = document.getElementById("submitButton");
-    const refreshButton = document.getElementById("refreshButton");
+    <div id="corporate-tab" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Department Management</span>
+          <button class="btn-primary btn-sm" onclick="showAddDepartmentForm()">➕ Add Department</button>
+        </div>
+        <div class="panel-body">
+          <div id="addDepartmentForm" style="display:none; margin-bottom:20px;">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Department ID *</label>
+                <input type="text" id="deptId" required>
+              </div>
+              <div class="form-group">
+                <label>Department Name *</label>
+                <input type="text" id="deptName" required>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn-success" onclick="saveDepartment()">💾 Save</button>
+              <button class="btn-secondary" onclick="cancelAddDepartment()">❌ Cancel</button>
+            </div>
+          </div>
+          <div id="departmentsContainer"></div>
+        </div>
+      </div>
+    </div>
 
-    async function requestJson(url, options) {
-      const response = await fetch(url, options);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.Message || data.message || `HTTP ${response.status}`);
-      }
-      return data;
-    }
+    <!-- Door Access Tab (Personnel Management) -->
+    <div id="dooraccess-tab" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Personnel Management</span>
+          <button class="btn-primary btn-sm" onclick="showAddPersonForm()">➕ Add Personnel</button>
+        </div>
+        <div class="panel-body">
+          <div class="search-bar">
+            <input type="text" id="searchPerson" placeholder="🔍 Search by Name, UserID, or Card Number..." onkeyup="searchPersonnel()">
+            <button class="btn-primary" onclick="refreshPersonnel()">🔄 Refresh</button>
+          </div>
+          <div id="addPersonForm" style="display:none; margin-bottom:20px;">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>User ID *</label>
+                <input type="text" id="userId" required maxlength="32">
+              </div>
+              <div class="form-group">
+                <label>Name *</label>
+                <input type="text" id="userName" required maxlength="64">
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <select id="userDepartment"></select>
+              </div>
+              <div class="form-group">
+                <label>Job Title</label>
+                <input type="text" id="userJob" maxlength="64">
+              </div>
+              <div class="form-group">
+                <label>Card Number</label>
+                <input type="text" id="userCardNum" maxlength="64">
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <input type="text" id="userPassword" maxlength="16">
+              </div>
+              <div class="form-group">
+                <label>Access Type</label>
+                <select id="userAccessType">
+                  <option value="0">Normal User</option>
+                  <option value="1">Administrator</option>
+                  <option value="2">Blacklist</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn-success" onclick="savePerson()">💾 Save</button>
+              <button class="btn-secondary" onclick="cancelAddPerson()">❌ Cancel</button>
+            </div>
+          </div>
+          <div id="personnelContainer"></div>
+        </div>
+      </div>
+    </div>
 
-    function setStatus(message, isError = false) {
-      statusEl.textContent = message;
-      statusEl.style.background = isError ? "#fee2e2" : "#dbeafe";
-      statusEl.style.color = isError ? "#b91c1c" : "#1d4ed8";
-    }
+    <!-- Attendance Tab -->
+    <div id="attendance-tab" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Attendance Management</span>
+          <button class="btn-primary btn-sm" onclick="refreshAttendance()">🔄 Refresh</button>
+        </div>
+        <div class="panel-body">
+          <!-- Search Form -->
+          <div style="background:#f8f9fa; padding:15px; border-radius:4px; margin-bottom:20px;">
+            <h4 style="margin-bottom:15px; font-size:14px; color:#333;">📊 Attendance Search</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>User ID</label>
+                <input type="text" id="attendanceUserID" placeholder="Enter User ID">
+              </div>
+              <div class="form-group">
+                <label>User Name</label>
+                <input type="text" id="attendanceUserName" placeholder="Enter Name">
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <select id="attendanceDepartment">
+                  <option value="">All Departments</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Start Date & Time</label>
+                <input type="datetime-local" id="attendanceStartTime">
+              </div>
+              <div class="form-group">
+                <label>End Date & Time</label>
+                <input type="datetime-local" id="attendanceEndTime">
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:15px;">
+              <button class="btn-success" onclick="searchAttendance()">🔍 Search</button>
+              <button class="btn-secondary" onclick="clearAttendanceSearch()">🔄 Clear</button>
+              <button class="btn-info" onclick="getAttendanceStatistics()">📈 Statistics</button>
+              <button class="btn-warning" onclick="exportAttendance()">📤 Export</button>
+            </div>
+          </div>
 
-    function formatDate(value) {
-      if (!value) {
-        return "-";
-      }
+          <!-- Statistics Panel -->
+          <div id="attendanceStatsPanel" style="display:none; background:#e7f3ff; padding:15px; border-radius:4px; margin-bottom:20px; border-left:4px solid #007bff;">
+            <h4 style="margin-bottom:10px; font-size:14px; color:#0056b3;">📈 Attendance Statistics</h4>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+              <div>
+                <div style="font-size:12px; color:#666;">Total Records</div>
+                <div style="font-size:24px; font-weight:600; color:#007bff;" id="statsTotalRecords">0</div>
+              </div>
+              <div>
+                <div style="font-size:12px; color:#666;">Unique Users</div>
+                <div style="font-size:24px; font-weight:600; color:#28a745;" id="statsUniqueUsers">0</div>
+              </div>
+              <div>
+                <div style="font-size:12px; color:#666;">Departments</div>
+                <div style="font-size:24px; font-weight:600; color:#ffc107;" id="statsUniqueDepts">0</div>
+              </div>
+            </div>
+          </div>
 
-      const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-    }
+          <!-- Attendance Records Table -->
+          <div id="attendanceContainer"></div>
+        </div>
+      </div>
+    </div>
 
-    function accessLabel(accessType) {
-      switch (accessType) {
-        case 1: return "관리자";
-        case 2: return "블랙리스트";
-        default: return "일반";
-      }
-    }
+    <div id="record-tab" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Access Records</span>
+          <button class="btn-warning btn-sm" onclick="clearAllRecords()">🗑️ Clear All</button>
+        </div>
+        <div class="panel-body">
+          <div class="search-bar">
+            <input type="text" id="searchRecord" placeholder="🔍 Search by Name or UserID..." onkeyup="searchRecords()">
+            <button class="btn-primary" onclick="refreshRecords()">🔄 Refresh</button>
+          </div>
+          <div id="recordsContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    function createButton(label, className, handler) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = label;
-      if (className) {
-        button.className = className;
-      }
-      button.addEventListener("click", handler);
-      return button;
-    }
-
-    async function refreshAll(message) {
-      const [devices, people] = await Promise.all([
-        requestJson("/admin/devices"),
-        requestJson("/admin/people")
-      ]);
-
-      renderDevices(devices);
-      renderPeople(people);
-      setStatus(message || `최근 새로고침: ${new Date().toLocaleTimeString()}`);
-    }
-
-    function renderDevices(devices) {
-      deviceCountEl.textContent = `총 ${devices.length}대`;
-      devicesContainer.textContent = "";
-
-      if (!devices.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "아직 Keepalive를 보낸 디바이스가 없습니다.";
-        devicesContainer.appendChild(empty);
-        return;
-      }
-
-      const table = document.createElement("table");
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      ["SN", "최근 Keepalive", "추가 대기", "삭제 대기", "기록 수", "동작"].forEach(text => {
-        const th = document.createElement("th");
-        th.textContent = text;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-      devices.forEach(device => {
-        const row = document.createElement("tr");
-        row.appendChild(cell(device.SN));
-        row.appendChild(cell(formatDate(device.LastKeepaliveAtUtc)));
-        row.appendChild(cell(String(device.PendingAddPeopleCount ?? 0)));
-        row.appendChild(cell(String(device.PendingDeletePeopleCount ?? 0)));
-        row.appendChild(cell(String(device.RecordCount ?? 0)));
-
-        const actionCell = document.createElement("td");
-        actionCell.appendChild(createButton("추가 재전송", "", async () => {
-          const result = await requestJson(`/admin/devices/${encodeURIComponent(device.SN)}/request-add-people`, { method: "POST" });
-          await refreshAll(result.Message || `${device.SN} AddPeople 예약 완료`);
-        }));
-        actionCell.appendChild(createButton("삭제 재전송", "secondary", async () => {
-          const result = await requestJson(`/admin/devices/${encodeURIComponent(device.SN)}/request-delete-people`, { method: "POST" });
-          await refreshAll(result.Message || `${device.SN} DeletePeople 예약 완료`);
-        }));
-        row.appendChild(actionCell);
-        tbody.appendChild(row);
-      });
-
-      table.appendChild(tbody);
-      devicesContainer.appendChild(table);
-    }
-
-    function renderPeople(people) {
-      peopleCountEl.textContent = `총 ${people.length}명`;
-      peopleContainer.textContent = "";
-
-      if (!people.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "등록된 사람이 없습니다.";
-        peopleContainer.appendChild(empty);
-        return;
-      }
-
-      const table = document.createElement("table");
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      ["UserID", "이름", "부서", "직무", "권한", "카드번호", "동작"].forEach(text => {
-        const th = document.createElement("th");
-        th.textContent = text;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-      people.forEach(person => {
-        const row = document.createElement("tr");
-        row.appendChild(cell(person.UserID || ""));
-        row.appendChild(cell(person.Name || "-"));
-        row.appendChild(cell(person.Department || "-"));
-        row.appendChild(cell(person.Job || "-"));
-        row.appendChild(cell(accessLabel(person.AccessType ?? 0)));
-        row.appendChild(cell(person.CardNum || "-"));
-
-        const actionCell = document.createElement("td");
-        actionCell.appendChild(createButton("삭제", "danger", async () => {
-          if (!confirm(`${person.UserID} 사용자를 삭제할까요?`)) {
-            return;
-          }
-
-          const result = await requestJson(`/admin/people/${encodeURIComponent(person.UserID)}`, { method: "DELETE" });
-          await refreshAll(result.Message || `${person.UserID} 삭제 완료`);
-        }));
-        row.appendChild(actionCell);
-        tbody.appendChild(row);
-      });
-
-      table.appendChild(tbody);
-      peopleContainer.appendChild(table);
-    }
-
-    function cell(text) {
-      const td = document.createElement("td");
-      td.textContent = text;
-      return td;
-    }
-
-    personForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      submitButton.disabled = true;
-
-      try {
-        const payload = {
-          UserID: document.getElementById("userId").value.trim(),
-          Name: document.getElementById("name").value.trim(),
-          Department: document.getElementById("department").value.trim(),
-          Job: document.getElementById("job").value.trim(),
-          CardNum: document.getElementById("cardNum").value.trim(),
-          Password: document.getElementById("password").value.trim(),
-          AccessType: Number(document.getElementById("accessType").value)
-        };
-
-        const result = await requestJson("/admin/people", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        personForm.reset();
-        document.getElementById("accessType").value = "0";
-        await refreshAll(result.Message || `${payload.UserID} 추가 완료`);
-      } catch (error) {
-        setStatus(error.message || "사람 추가 중 오류가 발생했습니다.", true);
-      } finally {
-        submitButton.disabled = false;
-      }
-    });
-
-    refreshButton.addEventListener("click", async () => {
-      refreshButton.disabled = true;
-      try {
-        await refreshAll();
-      } catch (error) {
-        setStatus(error.message || "새로고침 중 오류가 발생했습니다.", true);
-      } finally {
-        refreshButton.disabled = false;
-      }
-    });
-
-    refreshAll().catch(error => setStatus(error.message || "초기 로드에 실패했습니다.", true));
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>

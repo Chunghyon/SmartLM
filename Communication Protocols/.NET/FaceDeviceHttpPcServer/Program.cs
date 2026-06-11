@@ -18,6 +18,32 @@ Application.SetHighDpiMode(HighDpiMode.SystemAware);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ContentRootPath를 현재 실행 디렉토리로 설정
+var contentRoot = AppDomain.CurrentDomain.BaseDirectory;
+builder.Environment.ContentRootPath = contentRoot;
+builder.Configuration.SetBasePath(contentRoot);
+
+// WebRootPath 설정
+var webRoot = Path.Combine(contentRoot, "wwwroot");
+if (Directory.Exists(webRoot))
+{
+    builder.Environment.WebRootPath = webRoot;
+}
+else
+{
+    // 개발 환경에서는 프로젝트 루트의 wwwroot 사용
+    var projectRoot = Directory.GetCurrentDirectory();
+    webRoot = Path.Combine(projectRoot, "wwwroot");
+    if (Directory.Exists(webRoot))
+    {
+        builder.Environment.WebRootPath = webRoot;
+    }
+}
+
+LogHub.Instance.Info($"ContentRootPath: {builder.Environment.ContentRootPath}");
+LogHub.Instance.Info($"WebRootPath: {builder.Environment.WebRootPath}");
+LogHub.Instance.Info($"wwwroot exists: {Directory.Exists(builder.Environment.WebRootPath)}");
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.WriteIndented = true;
@@ -38,6 +64,9 @@ builder.Services.AddSingleton(sp =>
     return new StateStore(storagePath);
 });
 
+builder.Services.AddSingleton<DeviceDiscoveryService>();
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 // HTTP 요청 로깅 미들웨어 추가
@@ -46,6 +75,9 @@ app.UseMiddleware<HttpLoggingMiddleware>();
 // 정적 파일 서비스 구성
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Favicon 404 방지
+app.MapGet("/favicon.ico", () => Results.File(Array.Empty<byte>(), "image/x-icon"));
 
 app.MapGet("/api-info", () => Results.Ok(new
 {
@@ -439,6 +471,131 @@ app.MapGet("/api/Device/FunctionList", () => Results.Ok(BrowserApiResponse.Ok(ne
     Websocket_V1 = true, Websocket_V2 = true
 })));
 
+// ── /api/Device/Search ────────────────────────────────────────────────────────
+app.MapPost("/api/Device/Search", async (DeviceDiscoveryService discoveryService, JsonNode? body) =>
+{
+    try
+    {
+        var searchType = body?["SearchType"]?.GetValue<string>() ?? "broadcast";
+        var subnet = body?["Subnet"]?.GetValue<string>();
+
+        List<DeviceDiscoveryService.DiscoveredDevice> devices;
+
+        if (searchType.Equals("scan", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(subnet))
+        {
+            // IP 범위 스캔
+            devices = await discoveryService.ScanNetworkAsync(subnet);
+        }
+        else
+        {
+            // UDP 브로드캐스트
+            devices = await discoveryService.SearchDevicesAsync();
+        }
+
+        return Results.Ok(BrowserApiResponse.Ok(devices));
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(BrowserApiResponse.Fail(500, $"Search failed: {ex.Message}"));
+    }
+});
+
+// ── /api/Device/ProbeDevice ──────────────────────────────────────────────────
+app.MapPost("/api/Device/ProbeDevice", async (JsonNode? body, IHttpClientFactory httpFactory) =>
+{
+    try
+    {
+        var ip = body?["IpAddress"]?.GetValue<string>();
+        var port = body?["HttpPort"]?.GetValue<int>() ?? 80;
+
+        if (string.IsNullOrWhiteSpace(ip))
+        {
+            return Results.Ok(BrowserApiResponse.Fail(3, "IpAddress is required."));
+        }
+
+        var client = httpFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(5);
+
+        // Get device SN
+        var snUrl = $"http://{ip}:{port}/api/GetDeviceSN";
+        var snResponse = await client.GetAsync(snUrl);
+
+        if (!snResponse.IsSuccessStatusCode)
+        {
+            return Results.Ok(BrowserApiResponse.Fail(500, $"Failed to connect to device: HTTP {snResponse.StatusCode}"));
+        }
+
+        var snJson = await snResponse.Content.ReadFromJsonAsync<JsonNode>();
+        var deviceSN = snJson?["content"]?.GetValue<string>();
+
+        if (string.IsNullOrWhiteSpace(deviceSN))
+        {
+            return Results.Ok(BrowserApiResponse.Fail(500, "Invalid device response"));
+        }
+
+        // Try to get additional device info
+        string? deviceName = null;
+        string? model = null;
+        string? firmware = null;
+
+        try
+        {
+            var detailUrl = $"http://{ip}:{port}/api/Device/GetDetail";
+            var detailResponse = await client.GetAsync(detailUrl);
+            if (detailResponse.IsSuccessStatusCode)
+            {
+                var detailJson = await detailResponse.Content.ReadFromJsonAsync<JsonNode>();
+                var content = detailJson?["content"];
+                deviceName = content?["DeviceName"]?.GetValue<string>();
+                model = content?["Model"]?.GetValue<string>();
+                firmware = content?["FirmwareVersion"]?.GetValue<string>();
+            }
+        }
+        catch
+        {
+            // Optional info, continue without it
+        }
+
+        return Results.Ok(BrowserApiResponse.Ok(new
+        {
+            DeviceSN = deviceSN,
+            DeviceName = deviceName,
+            Model = model,
+            FirmwareVersion = firmware
+        }));
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(BrowserApiResponse.Fail(500, $"Probe failed: {ex.Message}"));
+    }
+});
+
+// ── /api/Device/Connect ──────────────────────────────────────────────────────
+app.MapPost("/api/Device/Connect", (JsonNode? body, StateStore store) =>
+{
+    try
+    {
+        var sn = body?["DeviceSN"]?.GetValue<string>();
+        var ip = body?["IpAddress"]?.GetValue<string>();
+        var port = body?["HttpPort"]?.GetValue<int>() ?? 80;
+        var name = body?["DeviceName"]?.GetValue<string>();
+        var model = body?["Model"]?.GetValue<string>();
+        var firmware = body?["FirmwareVersion"]?.GetValue<string>();
+
+        if (string.IsNullOrWhiteSpace(sn) || string.IsNullOrWhiteSpace(ip))
+        {
+            return Results.Ok(BrowserApiResponse.Fail(3, "DeviceSN and IpAddress are required."));
+        }
+
+        store.ConnectDevice(sn, ip, port, name, model, firmware);
+        return Results.Ok(BrowserApiResponse.Ok($"Device {sn} connected successfully"));
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(BrowserApiResponse.Fail(500, $"Connection failed: {ex.Message}"));
+    }
+});
+
 // ── /api/Device/GetDetail ─────────────────────────────────────────────────────
 app.MapGet("/api/Device/GetDetail", (StateStore store) =>
 {
@@ -635,6 +792,102 @@ app.MapPost("/api/Department/Delete", (JsonNode? body, StateStore store) =>
         : Results.Ok(BrowserApiResponse.Fail(3, "Department not found."));
 });
 
+// ── /api/Attendance/* ─────────────────────────────────────────────────────────
+app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, StateStore store) =>
+{
+    var records = store.GetDeviceSummaries()
+        .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
+        .Where(r => r.RecordDetail?["RecordType"] is not null)
+        .AsEnumerable();
+
+    if (!string.IsNullOrWhiteSpace(req.UserID))
+        records = records.Where(r => 
+            string.Equals(r.RecordDetail?["UserID"]?.GetValue<string>(), req.UserID, StringComparison.OrdinalIgnoreCase));
+
+    if (!string.IsNullOrWhiteSpace(req.UserName))
+        records = records.Where(r => 
+            (r.RecordDetail?["UserName"]?.GetValue<string>() ?? "").Contains(req.UserName, StringComparison.OrdinalIgnoreCase));
+
+    if (!string.IsNullOrWhiteSpace(req.DepartmentID))
+        records = records.Where(r => 
+            string.Equals(r.RecordDetail?["DepartmentID"]?.GetValue<string>(), req.DepartmentID, StringComparison.OrdinalIgnoreCase));
+
+    if (req.StartTime.HasValue)
+        records = records.Where(r =>
+        {
+            var timeStr = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+            return DateTime.TryParse(timeStr, out var dt) && dt >= req.StartTime.Value;
+        });
+
+    if (req.EndTime.HasValue)
+        records = records.Where(r =>
+        {
+            var timeStr = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+            return DateTime.TryParse(timeStr, out var dt) && dt <= req.EndTime.Value;
+        });
+
+    var list = records.Select(r => new AttendanceRecord
+    {
+        UserID = r.RecordDetail?["UserID"]?.GetValue<string>() ?? "",
+        UserName = r.RecordDetail?["UserName"]?.GetValue<string>() ?? "",
+        DepartmentID = r.RecordDetail?["DepartmentID"]?.GetValue<string>() ?? "",
+        DepartmentName = r.RecordDetail?["DepartmentName"]?.GetValue<string>() ?? "",
+        RecordTime = r.RecordDetail?["RecordTime"]?.GetValue<string>() ?? "",
+        DeviceSN = r.RecordDetail?["DeviceSN"]?.GetValue<string>() ?? "",
+        RecordType = r.RecordDetail?["RecordType"]?.GetValue<int>() ?? 0,
+        Temperature = r.RecordDetail?["Temperature"]?.GetValue<string>(),
+        PhotoUrl = r.RecordDetail?["PhotoUrl"]?.GetValue<string>()
+    }).ToList();
+
+    var page = Math.Max(1, req.PageIndex);
+    var size = Math.Max(1, req.PageSize);
+
+    return Results.Ok(BrowserApiResponse.Ok(new AttendanceSearchResult
+    {
+        TotalCount = list.Count,
+        PageIndex = page,
+        PageSize = size,
+        DataList = list.Skip((page - 1) * size).Take(size).ToList()
+    }));
+});
+
+app.MapPost("/api/Attendance/Statistics", (AttendanceSearchRequest req, StateStore store) =>
+{
+    var records = store.GetDeviceSummaries()
+        .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
+        .Where(r => r.RecordDetail?["RecordType"] is not null)
+        .AsEnumerable();
+
+    if (req.StartTime.HasValue)
+        records = records.Where(r =>
+        {
+            var timeStr = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+            return DateTime.TryParse(timeStr, out var dt) && dt >= req.StartTime.Value;
+        });
+
+    if (req.EndTime.HasValue)
+        records = records.Where(r =>
+        {
+            var timeStr = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+            return DateTime.TryParse(timeStr, out var dt) && dt <= req.EndTime.Value;
+        });
+
+    var list = records.ToList();
+    var uniqueUsers = list.Select(r => r.RecordDetail?["UserID"]?.GetValue<string>()).Distinct().Count();
+    var uniqueDepts = list.Select(r => r.RecordDetail?["DepartmentID"]?.GetValue<string>()).Distinct().Count();
+
+    var stats = new AttendanceStatistics
+    {
+        TotalRecords = list.Count,
+        UniqueUsers = uniqueUsers,
+        UniqueDepartments = uniqueDepts,
+        StartTime = req.StartTime,
+        EndTime = req.EndTime
+    };
+
+    return Results.Ok(BrowserApiResponse.Ok(stats));
+});
+
 // ── /api/Record/* ─────────────────────────────────────────────────────────────
 app.MapPost("/api/Record/Identify/Search", (RecordSearchRequest req, StateStore store) =>
 {
@@ -680,9 +933,11 @@ app.MapPost("/api/Record/Delete/ByType", (DeleteRecordsByTypeRequest req, StateS
 var cts = new CancellationTokenSource();
 var serverTask = app.RunAsync(cts.Token);
 
-// 서버 URL 가져오기
+// 서버 URL 가져오기 및 브라우저용으로 변환
 var urls = app.Urls.ToArray();
-var serverUrl = urls.Length > 0 ? urls[0] : "http://localhost:5000";
+var rawUrl = urls.Length > 0 ? urls[0] : "http://localhost:8100";
+// 0.0.0.0을 localhost로 변환 (브라우저에서 사용 가능하도록)
+var serverUrl = rawUrl.Replace("0.0.0.0", "localhost");
 
 // MainForm 생성 및 서버 URL 설정
 var mainForm = new MainForm();

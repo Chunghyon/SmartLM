@@ -211,6 +211,12 @@ public sealed record SelectDeleteInfoResponse : ApiResponse
 public sealed class DeviceSnapshot
 {
     public string SN { get; set; } = string.Empty;
+    public string? IpAddress { get; set; }
+    public int HttpPort { get; set; } = 80;
+    public string? DeviceName { get; set; }
+    public string? Model { get; set; }
+    public string? FirmwareVersion { get; set; }
+    public DateTimeOffset? ConnectedAtUtc { get; set; }
     public KeepaliveRequest? LastKeepalive { get; set; }
     public DateTimeOffset? LastKeepaliveAtUtc { get; set; }
     public DateTimeOffset? LastWorkSettingUploadAtUtc { get; set; }
@@ -236,6 +242,12 @@ public sealed class RecordSnapshot
 public sealed class DeviceSummary
 {
     public string SN { get; set; } = string.Empty;
+    public string? IpAddress { get; set; }
+    public int HttpPort { get; set; } = 80;
+    public string? DeviceName { get; set; }
+    public string? Model { get; set; }
+    public string? FirmwareVersion { get; set; }
+    public DateTimeOffset? ConnectedAtUtc { get; set; }
     public DateTimeOffset? LastKeepaliveAtUtc { get; set; }
     public DateTimeOffset? LastWorkSettingUploadAtUtc { get; set; }
     public bool PendingSyncParameter { get; set; }
@@ -348,4 +360,47 @@ public sealed class PendingRemoteCommand
     public int? PushAllPeople { get; set; }
     public List<uint>? QueryPeople { get; set; }
     public int? ClearRecord { get; set; }
+}
+
+// 式式式 Attendance Management 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class AttendanceSearchRequest
+{
+    public int PageIndex { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public string? UserID { get; set; }
+    public string? UserName { get; set; }
+    public string? DepartmentID { get; set; }
+}
+
+public sealed class AttendanceRecord
+{
+    public string UserID { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string DepartmentID { get; set; } = string.Empty;
+    public string DepartmentName { get; set; } = string.Empty;
+    public string RecordTime { get; set; } = string.Empty;
+    public string DeviceSN { get; set; } = string.Empty;
+    public int RecordType { get; set; }
+    public string? Temperature { get; set; }
+    public string? PhotoUrl { get; set; }
+}
+
+public sealed class AttendanceSearchResult
+{
+    public int TotalCount { get; set; }
+    public int PageIndex { get; set; }
+    public int PageSize { get; set; }
+    public List<AttendanceRecord> DataList { get; set; } = new();
+}
+
+public sealed class AttendanceStatistics
+{
+    public int TotalRecords { get; set; }
+    public int UniqueUsers { get; set; }
+    public int UniqueDepartments { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
 }
