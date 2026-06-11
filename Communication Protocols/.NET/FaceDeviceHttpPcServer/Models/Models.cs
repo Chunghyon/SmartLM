@@ -2,10 +2,117 @@ using System.Text.Json.Nodes;
 
 namespace FaceDeviceHttpPcServer.Models;
 
+// 式式式 Common response formats 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+/// <summary>HTTP-Docking protocol response (Success 0 = OK)</summary>
 public record ApiResponse(int Success, string? Message = null)
 {
     public static ApiResponse Ok(string? message = null) => new(0, message);
 }
+
+/// <summary>Browser-UI protocol unified response</summary>
+public sealed class BrowserApiResponse
+{
+    public bool result { get; set; }
+    public object? content { get; set; }
+    public int errCode { get; set; }
+    public string? error { get; set; }
+
+    public static BrowserApiResponse Ok(object? content = null) =>
+        new() { result = true, content = content };
+
+    public static BrowserApiResponse Fail(int code, string err) =>
+        new() { result = false, errCode = code, error = err };
+}
+
+// 式式式 Browser-UI: User / Login 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class LoginRequest
+{
+    public string password { get; set; } = string.Empty;
+}
+
+// 式式式 Browser-UI: Department 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class DepartmentInfo
+{
+    public string DepartmentID { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+}
+
+public sealed class DepartmentSearchRequest
+{
+    public int PageIndex { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public string? Name { get; set; }
+}
+
+// 式式式 Browser-UI: People search 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class PeopleSearchRequest
+{
+    public int PageIndex { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public string? UserID { get; set; }
+    public string? Name { get; set; }
+    public string? Job { get; set; }
+    public string? Department { get; set; }
+    public int? AccessType { get; set; }
+    public int? Timegroup { get; set; }
+    public int? Photo { get; set; }
+    public string? CardNum { get; set; }
+    public string? IdentityCard { get; set; }
+    public int? Fingerprint { get; set; }
+    public int? Palmprint { get; set; }
+    public string? OrderByColumn { get; set; }
+    public string? OrderByType { get; set; }
+}
+
+public sealed class PeopleSearchResult
+{
+    public int TotalCount { get; set; }
+    public int PageIndex { get; set; }
+    public int PageSize { get; set; }
+    public List<PersonInfo> DataList { get; set; } = new();
+}
+
+// 式式式 Browser-UI: Record search 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class RecordSearchRequest
+{
+    public int PageIndex { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public long BeginDate { get; set; }
+    public long EndDate { get; set; }
+    public string? UserID { get; set; }
+    public string? Name { get; set; }
+    public string? Department { get; set; }
+    public string? Job { get; set; }
+    public string? CardNum { get; set; }
+    public string? IdentityCard { get; set; }
+    public string? RecordTypes { get; set; }
+    public int? PhotoBase64 { get; set; }
+    public long? RecordID { get; set; }
+    public string? OrderByColumn { get; set; }
+    public string? OrderByType { get; set; }
+}
+
+public sealed class DeleteRecordsByTypeRequest
+{
+    public int RecordType { get; set; }
+}
+
+// 式式式 Browser-UI: Device 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class DeviceRemoteRequest
+{
+    public int? Opendoor { get; set; }
+    public int? Restart { get; set; }
+    public int? Recover { get; set; }
+    public int? Closealarm { get; set; }
+}
+
+// 式式式 HTTP-Docking Protocol models 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
 public sealed class KeepaliveRequest
 {
@@ -114,6 +221,7 @@ public sealed class DeviceSnapshot
     public int PendingAddPeopleCount { get; set; }
     public List<string> PendingDeleteUserIds { get; set; } = new();
     public List<RecordSnapshot> Records { get; set; } = new();
+    public PendingRemoteCommand? PendingRemote { get; set; }
 }
 
 public sealed class RecordSnapshot
@@ -142,4 +250,102 @@ public sealed class PersistedState
     public Dictionary<string, DeviceSnapshot> Devices { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, PersonInfo> People { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<string> DeletedUserIds { get; set; } = new();
+    public Dictionary<string, DepartmentInfo> Departments { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+// 式式式 HTTP-Docking: Remote command 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class RemoteCommandRequest
+{
+    public string SN { get; set; } = string.Empty;
+}
+
+public sealed record RemoteCommandResponse : ApiResponse
+{
+    public RemoteCommandResponse() : base(0) { }
+    public int? Restart { get; set; }
+    public int? Recover { get; set; }
+    public int? Opendoor { get; set; }
+    public int? Closealarm { get; set; }
+    public int? RepostRecord { get; set; }
+    public int? PushAllPeople { get; set; }
+    public List<uint>? QueryPeople { get; set; }
+    public int? ClearRecord { get; set; }
+}
+
+// 式式式 HTTP-Docking: People push from device 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class PushPeopleRequest
+{
+    public string SN { get; set; } = string.Empty;
+    public List<PersonInfo> PeopleList { get; set; } = new();
+}
+
+// 式式式 HTTP-Docking: Download people list result 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class DownloadPeopleListResultRequest
+{
+    public string SN { get; set; } = string.Empty;
+    public int SuccessCount { get; set; }
+    public int FailCount { get; set; }
+    public List<PeopleImportFailItem> FailList { get; set; } = new();
+}
+
+public sealed class PeopleImportFailItem
+{
+    public string UserID { get; set; } = string.Empty;
+    public int ErrorCode { get; set; }
+    public string? RepeatID { get; set; }
+    public string? ErrMsg { get; set; }
+}
+
+// 式式式 HTTP-Docking: Delete people list 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class DeletePeopleListRequest
+{
+    public string SN { get; set; } = string.Empty;
+    public int Limit { get; set; }
+}
+
+public sealed record DeletePeopleListResponse : ApiResponse
+{
+    public DeletePeopleListResponse() : base(0) { }
+    public List<string> DeleteList { get; set; } = new();
+}
+
+public sealed class DeletePeopleListResultRequest
+{
+    public string SN { get; set; } = string.Empty;
+    public int SuccessCount { get; set; }
+    public int FailCount { get; set; }
+}
+
+// 式式式 HTTP-Docking: System record upload 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class UploadSystemRecordRequest
+{
+    public string SN { get; set; } = string.Empty;
+    public int RecordType { get; set; }
+    public List<SystemRecordItem> Records { get; set; } = new();
+}
+
+public sealed class SystemRecordItem
+{
+    public long RecordID { get; set; }
+    public int RecordType { get; set; }
+    public long RecordDate { get; set; }
+}
+
+// 式式式 DeviceSnapshot: pending remote command 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class PendingRemoteCommand
+{
+    public int? Restart { get; set; }
+    public int? Recover { get; set; }
+    public int? Opendoor { get; set; }
+    public int? Closealarm { get; set; }
+    public int? RepostRecord { get; set; }
+    public int? PushAllPeople { get; set; }
+    public List<uint>? QueryPeople { get; set; }
+    public int? ClearRecord { get; set; }
 }

@@ -45,7 +45,8 @@ public sealed class StateStore
                 AddPeople = device.PendingAddPeopleCount > 0 ? device.PendingAddPeopleCount : null,
                 DeletePeople = device.PendingDeleteUserIds.Count > 0 ? device.PendingDeleteUserIds.Count : null,
                 SyncParameter = device.PendingSyncParameter ? 1 : null,
-                UploadWorkParameter = device.PendingUploadWorkParameter ? 1 : null
+                UploadWorkParameter = device.PendingUploadWorkParameter ? 1 : null,
+                Remote = device.PendingRemote is not null ? 1 : null
             };
         }
     }
@@ -305,6 +306,145 @@ public sealed class StateStore
         }
     }
 
+    // 式式 Remote command 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+    public void SetPendingRemoteCommand(string deviceSn, PendingRemoteCommand cmd)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.PendingRemote = cmd;
+            SaveState();
+        }
+    }
+
+    public PendingRemoteCommand? ConsumeRemoteCommand(string deviceSn)
+    {
+        lock (_sync)
+        {
+            if (!_state.Devices.TryGetValue(deviceSn, out var device))
+                return null;
+            var cmd = device.PendingRemote;
+            device.PendingRemote = null;
+            SaveState();
+            return cmd;
+        }
+    }
+
+    // 式式 Department management 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+    public IReadOnlyCollection<DepartmentInfo> GetDepartments() =>
+        _state.Departments.Values.OrderBy(d => d.DepartmentID, StringComparer.OrdinalIgnoreCase).ToArray();
+
+    public bool TryAddDepartment(DepartmentInfo dept)
+    {
+        lock (_sync)
+        {
+            if (_state.Departments.ContainsKey(dept.DepartmentID))
+                return false;
+            _state.Departments[dept.DepartmentID] = Clone(dept);
+            SaveState();
+            return true;
+        }
+    }
+
+    public bool DeleteDepartment(string deptId)
+    {
+        lock (_sync)
+        {
+            if (!_state.Departments.Remove(deptId))
+                return false;
+            SaveState();
+            return true;
+        }
+    }
+
+    // 式式 System records 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+    public void SaveSystemRecords(string deviceSn, int recordType, List<SystemRecordItem> items)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            foreach (var item in items)
+            {
+                var uniqueId = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}_{item.RecordID}";
+                var recordFile = Path.Combine(_recordsPath, $"sys_{SanitizeForFileName(deviceSn)}_{uniqueId}.json");
+                var json = System.Text.Json.JsonSerializer.Serialize(
+                    new { DeviceSN = deviceSn, RecordType = recordType, item.RecordID, item.RecordDate },
+                    _serializerOptions);
+                File.WriteAllText(recordFile, json);
+
+                device.Records.Add(new RecordSnapshot
+                {
+                    Id = uniqueId,
+                    ReceivedAtUtc = DateTimeOffset.UtcNow,
+                    RecordJsonPath = recordFile,
+                    PhotoPath = null,
+                    RecordDetail = System.Text.Json.Nodes.JsonNode.Parse(json)
+                });
+            }
+
+            SaveState();
+        }
+    }
+
+    // 式式 People push from device 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+    public (int success, int fail) SavePushedPeople(List<PersonInfo> people)
+    {
+        lock (_sync)
+        {
+            int success = 0, fail = 0;
+            foreach (var p in people)
+            {
+                if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
+                _state.People[p.UserID] = Clone(p);
+                _state.DeletedUserIds.RemoveAll(id => string.Equals(id, p.UserID, StringComparison.OrdinalIgnoreCase));
+                success++;
+            }
+
+            SaveState();
+            return (success, fail);
+        }
+    }
+
+    // 式式 Delete people list result 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+    public void ConfirmDeletePeopleResult(string deviceSn, List<string> confirmedIds)
+    {
+        // Deletions are already cleared on GetDeletePeople; nothing extra to do.
+    }
+
+    // 式式 Record management 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+    public void ClearAllRecords()
+    {
+        lock (_sync)
+        {
+            foreach (var device in _state.Devices.Values)
+                device.Records.Clear();
+            SaveState();
+        }
+    }
+
+    public void ClearRecordsByType(int recordType)
+    {
+        lock (_sync)
+        {
+            // recordType: 1=identify, 2=door-sensor, 3=system
+            // System records are saved with a "sys_" prefix file name; identify records without.
+            foreach (var device in _state.Devices.Values)
+            {
+                device.Records.RemoveAll(r =>
+                    recordType == 1 ? !r.RecordJsonPath.Contains("sys_") :
+                    recordType >= 2 && r.RecordJsonPath.Contains("sys_"));
+            }
+
+            SaveState();
+        }
+    }
+
     private DeviceSnapshot GetOrCreateDevice(string deviceSn)
     {
         if (!_state.Devices.TryGetValue(deviceSn, out var device))
@@ -334,6 +474,9 @@ public sealed class StateStore
                 state.People ?? new Dictionary<string, PersonInfo>(),
                 StringComparer.OrdinalIgnoreCase);
             state.DeletedUserIds ??= new();
+            state.Departments = new Dictionary<string, DepartmentInfo>(
+                state.Departments ?? new Dictionary<string, DepartmentInfo>(),
+                StringComparer.OrdinalIgnoreCase);
 
             foreach (var device in state.Devices.Values)
             {

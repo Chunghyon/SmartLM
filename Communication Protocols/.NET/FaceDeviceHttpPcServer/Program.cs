@@ -1,12 +1,20 @@
 using System.IO.Compression;
+using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using FaceDeviceHttpPcServer.Forms;
+using FaceDeviceHttpPcServer.Middleware;
 using FaceDeviceHttpPcServer.Models;
 using FaceDeviceHttpPcServer.Services;
 
 const byte GzipMagicByte1 = 0x1F;
 const byte GzipMagicByte2 = 0x8B;
+
+// Windows Forms 蟾晦��
+Application.EnableVisualStyles();
+Application.SetCompatibleTextRenderingDefault(false);
+Application.SetHighDpiMode(HighDpiMode.SystemAware);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,10 +40,14 @@ builder.Services.AddSingleton(sp =>
 
 var app = builder.Build();
 
+// HTTP 蹂羶 煎梵 嘐菟錚橫 蹺陛
+app.UseMiddleware<HttpLoggingMiddleware>();
+
+// 薑瞳 だ橾 憮綠蝶 掘撩
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/", () => Results.Ok(new
+app.MapGet("/api-info", () => Results.Ok(new
 {
     name = "FaceDeviceHttpPcServer",
     purpose = "Phase-2 HTTP integration server for face-recognition terminals",
@@ -60,8 +72,6 @@ app.MapGet("/", () => Results.Ok(new
         "/admin/devices/{sn}/work-setting"
     }
 }));
-
-app.MapGet("/admin", () => Results.Redirect("/admin/"));
 
 app.MapPost("/Device/Keepalive", (KeepaliveRequest request, StateStore store) =>
 {
@@ -237,10 +247,480 @@ app.MapPut("/admin/devices/{sn}/work-setting", async (string sn, HttpRequest req
     return Results.Ok(ApiResponse.Ok("Desired work-setting snapshot saved."));
 });
 
-app.Run();
+// 式式 Admin: remote command dispatch 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/admin/devices/{sn}/remote", (string sn, DeviceRemoteRequest cmd, StateStore store) =>
+{
+    store.SetPendingRemoteCommand(sn, new PendingRemoteCommand
+    {
+        Opendoor = cmd.Opendoor,
+        Restart = cmd.Restart,
+        Recover = cmd.Recover,
+        Closealarm = cmd.Closealarm
+    });
+    return Results.Ok(ApiResponse.Ok($"Remote command queued for {sn}."));
+});
+
+// 式式 Admin: departments 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapGet("/admin/departments", (StateStore store) => Results.Ok(store.GetDepartments()));
+
+app.MapPost("/admin/departments", (DepartmentInfo dept, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(dept.DepartmentID))
+        return Results.BadRequest(new ApiResponse(400, "DepartmentID is required."));
+    return store.TryAddDepartment(dept)
+        ? Results.Ok(ApiResponse.Ok($"Department {dept.DepartmentID} added."))
+        : Results.Conflict(new ApiResponse(409, $"Department {dept.DepartmentID} already exists."));
+});
+
+app.MapDelete("/admin/departments/{id}", (string id, StateStore store) =>
+    store.DeleteDepartment(id)
+        ? Results.Ok(ApiResponse.Ok($"Department {id} deleted."))
+        : Results.NotFound(new ApiResponse(404, "Department not found.")));
+
+// ???????????????????????????????????????????????????????????????????????????????
+// HTTP-Docking Protocol  (Device ⊥ Server)
+// ???????????????????????????????????????????????????????????????????????????????
+
+// 式式 /Device/RemoteCommand 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/Device/RemoteCommand", (RemoteCommandRequest request, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+
+    var cmd = store.ConsumeRemoteCommand(request.SN);
+    if (cmd is null)
+        return Results.Ok(new RemoteCommandResponse());
+
+    return Results.Ok(new RemoteCommandResponse
+    {
+        Restart = cmd.Restart,
+        Recover = cmd.Recover,
+        Opendoor = cmd.Opendoor,
+        Closealarm = cmd.Closealarm,
+        RepostRecord = cmd.RepostRecord,
+        PushAllPeople = cmd.PushAllPeople,
+        QueryPeople = cmd.QueryPeople,
+        ClearRecord = cmd.ClearRecord
+    });
+});
+
+// 式式 /People/DownloadPeopleListResult 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/People/DownloadPeopleListResult", (DownloadPeopleListResultRequest request, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    return Results.Ok(ApiResponse.Ok());
+});
+
+// 式式 /People/DeletePeopleList 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/People/DeletePeopleList", (DeletePeopleListRequest request, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+
+    var effectiveLimit = request.Limit <= 0 ? 50 : Math.Min(request.Limit, 1000);
+    var list = store.GetDeletePeople(request.SN).Take(effectiveLimit).ToList();
+    return Results.Ok(new DeletePeopleListResponse { DeleteList = list });
+});
+
+// 式式 /People/DeletePeopleListResult 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/People/DeletePeopleListResult", (DeletePeopleListResultRequest request, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    return Results.Ok(ApiResponse.Ok());
+});
+
+// 式式 /People/PushPeople  (device uploads its stored people to server) 式式式式式式式式式式
+app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore store) =>
+{
+    List<PersonInfo>? people = null;
+    string? sn = null;
+
+    if (httpRequest.HasFormContentType)
+    {
+        var form = await httpRequest.ReadFormAsync();
+        sn = FirstNonEmpty(form["SN"].ToString(), form["DeviceSN"].ToString());
+        var json = form["PeopleJson"].ToString();
+        if (!string.IsNullOrWhiteSpace(json))
+            people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(json);
+    }
+    else
+    {
+        var payload = await JsonNode.ParseAsync(httpRequest.Body);
+        sn = payload?["SN"]?.GetValue<string>();
+        var listNode = payload?["PeopleList"];
+        if (listNode is not null)
+            people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(listNode.ToJsonString());
+    }
+
+    if (string.IsNullOrWhiteSpace(sn))
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+
+    var (success, fail) = store.SavePushedPeople(people ?? new());
+    return Results.Ok(ApiResponse.Ok($"Received {success} people, {fail} failed."));
+});
+
+// 式式 /Record/UploadSystemRecord 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/Record/UploadSystemRecord", (UploadSystemRecordRequest request, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(request.SN))
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+
+    store.SaveSystemRecords(request.SN, request.RecordType, request.Records ?? new());
+    return Results.Ok(ApiResponse.Ok());
+});
+
+// ???????????????????????????????????????????????????????????????????????????????
+// Browser UI Protocol  (Browser ⊥ Server acting as device proxy)
+// ???????????????????????????????????????????????????????????????????????????????
+
+// 式式 /api/heartBeat 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapGet("/api/heartBeat", () => Results.Ok(BrowserApiResponse.Ok("OK")));
+
+// 式式 /api/GetDeviceSN 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapGet("/api/GetDeviceSN", (StateStore store) =>
+{
+    var devices = store.GetDeviceSummaries();
+    var sn = devices.FirstOrDefault()?.SN ?? "UNKNOWN";
+    return Results.Ok(BrowserApiResponse.Ok(sn));
+});
+
+// 式式 /api/User/Login 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+{
+    const string DefaultPassword = "123456";
+    var tokens = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset>(StringComparer.Ordinal);
+
+    app.MapPost("/api/User/Login", (LoginRequest req) =>
+    {
+        if (req.password != DefaultPassword)
+            return Results.Ok(BrowserApiResponse.Fail(1, "password incorrect"));
+        var token = Guid.NewGuid().ToString("N");
+        tokens[token] = DateTimeOffset.UtcNow.AddHours(24);
+        return Results.Ok(BrowserApiResponse.Ok(token));
+    });
+
+    app.MapGet("/api/User/Logout", (HttpContext ctx) =>
+    {
+        var token = ExtractBearer(ctx);
+        if (token is not null) tokens.TryRemove(token, out _);
+        return Results.Ok(BrowserApiResponse.Ok("ok"));
+    });
+
+    app.MapGet("/api/User/CheckLoginToken", (HttpContext ctx) =>
+    {
+        var token = ExtractBearer(ctx);
+        if (token is null || !tokens.TryGetValue(token, out var exp) || exp < DateTimeOffset.UtcNow)
+            return Results.Ok(BrowserApiResponse.Fail(10000, "Token is invalid"));
+        return Results.Ok(BrowserApiResponse.Ok(exp.ToUnixTimeSeconds()));
+    });
+
+    app.MapGet("/api/User/TokenExtension", (HttpContext ctx) =>
+    {
+        var token = ExtractBearer(ctx);
+        if (token is null || !tokens.TryGetValue(token, out var exp) || exp < DateTimeOffset.UtcNow)
+            return Results.Ok(BrowserApiResponse.Fail(10000, "Token is invalid"));
+        var newExp = DateTimeOffset.UtcNow.AddHours(24);
+        tokens[token] = newExp;
+        return Results.Ok(BrowserApiResponse.Ok(newExp.ToUnixTimeSeconds()));
+    });
+
+    app.MapPost("/api/User/EditPassword", (JsonNode? body) =>
+        Results.Ok(BrowserApiResponse.Ok()));
+}
+
+// 式式 /api/Device/FunctionList 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapGet("/api/Device/FunctionList", () => Results.Ok(BrowserApiResponse.Ok(new
+{
+    FaceIR = true, BodyTemperature = false, Elevator = true,
+    FaceMask = true, AlarmClock = true, ExcelFile = true, ZipFile = true,
+    TimeGreoup = true, WIFI = true,
+    HTTPClient_V1 = true, HTTPClient_V2 = true, MQTT = true,
+    Websocket_V1 = true, Websocket_V2 = true
+})));
+
+// 式式 /api/Device/GetDetail 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapGet("/api/Device/GetDetail", (StateStore store) =>
+{
+    var device = store.GetDeviceSummaries().FirstOrDefault();
+    return Results.Ok(BrowserApiResponse.Ok(device));
+});
+
+// 式式 /api/Device/UpdateParameter 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/Device/UpdateParameter", async (HttpRequest request, StateStore store) =>
+{
+    var payload = await JsonNode.ParseAsync(request.Body);
+    if (payload is not JsonObject setting)
+        return Results.Ok(BrowserApiResponse.Fail(10004, "json parse error"));
+    var sn = setting["DeviceSN"]?.GetValue<string>() ?? setting["SN"]?.GetValue<string>() ?? "";
+    if (!string.IsNullOrWhiteSpace(sn))
+        store.SetDesiredWorkSetting(sn, setting);
+    return Results.Ok(BrowserApiResponse.Ok());
+});
+
+// 式式 /api/Device/Remote 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/Device/Remote", (DeviceRemoteRequest cmd, StateStore store) =>
+{
+    var devices = store.GetDeviceSummaries();
+    foreach (var d in devices)
+    {
+        store.SetPendingRemoteCommand(d.SN, new PendingRemoteCommand
+        {
+            Opendoor = cmd.Opendoor,
+            Restart = cmd.Restart,
+            Recover = cmd.Recover,
+            Closealarm = cmd.Closealarm
+        });
+    }
+    return Results.Ok(BrowserApiResponse.Ok());
+});
+
+// 式式 /api/Device/UploadSoftware 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/Device/UploadSoftware", () =>
+    Results.Ok(BrowserApiResponse.Ok()));
+
+// 式式 /api/People/Search 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/People/Search", (PeopleSearchRequest req, StateStore store) =>
+{
+    var all = store.GetPeople().AsEnumerable();
+
+    if (!string.IsNullOrWhiteSpace(req.UserID))
+        all = all.Where(p => p.UserID.Contains(req.UserID, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrWhiteSpace(req.Name))
+        all = all.Where(p => p.Name.Contains(req.Name, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrWhiteSpace(req.Department))
+        all = all.Where(p => p.Department.Contains(req.Department, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrWhiteSpace(req.Job))
+        all = all.Where(p => p.Job.Contains(req.Job, StringComparison.OrdinalIgnoreCase));
+    if (req.AccessType.HasValue)
+        all = all.Where(p => p.AccessType == req.AccessType.Value);
+    if (req.Timegroup.HasValue)
+        all = all.Where(p => p.Timegroup == req.Timegroup.Value);
+    if (!string.IsNullOrWhiteSpace(req.CardNum))
+        all = all.Where(p => p.CardNum.Contains(req.CardNum, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrWhiteSpace(req.IdentityCard))
+        all = all.Where(p => p.IdentityCard.Contains(req.IdentityCard, StringComparison.OrdinalIgnoreCase));
+    if (req.Photo.HasValue)
+        all = all.Where(p => req.Photo.Value == 1 ? !string.IsNullOrEmpty(p.Photo) : string.IsNullOrEmpty(p.Photo));
+    if (req.Fingerprint.HasValue)
+        all = all.Where(p => req.Fingerprint.Value == 1 ? p.Fingerprints.Count > 0 : p.Fingerprints.Count == 0);
+    if (req.Palmprint.HasValue)
+        all = all.Where(p => req.Palmprint.Value == 1 ? p.Palmveins.Count > 0 : p.Palmveins.Count == 0);
+
+    // Sort
+    var sortCol = req.OrderByColumn ?? "UserID";
+    var desc = string.Equals(req.OrderByType, "DESC", StringComparison.OrdinalIgnoreCase);
+    all = sortCol switch
+    {
+        "Name" => desc ? all.OrderByDescending(p => p.Name) : all.OrderBy(p => p.Name),
+        "Department" => desc ? all.OrderByDescending(p => p.Department) : all.OrderBy(p => p.Department),
+        "CardNum" => desc ? all.OrderByDescending(p => p.CardNum) : all.OrderBy(p => p.CardNum),
+        _ => desc ? all.OrderByDescending(p => p.UserID) : all.OrderBy(p => p.UserID)
+    };
+
+    var list = all.ToList();
+    var total = list.Count;
+    var page = Math.Max(1, req.PageIndex);
+    var size = Math.Max(1, req.PageSize);
+    var data = list.Skip((page - 1) * size).Take(size).ToList();
+
+    return Results.Ok(BrowserApiResponse.Ok(new PeopleSearchResult
+    {
+        TotalCount = total,
+        PageIndex = page,
+        PageSize = size,
+        DataList = data
+    }));
+});
+
+// 式式 /api/People/GetDetail 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/People/GetDetail", (JsonNode? body, StateStore store) =>
+{
+    var userId = body?["UserID"]?.GetValue<string>();
+    if (string.IsNullOrWhiteSpace(userId))
+        return Results.Ok(BrowserApiResponse.Fail(3, "UserID is required."));
+    var person = store.GetPeople().FirstOrDefault(p =>
+        string.Equals(p.UserID, userId, StringComparison.OrdinalIgnoreCase));
+    return person is null
+        ? Results.Ok(BrowserApiResponse.Fail(3, "Person not found."))
+        : Results.Ok(BrowserApiResponse.Ok(person));
+});
+
+// 式式 /api/People/GetNewID 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapGet("/api/People/GetNewID", (StateStore store) =>
+{
+    var all = store.GetPeople();
+    var maxId = all.Select(p => long.TryParse(p.UserID, out var n) ? n : 0L).DefaultIfEmpty(0).Max();
+    return Results.Ok(BrowserApiResponse.Ok((maxId + 1).ToString()));
+});
+
+// 式式 /api/People/New 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/People/New", async (HttpRequest request, StateStore store) =>
+{
+    PersonInfo? person = null;
+
+    if (request.HasFormContentType)
+    {
+        var form = await request.ReadFormAsync();
+        var json = form["PeopleJson"].ToString();
+        if (!string.IsNullOrWhiteSpace(json))
+            person = System.Text.Json.JsonSerializer.Deserialize<PersonInfo>(json);
+    }
+    else
+    {
+        person = await request.ReadFromJsonAsync<PersonInfo>();
+    }
+
+    if (person is null || string.IsNullOrWhiteSpace(person.UserID))
+        return Results.Ok(BrowserApiResponse.Fail(11, "Personnel parameter verification failed."));
+
+    var normalized = NormalizePerson(person);
+    return store.TryAddPerson(normalized)
+        ? Results.Ok(BrowserApiResponse.Ok())
+        : Results.Ok(BrowserApiResponse.Fail(23, "UserID or card number duplicated."));
+});
+
+// 式式 /api/People/Delete 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/People/Delete", (JsonNode? body, StateStore store) =>
+{
+    var userId = body?["UserID"]?.GetValue<string>();
+    if (string.IsNullOrWhiteSpace(userId))
+        return Results.Ok(BrowserApiResponse.Fail(3, "UserID is required."));
+    return store.DeletePerson(userId)
+        ? Results.Ok(BrowserApiResponse.Ok())
+        : Results.Ok(BrowserApiResponse.Fail(3, "Person not found."));
+});
+
+// 式式 /api/Department/Search 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/Department/Search", (DepartmentSearchRequest req, StateStore store) =>
+{
+    var all = store.GetDepartments().AsEnumerable();
+    if (!string.IsNullOrWhiteSpace(req.Name))
+        all = all.Where(d => d.Name.Contains(req.Name, StringComparison.OrdinalIgnoreCase));
+    var list = all.ToList();
+    var page = Math.Max(1, req.PageIndex);
+    var size = Math.Max(1, req.PageSize);
+    return Results.Ok(BrowserApiResponse.Ok(new
+    {
+        TotalCount = list.Count,
+        PageIndex = page,
+        PageSize = size,
+        DataList = list.Skip((page - 1) * size).Take(size).ToList()
+    }));
+});
+
+app.MapGet("/api/Department/GetNewID", (StateStore store) =>
+{
+    var all = store.GetDepartments();
+    var maxId = all.Select(d => long.TryParse(d.DepartmentID, out var n) ? n : 0L).DefaultIfEmpty(0).Max();
+    return Results.Ok(BrowserApiResponse.Ok((maxId + 1).ToString()));
+});
+
+app.MapPost("/api/Department/New", (DepartmentInfo dept, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(dept.DepartmentID))
+        return Results.Ok(BrowserApiResponse.Fail(3, "DepartmentID is required."));
+    return store.TryAddDepartment(dept)
+        ? Results.Ok(BrowserApiResponse.Ok())
+        : Results.Ok(BrowserApiResponse.Fail(23, "Department already exists."));
+});
+
+app.MapPost("/api/Department/Delete", (JsonNode? body, StateStore store) =>
+{
+    var id = body?["DepartmentID"]?.GetValue<string>();
+    if (string.IsNullOrWhiteSpace(id))
+        return Results.Ok(BrowserApiResponse.Fail(3, "DepartmentID is required."));
+    return store.DeleteDepartment(id)
+        ? Results.Ok(BrowserApiResponse.Ok())
+        : Results.Ok(BrowserApiResponse.Fail(3, "Department not found."));
+});
+
+// 式式 /api/Record/* 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/Record/Identify/Search", (RecordSearchRequest req, StateStore store) =>
+{
+    var all = store.GetDeviceSummaries()
+        .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
+        .Where(r => r.RecordDetail?["RecordType"] is not null)
+        .AsEnumerable();
+
+    all = ApplyRecordFilters(all, req);
+    var list = all.ToList();
+    var page = Math.Max(1, req.PageIndex);
+    var size = Math.Max(1, req.PageSize);
+    return Results.Ok(BrowserApiResponse.Ok(new
+    {
+        TotalCount = list.Count,
+        PageIndex = page,
+        PageSize = size,
+        DataList = list.Skip((page - 1) * size).Take(size)
+            .Select(r => r.RecordDetail)
+            .ToList()
+    }));
+});
+
+app.MapPost("/api/Record/DoorSensor/Search", (RecordSearchRequest req, StateStore store) =>
+    Results.Ok(BrowserApiResponse.Ok(new { TotalCount = 0, PageIndex = req.PageIndex, PageSize = req.PageSize, DataList = Array.Empty<object>() })));
+
+app.MapPost("/api/Record/System/Search", (RecordSearchRequest req, StateStore store) =>
+    Results.Ok(BrowserApiResponse.Ok(new { TotalCount = 0, PageIndex = req.PageIndex, PageSize = req.PageSize, DataList = Array.Empty<object>() })));
+
+app.MapPost("/api/Record/Delete/All", (StateStore store) =>
+{
+    store.ClearAllRecords();
+    return Results.Ok(BrowserApiResponse.Ok());
+});
+
+app.MapPost("/api/Record/Delete/ByType", (DeleteRecordsByTypeRequest req, StateStore store) =>
+{
+    store.ClearRecordsByType(req.RecordType);
+    return Results.Ok(BrowserApiResponse.Ok());
+});
+
+// HTTP 憮幗蒂 寥斜塭遴萄縑憮 褒ч
+var cts = new CancellationTokenSource();
+var serverTask = app.RunAsync(cts.Token);
+
+// 憮幗 URL 陛螳螃晦
+var urls = app.Urls.ToArray();
+var serverUrl = urls.Length > 0 ? urls[0] : "http://localhost:5000";
+
+// MainForm 儅撩 塽 憮幗 URL 撲薑
+var mainForm = new MainForm();
+mainForm.SetServerUrl(serverUrl);
+mainForm.FormClosed += (_, _) =>
+{
+    cts.Cancel();
+};
+
+// Windows Forms 褒ч
+Application.Run(mainForm);
+
+// 憮幗 謙猿 渠晦
+await serverTask;
 
 static string? FirstNonEmpty(params string?[] values) =>
     values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+static string? ExtractBearer(HttpContext ctx)
+{
+    var auth = ctx.Request.Headers.Authorization.ToString();
+    if (auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        return auth["Bearer ".Length..].Trim();
+    return null;
+}
+
+static IEnumerable<RecordSnapshot> ApplyRecordFilters(IEnumerable<RecordSnapshot> all, RecordSearchRequest req)
+{
+    if (req.BeginDate > 0)
+        all = all.Where(r => r.RecordDetail?["RecordDate"]?.GetValue<long>() >= req.BeginDate);
+    if (req.EndDate > 0)
+        all = all.Where(r => r.RecordDetail?["RecordDate"]?.GetValue<long>() <= req.EndDate);
+    if (!string.IsNullOrWhiteSpace(req.UserID))
+        all = all.Where(r => r.RecordDetail?["UserID"]?.GetValue<string>()?.Contains(req.UserID, StringComparison.OrdinalIgnoreCase) == true);
+    if (!string.IsNullOrWhiteSpace(req.Name))
+        all = all.Where(r => r.RecordDetail?["Name"]?.GetValue<string>()?.Contains(req.Name, StringComparison.OrdinalIgnoreCase) == true);
+    return all;
+}
 
 static IResult DownloadPeopleList(DownloadPeopleListRequest request, StateStore store)
 {
