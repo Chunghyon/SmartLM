@@ -227,8 +227,10 @@ public sealed class StateStore
                     IpAddress = device.IpAddress,
                     HttpPort = device.HttpPort,
                     DeviceName = device.DeviceName,
+                    TagName = device.TagName,
                     Model = device.Model,
                     FirmwareVersion = device.FirmwareVersion,
+                    UnitNo = device.UnitNo,
                     ConnectedAtUtc = device.ConnectedAtUtc,
                     LastKeepaliveAtUtc = device.LastKeepaliveAtUtc,
                     LastWorkSettingUploadAtUtc = device.LastWorkSettingUploadAtUtc,
@@ -462,7 +464,7 @@ public sealed class StateStore
         return device;
     }
 
-    public bool ConnectDevice(string deviceSn, string ipAddress, int httpPort, string? deviceName = null, string? model = null, string? firmwareVersion = null)
+    public bool ConnectDevice(string deviceSn, string ipAddress, int httpPort, string? deviceName = null, string? tagName = null, string? model = null, string? firmwareVersion = null, int unitNo = 0)
     {
         lock (_sync)
         {
@@ -470,8 +472,10 @@ public sealed class StateStore
             device.IpAddress = ipAddress;
             device.HttpPort = httpPort;
             device.DeviceName = deviceName;
+            device.TagName = tagName;
             device.Model = model;
             device.FirmwareVersion = firmwareVersion;
+            device.UnitNo = unitNo;
 
             if (!device.ConnectedAtUtc.HasValue)
             {
@@ -536,6 +540,37 @@ public sealed class StateStore
     {
         var json = JsonSerializer.Serialize(value, _serializerOptions);
         return JsonSerializer.Deserialize<T>(json, _serializerOptions)!;
+    }
+
+    public bool RemoveDevice(string deviceSn)
+    {
+        lock (_sync)
+        {
+            if (_state.Devices.Remove(deviceSn))
+            {
+                SaveState();
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public void QueueRemoteCommand(string deviceSn, bool restart = false, bool opendoor = false, 
+        bool closealarm = false, bool clearRecord = false, bool repostRecord = false)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.PendingRemote = new PendingRemoteCommand
+            {
+                Restart = restart ? 1 : null,
+                Opendoor = opendoor ? 1 : null,
+                Closealarm = closealarm ? 1 : null,
+                ClearRecord = clearRecord ? 1 : null,
+                RepostRecord = repostRecord ? 1 : null
+            };
+            SaveState();
+        }
     }
 
     private static string SanitizeForFileName(string? value)

@@ -43,6 +43,9 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshDevices = new System.Windows.Forms.Button();
             this.dgvDiscoveredDevices = new System.Windows.Forms.DataGridView();
             this.btnConnectDevice = new System.Windows.Forms.Button();
+            this.grpDeviceManagement = new System.Windows.Forms.GroupBox();
+            this.btnRemoteControl = new System.Windows.Forms.Button();
+            this.btnRemoveDevice = new System.Windows.Forms.Button();
             this.dgvDevices = new System.Windows.Forms.DataGridView();
 
             // Department controls
@@ -199,14 +202,15 @@ namespace FaceDeviceDesktopClient
             // 
             // tabDevices
             // 
-            this.tabDevices.Controls.Add(this.grpDeviceSearch);
             this.tabDevices.Controls.Add(this.dgvDevices);
+            this.tabDevices.Controls.Add(this.grpDeviceManagement);
+            this.tabDevices.Controls.Add(this.grpDeviceSearch);
             this.tabDevices.Location = new System.Drawing.Point(4, 24);
             this.tabDevices.Name = "tabDevices";
             this.tabDevices.Padding = new System.Windows.Forms.Padding(10);
             this.tabDevices.Size = new System.Drawing.Size(1192, 572);
             this.tabDevices.TabIndex = 1;
-            this.tabDevices.Text = "Device Install";
+            this.tabDevices.Text = "Device Management";
             this.tabDevices.UseVisualStyleBackColor = true;
 
             // 
@@ -244,7 +248,7 @@ namespace FaceDeviceDesktopClient
             this.btnConnectDevice.Name = "btnConnectDevice";
             this.btnConnectDevice.Size = new System.Drawing.Size(120, 30);
             this.btnConnectDevice.TabIndex = 2;
-            this.btnConnectDevice.Text = "Connect";
+            this.btnConnectDevice.Text = "Install Device";
             this.btnConnectDevice.UseVisualStyleBackColor = true;
             this.btnConnectDevice.Click += new System.EventHandler(this.btnConnectDevice_Click);
 
@@ -253,6 +257,7 @@ namespace FaceDeviceDesktopClient
             this.dgvDiscoveredDevices.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvDiscoveredDevices.AutoGenerateColumns = true;
             this.dgvDiscoveredDevices.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvDiscoveredDevices.Location = new System.Drawing.Point(10, 65);
             this.dgvDiscoveredDevices.MultiSelect = false;
@@ -264,14 +269,45 @@ namespace FaceDeviceDesktopClient
 
             this.dgvDevices.AllowUserToAddRows = false;
             this.dgvDevices.AllowUserToDeleteRows = false;
+            this.dgvDevices.AutoGenerateColumns = true;
             this.dgvDevices.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvDevices.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvDevices.Location = new System.Drawing.Point(10, 260);
+            this.dgvDevices.Location = new System.Drawing.Point(10, 335);
             this.dgvDevices.Name = "dgvDevices";
             this.dgvDevices.ReadOnly = true;
             this.dgvDevices.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvDevices.Size = new System.Drawing.Size(1172, 302);
+            this.dgvDevices.Size = new System.Drawing.Size(1172, 227);
             this.dgvDevices.TabIndex = 1;
+
+            // 
+            // grpDeviceManagement
+            // 
+            this.grpDeviceManagement.Controls.Add(this.btnRemoteControl);
+            this.grpDeviceManagement.Controls.Add(this.btnRemoveDevice);
+            this.grpDeviceManagement.Dock = System.Windows.Forms.DockStyle.Top;
+            this.grpDeviceManagement.Location = new System.Drawing.Point(10, 260);
+            this.grpDeviceManagement.Name = "grpDeviceManagement";
+            this.grpDeviceManagement.Size = new System.Drawing.Size(1172, 75);
+            this.grpDeviceManagement.TabIndex = 2;
+            this.grpDeviceManagement.TabStop = false;
+            this.grpDeviceManagement.Text = "Installed Devices - Management";
+
+            this.btnRemoteControl.Location = new System.Drawing.Point(10, 25);
+            this.btnRemoteControl.Name = "btnRemoteControl";
+            this.btnRemoteControl.Size = new System.Drawing.Size(150, 35);
+            this.btnRemoteControl.TabIndex = 0;
+            this.btnRemoteControl.Text = "Remote Control";
+            this.btnRemoteControl.UseVisualStyleBackColor = true;
+            this.btnRemoteControl.Click += new System.EventHandler(this.btnRemoteControl_Click);
+
+            this.btnRemoveDevice.Location = new System.Drawing.Point(170, 25);
+            this.btnRemoveDevice.Name = "btnRemoveDevice";
+            this.btnRemoveDevice.Size = new System.Drawing.Size(150, 35);
+            this.btnRemoveDevice.TabIndex = 1;
+            this.btnRemoveDevice.Text = "Remove Device";
+            this.btnRemoveDevice.ForeColor = System.Drawing.Color.DarkRed;
+            this.btnRemoveDevice.UseVisualStyleBackColor = true;
+            this.btnRemoveDevice.Click += new System.EventHandler(this.btnRemoveDevice_Click);
 
             // 
             // tabDepartments
@@ -584,6 +620,9 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.Button btnRefreshDevices;
         private System.Windows.Forms.Button btnConnectDevice;
         private System.Windows.Forms.DataGridView dgvDiscoveredDevices;
+        private System.Windows.Forms.GroupBox grpDeviceManagement;
+        private System.Windows.Forms.Button btnRemoteControl;
+        private System.Windows.Forms.Button btnRemoveDevice;
         private System.Windows.Forms.DataGridView dgvDevices;
         private System.Windows.Forms.Button btnAddDepartment;
         private System.Windows.Forms.Button btnRefreshDepartments;

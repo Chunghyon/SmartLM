@@ -214,8 +214,10 @@ public sealed class DeviceSnapshot
     public string? IpAddress { get; set; }
     public int HttpPort { get; set; } = 80;
     public string? DeviceName { get; set; }
+    public string? TagName { get; set; }
     public string? Model { get; set; }
     public string? FirmwareVersion { get; set; }
+    public int UnitNo { get; set; }
     public DateTimeOffset? ConnectedAtUtc { get; set; }
     public KeepaliveRequest? LastKeepalive { get; set; }
     public DateTimeOffset? LastKeepaliveAtUtc { get; set; }
@@ -245,8 +247,10 @@ public sealed class DeviceSummary
     public string? IpAddress { get; set; }
     public int HttpPort { get; set; } = 80;
     public string? DeviceName { get; set; }
+    public string? TagName { get; set; }
     public string? Model { get; set; }
     public string? FirmwareVersion { get; set; }
+    public int UnitNo { get; set; }
     public DateTimeOffset? ConnectedAtUtc { get; set; }
     public DateTimeOffset? LastKeepaliveAtUtc { get; set; }
     public DateTimeOffset? LastWorkSettingUploadAtUtc { get; set; }

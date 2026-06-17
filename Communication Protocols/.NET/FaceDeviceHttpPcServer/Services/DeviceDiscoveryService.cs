@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 
@@ -10,8 +12,8 @@ namespace FaceDeviceHttpPcServer.Services;
 /// </summary>
 public sealed class DeviceDiscoveryService
 {
-    private const int DiscoveryPort = 20567; // 표준 디스커버리 포트 (UDP 브로드캐스트)
-    private const int TimeoutMs = 5000; // 5초로 증가 - 디바이스 응답 대기 시간
+    private const int DiscoveryPort = 8101; // Face Device Discovery 포트 (ACS 및 단말 기본값)
+    private const int TimeoutMs = 30000; // 30초 - 디바이스 응답 대기 시간
 
     // UDP 브로드캐스트 프로토콜 매직 넘버
     private const uint DEVDISCOVER_REQUEST_MAGIC1 = 0x0c58380d;
@@ -29,77 +31,154 @@ public sealed class DeviceDiscoveryService
         int HttpPort);
 
     /// <summary>
-    /// 로컬 네트워크에서 디바이스를 검색합니다 (UDP 브로드캐스트)
+    /// 로컬 네트워크에서 디바이스를 검색합니다 (UDP 브로드캐스트) - ACS 방식
     /// </summary>
     public async Task<List<DiscoveredDevice>> SearchDevicesAsync(CancellationToken cancellationToken = default)
     {
         var devices = new List<DiscoveredDevice>();
+        var startTime = DateTime.Now;
+
+        UdpClient? binaryClient = null;
+        UdpClient? jsonClient = null;
 
         try
         {
-            using var udpClient = new UdpClient();
-            udpClient.EnableBroadcast = true;
-            udpClient.Client.ReceiveTimeout = TimeoutMs;
+            // 로컬 네트워크 인터페이스 가져오기
+            var networkInterfaces = GetValidNetworkInterfaces();
 
-            // 브로드캐스트 메시지 준비 (바이너리 프로토콜)
-            var data = CreateDiscoveryRequest(""); // 빈 prefix는 모든 디바이스 검색
+            if (networkInterfaces.Count == 0)
+            {
+                LogHub.Instance.Error("브로드캐스트 전송 실패: 192.168.0.x 네트워크 인터페이스가 없습니다.");
+                return devices;
+            }
 
-            // 브로드캐스트 전송
+            // 192.168.0.x 네트워크의 첫 번째 인터페이스 사용
+            var (localIp, broadcastIp) = networkInterfaces[0];
+
+            // ACS 방식 프로토콜 준비
+            var binaryRequest = CreateDiscoveryRequest_ACS(); // 36 bytes
+            var jsonRequest = Encoding.UTF8.GetBytes(@"{""cmd"":""UDPSerach"",""Ver"":1}" + "\0"); // 28 bytes
+
+            // 패킷 내용 로깅
+            var binHex = BitConverter.ToString(binaryRequest).Replace("-", "");
+            LogHub.Instance.Info($"바이너리 요청 ({binaryRequest.Length} bytes): {binHex}");
+            LogHub.Instance.Info($"JSON 요청 ({jsonRequest.Length} bytes): {{\"cmd\":\"UDPSerach\",\"Ver\":1}}");
+
+            // 브로드캐스트 주소
             var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, DiscoveryPort);
-            await udpClient.SendAsync(data, data.Length, broadcastEndpoint);
 
-            LogHub.Instance.Info($"브로드캐스트 전송: 포트 {DiscoveryPort}, {data.Length} bytes");
+            // ? ACS 방식: 서로 다른 포트 2개 사용!
 
-            // 응답 수신 (3초 동안)
+            // 1?? 바이너리 프로토콜 전송 (첫 번째 포트)
+            binaryClient = new UdpClient(new IPEndPoint(localIp, 0));
+            binaryClient.EnableBroadcast = true;
+            binaryClient.Client.Blocking = false;
+
+            var binaryPort = ((IPEndPoint)binaryClient.Client.LocalEndPoint!).Port;
+            await binaryClient.SendAsync(binaryRequest, binaryRequest.Length, broadcastEndpoint);
+            LogHub.Instance.Info($"? 바이너리 전송: {localIp}:{binaryPort} → {broadcastEndpoint}");
+
+            // 약간의 지연 (디바이스 처리 시간)
+            await Task.Delay(50);
+
+            // 2?? JSON 프로토콜 전송 (두 번째 포트)
+            jsonClient = new UdpClient(new IPEndPoint(localIp, 0));
+            jsonClient.EnableBroadcast = true;
+            jsonClient.Client.Blocking = false;
+
+            var jsonPort = ((IPEndPoint)jsonClient.Client.LocalEndPoint!).Port;
+            await jsonClient.SendAsync(jsonRequest, jsonRequest.Length, broadcastEndpoint);
+            LogHub.Instance.Info($"? JSON 전송: {localIp}:{jsonPort} → {broadcastEndpoint}");
+
+            LogHub.Instance.Info($"브로드캐스트 전송 완료: 2개 포트, 대기 시간 {TimeoutMs}ms");
+            LogHub.Instance.Info($"수신 대기 포트: 바이너리={binaryPort}, JSON={jsonPort}");
+
+            // 3?? 응답 수신 (두 클라이언트 모두에서 수신)
             var endTime = DateTime.Now.AddMilliseconds(TimeoutMs);
+            var lastLogTime = DateTime.Now;
+            var lastResponseTime = DateTime.Now;
+
+            LogHub.Instance.Info($"응답 대기 시작: {TimeoutMs}ms 동안 수신 대기...");
 
             while (DateTime.Now < endTime && !cancellationToken.IsCancellationRequested)
             {
+                // 5초마다 진행 상황 로깅
+                if ((DateTime.Now - lastLogTime).TotalSeconds >= 5)
+                {
+                    var elapsed = (DateTime.Now - startTime).TotalSeconds;
+                    var remaining = (endTime - DateTime.Now).TotalSeconds;
+                    LogHub.Instance.Info($"대기 중... 경과: {elapsed:F1}초, 남은 시간: {remaining:F1}초, 발견된 디바이스: {devices.Count}개");
+                    lastLogTime = DateTime.Now;
+                }
+
+                bool receivedData = false;
+
                 try
                 {
-                    var receiveTask = udpClient.ReceiveAsync();
-                    var completedTask = await Task.WhenAny(receiveTask, Task.Delay(500, cancellationToken));
-
-                    if (completedTask == receiveTask)
+                    // 바이너리 클라이언트에서 수신 확인
+                    if (binaryClient.Available > 0)
                     {
-                        var result = await receiveTask;
+                        var result = await binaryClient.ReceiveAsync();
+                        ProcessDiscoveryResponse(result, devices, startTime);
+                        lastResponseTime = DateTime.Now;
+                        receivedData = true;
+                    }
 
-                        LogHub.Instance.Info($"UDP 응답 수신: {result.RemoteEndPoint}, {result.Buffer.Length} bytes");
+                    // JSON 클라이언트에서 수신 확인
+                    if (jsonClient.Available > 0)
+                    {
+                        var result = await jsonClient.ReceiveAsync();
+                        ProcessDiscoveryResponse(result, devices, startTime);
+                        lastResponseTime = DateTime.Now;
+                        receivedData = true;
+                    }
 
-                        try
-                        {
-                            var device = ParseUdpDiscoveryResponse(result.RemoteEndPoint.Address.ToString(), result.Buffer);
-                            if (device != null && !devices.Any(d => d.DeviceSN == device.DeviceSN))
-                            {
-                                devices.Add(device);
-                                LogHub.Instance.Info($"디바이스 발견: {device.IpAddress} - {device.DeviceSN}");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHub.Instance.Warn($"응답 파싱 실패: {ex.Message}");
-                        }
+                    // 데이터가 없으면 짧은 대기
+                    if (!receivedData)
+                    {
+                        await Task.Delay(100, cancellationToken);
+                    }
+
+                    // 디바이스 발견 시 조기 종료
+                    if (devices.Count > 0 && (DateTime.Now - lastResponseTime).TotalSeconds > 3)
+                    {
+                        LogHub.Instance.Info($"디바이스 발견 완료, 검색 종료");
+                        break;
                     }
                 }
-                catch (SocketException)
+                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.WouldBlock)
                 {
-                    // 타임아웃 또는 기타 소켓 오류 - 계속 진행
+                    await Task.Delay(100, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    LogHub.Instance.Warn($"수신 오류: {ex.Message}");
+                    await Task.Delay(100, cancellationToken);
                 }
             }
+
+            var elapsedSeconds = (DateTime.Now - startTime).TotalSeconds;
+            LogHub.Instance.Info($"브로드캐스트 검색 완료: {devices.Count}개 디바이스 발견 (소요 시간: {elapsedSeconds:F1}초)");
         }
         catch (Exception ex)
         {
             LogHub.Instance.Error($"디바이스 검색 오류: {ex.Message}");
+            LogHub.Instance.Error($"스택 트레이스: {ex.StackTrace}");
+        }
+        finally
+        {
+            binaryClient?.Close();
+            jsonClient?.Close();
         }
 
-        LogHub.Instance.Info($"브로드캐스트 검색 완료: {devices.Count}개 디바이스 발견");
         return devices;
     }
 
     /// <summary>
     /// HTTP를 통한 네트워크 스캔 (IP 범위 스캔) - 실시간 결과 반환
+    /// Progress와 Device 정보를 모두 yield
     /// </summary>
-    public async IAsyncEnumerable<DiscoveredDevice> ScanNetworkStreamAsync(string subnet, CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<object> ScanNetworkStreamAsync(string subnet, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // 예: "192.168.0" -> 192.168.0.1-254 스캔
         var ipParts = subnet.Split('.');
@@ -111,31 +190,37 @@ public sealed class DeviceDiscoveryService
 
         LogHub.Instance.Info($"네트워크 스캔 시작: {subnet}.1-254");
 
-        var tasks = new List<Task<DiscoveredDevice?>>();
+        var tasks = new List<Task<(int ipIndex, DiscoveredDevice? device)>>();
         var deviceCount = 0;
+        var scannedCount = 0;
+        const int maxConcurrent = 50;
 
         for (int i = 1; i <= 254; i++)
         {
             if (cancellationToken.IsCancellationRequested) break;
 
             var ip = $"{subnet}.{i}";
-            tasks.Add(ProbeDeviceAsync(ip, cancellationToken));
+            var index = i;
+            tasks.Add(Task.Run(async () => (index, await ProbeDeviceAsync(ip, cancellationToken)), cancellationToken));
 
-            // 동시 연결 수 제한 (20개씩) 및 완료된 작업 확인
-            if (tasks.Count >= 20)
+            // 동시 연결 수 제한 (50개씩) - 배치가 가득 차거나 마지막 IP일 때만 대기
+            if (tasks.Count >= maxConcurrent || i == 254)
             {
-                while (tasks.Any())
-                {
-                    var completed = await Task.WhenAny(tasks);
-                    tasks.Remove(completed);
+                // 한 번에 하나씩만 처리하지 않고, 완료된 것들을 먼저 수집
+                var completed = await Task.WhenAny(tasks);
+                tasks.Remove(completed);
 
-                    var device = await completed;
-                    if (device != null)
-                    {
-                        deviceCount++;
-                        LogHub.Instance.Info($"디바이스 발견 #{deviceCount}: {device.IpAddress} - {device.DeviceSN}");
-                        yield return device;
-                    }
+                var (ipIndex, device) = await completed;
+                scannedCount++;
+
+                // 진행 상황 전송
+                yield return new { type = "progress", scanned = scannedCount, total = 254 };
+
+                if (device != null)
+                {
+                    deviceCount++;
+                    LogHub.Instance.Info($"디바이스 발견 #{deviceCount}: {device.IpAddress} - {device.DeviceSN}");
+                    yield return new { type = "device", device };
                 }
             }
         }
@@ -146,12 +231,17 @@ public sealed class DeviceDiscoveryService
             var completed = await Task.WhenAny(tasks);
             tasks.Remove(completed);
 
-            var device = await completed;
+            var (ipIndex, device) = await completed;
+            scannedCount++;
+
+            // 진행 상황 전송
+            yield return new { type = "progress", scanned = scannedCount, total = 254 };
+
             if (device != null)
             {
                 deviceCount++;
                 LogHub.Instance.Info($"디바이스 발견 #{deviceCount}: {device.IpAddress} - {device.DeviceSN}");
-                yield return device;
+                yield return new { type = "device", device };
             }
         }
 
@@ -164,9 +254,27 @@ public sealed class DeviceDiscoveryService
     public async Task<List<DiscoveredDevice>> ScanNetworkAsync(string subnet, CancellationToken cancellationToken = default)
     {
         var devices = new List<DiscoveredDevice>();
-        await foreach (var device in ScanNetworkStreamAsync(subnet, cancellationToken))
+        await foreach (var item in ScanNetworkStreamAsync(subnet, cancellationToken))
         {
-            devices.Add(device);
+            // 동적 객체에서 type 속성 확인
+            var itemType = item.GetType();
+            var typeProperty = itemType.GetProperty("type");
+            if (typeProperty != null)
+            {
+                var type = typeProperty.GetValue(item) as string;
+                if (type == "device")
+                {
+                    var deviceProperty = itemType.GetProperty("device");
+                    if (deviceProperty != null)
+                    {
+                        var device = deviceProperty.GetValue(item) as DiscoveredDevice;
+                        if (device != null)
+                        {
+                            devices.Add(device);
+                        }
+                    }
+                }
+            }
         }
         return devices;
     }
@@ -178,7 +286,7 @@ public sealed class DeviceDiscoveryService
     {
         try
         {
-            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(800) };
 
             // 일반적인 포트들 시도
             foreach (var port in new[] { 80, 8080, 8100 })
@@ -264,25 +372,97 @@ public sealed class DeviceDiscoveryService
     /// <summary>
     /// UDP 브로드캐스트 디스커버리 요청 패킷 생성
     /// </summary>
+    /// <summary>
+    /// Access Control System 방식 바이너리 Discovery 요청 생성 (36 bytes)
+    /// </summary>
+    private byte[] CreateDiscoveryRequest_ACS()
+    {
+        var packet = new List<byte>();
+
+        // 매직 바이트
+        packet.Add(0x7e); // '~'
+
+        // ProductNamePrefix: "0000000000000000" (16 bytes - '0' 16개)
+        packet.AddRange(Encoding.ASCII.GetBytes("0000000000000000"));
+
+        // 고정 필드들
+        packet.AddRange(new byte[] { 0xff, 0xff, 0xff, 0xff });
+        packet.AddRange(new byte[] { 0xbf, 0xbf, 0xaa, 0xbb });
+        packet.Add(0x01);
+        packet.Add(0xfe);
+        packet.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00 });
+
+        // 체크섬 (4 bytes) - ACS 값 그대로 사용 (테스트)
+        packet.AddRange(new byte[] { 0x02, 0x2d, 0x63, 0x70 });
+
+        packet.Add(0x7e); // 종료 바이트
+
+        return packet.ToArray(); // 36 bytes
+    }
+
+    /// <summary>
+    /// Discovery 응답 처리 헬퍼
+    /// </summary>
+    private void ProcessDiscoveryResponse(UdpReceiveResult result, List<DiscoveredDevice> devices, DateTime startTime)
+    {
+        var remoteIp = result.RemoteEndPoint.Address.ToString();
+
+        LogHub.Instance.Info($"UDP 응답 수신: {result.RemoteEndPoint}, {result.Buffer.Length} bytes (검색 시작 후 {(DateTime.Now - startTime).TotalSeconds:F1}초)");
+
+        // 패킷 내용 로깅 (처음 80 bytes)
+        var responseHex = BitConverter.ToString(result.Buffer.Take(Math.Min(80, result.Buffer.Length)).ToArray()).Replace("-", " ");
+        LogHub.Instance.Info($"응답 패킷 내용 (처음 80 bytes): {responseHex}");
+
+        try
+        {
+            var device = ParseUdpDiscoveryResponse(remoteIp, result.Buffer);
+            if (device != null)
+            {
+                if (!devices.Any(d => d.DeviceSN == device.DeviceSN))
+                {
+                    devices.Add(device);
+                    LogHub.Instance.Info($"? 디바이스 발견: {device.IpAddress} - {device.DeviceSN} ({device.DeviceName})");
+                }
+                else
+                {
+                    LogHub.Instance.Info($"중복 응답 무시: {device.DeviceSN}");
+                }
+            }
+            else
+            {
+                LogHub.Instance.Warn($"응답 파싱 실패 (매직 넘버 불일치 가능)");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHub.Instance.Warn($"응답 파싱 오류: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// UDP 브로드캐스트 디스커버리 요청 패킷 생성 (구버전 - 사용 안 함)
+    /// </summary>
     private byte[] CreateDiscoveryRequest(string productNamePrefix)
     {
-        using var stream = new MemoryStream();
-        using var writer = new BinaryWriter(stream);
+        // Access Control System 방식의 바이너리 프로토콜
+        var packet = new List<byte>();
 
-        writer.Write(DEVDISCOVER_REQUEST_MAGIC1);
-        writer.Write(DEVDISCOVER_REQUEST_MAGIC2);
+        // 매직 바이트
+        packet.Add(0x7e); // '~'
 
-        // ProductNamePrefix (16 bytes, null-terminated UTF-8)
-        var prefixBytes = Encoding.UTF8.GetBytes(productNamePrefix);
-        var prefixBuffer = new byte[ProductNameLen_Max];
-        Array.Copy(prefixBytes, prefixBuffer, Math.Min(prefixBytes.Length, ProductNameLen_Max - 1));
-        writer.Write(prefixBuffer);
+        // ProductNamePrefix: "000000000000000" (16 bytes)
+        packet.AddRange(Encoding.ASCII.GetBytes("000000000000000"));
 
-        // Reserved (2 * 4 bytes)
-        writer.Write((uint)0);
-        writer.Write((uint)0);
+        // 고정 필드들
+        packet.AddRange(new byte[] { 0xff, 0xff, 0xff, 0xff });
+        packet.AddRange(new byte[] { 0xbf, 0xbf, 0xaa, 0xbb });
+        packet.Add(0x01);
+        packet.Add(0xfe);
+        packet.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00 });
+        packet.AddRange(new byte[] { 0x02, 0xd4, 0xe1, 0x95 });
+        packet.Add(0x7e); // 종료 바이트
 
-        return stream.ToArray();
+        return packet.ToArray();
     }
 
     /// <summary>
@@ -358,5 +538,109 @@ public sealed class DeviceDiscoveryService
             }
         }
         return 80; // 기본값
+    }
+
+    /// <summary>
+    /// 유효한 네트워크 인터페이스 목록 가져오기 (로컬 IP, 브로드캐스트 IP)
+    /// </summary>
+    private List<(IPAddress localIp, IPAddress broadcastIp)> GetValidNetworkInterfaces()
+    {
+        var result = new List<(IPAddress, IPAddress)>();
+
+        try
+        {
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up &&
+                            ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .ToList();
+
+            foreach (var ni in interfaces)
+            {
+                var props = ni.GetIPProperties();
+                var ipv4Addresses = props.UnicastAddresses
+                    .Where(addr => addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    .ToList();
+
+                foreach (var addr in ipv4Addresses)
+                {
+                    var ipString = addr.Address.ToString();
+
+                    // 192.168.0.x 네트워크만 사용
+                    if (!ipString.StartsWith("192.168.0."))
+                    {
+                        continue;
+                    }
+
+                    // 브로드캐스트 주소 계산
+                    var ip = addr.Address.GetAddressBytes();
+                    var mask = addr.IPv4Mask.GetAddressBytes();
+                    var broadcast = new byte[4];
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        broadcast[i] = (byte)(ip[i] | ~mask[i]);
+                    }
+
+                    var broadcastIp = new IPAddress(broadcast);
+                    result.Add((addr.Address, broadcastIp));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHub.Instance.Warn($"네트워크 인터페이스 정보 조회 실패: {ex.Message}");
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// 로컬 네트워크 인터페이스 정보 로깅
+    /// </summary>
+    private void LogNetworkInterfaces()
+    {
+        try
+        {
+            LogHub.Instance.Info("=== 네트워크 인터페이스 정보 ===");
+
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up && 
+                            ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .ToList();
+
+            if (!interfaces.Any())
+            {
+                LogHub.Instance.Warn("활성화된 네트워크 인터페이스를 찾을 수 없습니다.");
+                return;
+            }
+
+            foreach (var ni in interfaces)
+            {
+                var props = ni.GetIPProperties();
+                var ipv4Addresses = props.UnicastAddresses
+                    .Where(addr => addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    .ToList();
+
+                LogHub.Instance.Info($"인터페이스: {ni.Name} ({ni.Description})");
+                LogHub.Instance.Info($"  - 상태: {ni.OperationalStatus}");
+                LogHub.Instance.Info($"  - 타입: {ni.NetworkInterfaceType}");
+
+                foreach (var addr in ipv4Addresses)
+                {
+                    LogHub.Instance.Info($"  - IP: {addr.Address} / {addr.IPv4Mask}");
+                }
+
+                if (!ipv4Addresses.Any())
+                {
+                    LogHub.Instance.Warn($"  - IPv4 주소가 없습니다.");
+                }
+            }
+
+            LogHub.Instance.Info("================================");
+        }
+        catch (Exception ex)
+        {
+            LogHub.Instance.Warn($"네트워크 인터페이스 정보 조회 실패: {ex.Message}");
+        }
     }
 }

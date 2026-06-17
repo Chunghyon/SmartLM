@@ -2,17 +2,25 @@ using System.Text.Json.Serialization;
 
 namespace FaceDeviceDesktopClient;
 
-// API Response wrappers
+// API Response wrappers - matching server's BrowserApiResponse format
 public class BrowserApiResponse<T>
 {
-    [JsonPropertyName("Code")]
-    public int Code { get; set; }
+    [JsonPropertyName("result")]
+    public bool Result { get; set; }
 
-    [JsonPropertyName("Msg")]
-    public string? Msg { get; set; }
+    [JsonPropertyName("content")]
+    public T? Content { get; set; }
 
-    [JsonPropertyName("Data")]
-    public T? Data { get; set; }
+    [JsonPropertyName("errCode")]
+    public int ErrCode { get; set; }
+
+    [JsonPropertyName("error")]
+    public string? Error { get; set; }
+
+    // Compatibility properties for easier access
+    public int Code => Result ? 0 : ErrCode;
+    public string? Msg => Error;
+    public T? Data => Content;
 }
 
 // Device models
@@ -20,15 +28,26 @@ public class DeviceInfo
 {
     public string SN { get; set; } = string.Empty;
     public string? IpAddress { get; set; }
-    public int? HttpPort { get; set; }
+    public int HttpPort { get; set; } = 80;
     public string? DeviceName { get; set; }
+    public string? TagName { get; set; }
     public string? Model { get; set; }
     public string? FirmwareVersion { get; set; }
-    public DateTimeOffset? LastKeepaliveAtUtc { get; set; }
+    public int UnitNo { get; set; }
     public DateTimeOffset? ConnectedAtUtc { get; set; }
-    public int AddPendingCount { get; set; }
-    public int DeletePendingCount { get; set; }
+    public DateTimeOffset? LastKeepaliveAtUtc { get; set; }
+    public DateTimeOffset? LastWorkSettingUploadAtUtc { get; set; }
+    public bool PendingSyncParameter { get; set; }
+    public bool PendingUploadWorkParameter { get; set; }
+    public int PendingAddPeopleCount { get; set; }
+    public int PendingDeletePeopleCount { get; set; }
     public int RecordCount { get; set; }
+
+    // Display properties for DataGridView
+    [System.ComponentModel.Browsable(false)]
+    public string Status => LastKeepaliveAtUtc.HasValue 
+        ? (DateTimeOffset.UtcNow - LastKeepaliveAtUtc.Value).TotalMinutes < 5 ? "Online" : "Offline"
+        : "Unknown";
 }
 
 public class DiscoveredDevice

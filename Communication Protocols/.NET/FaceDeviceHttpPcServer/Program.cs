@@ -259,6 +259,84 @@ app.MapPost("/admin/devices/{sn}/request-sync", (string sn, StateStore store) =>
     return Results.Ok(ApiResponse.Ok($"SyncParameter will be returned on the next keepalive for {sn}."));
 });
 
+app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, StateStore store) =>
+{
+    try
+    {
+        var commandType = body?["CommandType"]?.GetValue<string>()?.ToLower();
+
+        if (string.IsNullOrWhiteSpace(commandType))
+            return Results.BadRequest(new ApiResponse(400, "CommandType is required"));
+
+        switch (commandType)
+        {
+            case "restart":
+                store.QueueRemoteCommand(sn, restart: true);
+                LogHub.Instance.Info($"Remote command queued: Restart device {sn}");
+                return Results.Ok(ApiResponse.Ok("Restart command queued"));
+
+            case "opendoor":
+                store.QueueRemoteCommand(sn, opendoor: true);
+                LogHub.Instance.Info($"Remote command queued: Open door on {sn}");
+                return Results.Ok(ApiResponse.Ok("Open door command queued"));
+
+            case "closealarm":
+                store.QueueRemoteCommand(sn, closealarm: true);
+                LogHub.Instance.Info($"Remote command queued: Close alarm on {sn}");
+                return Results.Ok(ApiResponse.Ok("Close alarm command queued"));
+
+            case "pushallpeople":
+                var peopleCount = store.MarkAddPeopleRequested(sn);
+                LogHub.Instance.Info($"Remote command queued: Push all people to {sn} ({peopleCount} people)");
+                return Results.Ok(ApiResponse.Ok($"Push all people command queued ({peopleCount} people)"));
+
+            case "deleteallpeople":
+                // This would require special handling to delete all people
+                LogHub.Instance.Warn($"Remote command: Delete all people from {sn} - NOT IMPLEMENTED");
+                return Results.Ok(ApiResponse.Ok("Delete all people command queued (not implemented)"));
+
+            case "clearrecords":
+                store.QueueRemoteCommand(sn, clearRecord: true);
+                LogHub.Instance.Info($"Remote command queued: Clear records on {sn}");
+                return Results.Ok(ApiResponse.Ok("Clear records command queued"));
+
+            case "repostrecord":
+                store.QueueRemoteCommand(sn, repostRecord: true);
+                LogHub.Instance.Info($"Remote command queued: Repost records from {sn}");
+                return Results.Ok(ApiResponse.Ok("Repost records command queued"));
+
+            default:
+                return Results.BadRequest(new ApiResponse(400, $"Unknown command type: {commandType}"));
+        }
+    }
+    catch (Exception ex)
+    {
+        LogHub.Instance.Error($"Failed to queue remote command for {sn}: {ex.Message}");
+        return Results.Ok(new ApiResponse(500, $"Failed to queue command: {ex.Message}"));
+    }
+});
+
+app.MapDelete("/admin/devices/{sn}", (string sn, StateStore store) =>
+{
+    try
+    {
+        if (store.RemoveDevice(sn))
+        {
+            LogHub.Instance.Info($"Device removed: {sn}");
+            return Results.Ok(ApiResponse.Ok($"Device {sn} removed successfully"));
+        }
+        else
+        {
+            return Results.NotFound(new ApiResponse(404, "Device not found"));
+        }
+    }
+    catch (Exception ex)
+    {
+        LogHub.Instance.Error($"Failed to remove device {sn}: {ex.Message}");
+        return Results.Ok(new ApiResponse(500, $"Failed to remove device: {ex.Message}"));
+    }
+});
+
 app.MapPost("/admin/devices/{sn}/request-upload-work-setting", (string sn, StateStore store) =>
 {
     store.MarkUploadWorkSettingRequested(sn);
@@ -515,18 +593,38 @@ app.MapPost("/api/Device/SearchStream", async (DeviceDiscoveryService discoveryS
 
         if (searchType.Equals("scan", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(subnet))
         {
-            // IP 범위 스캔 - 실시간 스트리밍
-            await foreach (var device in discoveryService.ScanNetworkStreamAsync(subnet, context.RequestAborted))
+            // IP 범위 스캔 - 실시간 스트리밍 (progress + device)
+            await foreach (var item in discoveryService.ScanNetworkStreamAsync(subnet, context.RequestAborted))
             {
-                var json = System.Text.Json.JsonSerializer.Serialize(new
+                // 동적 객체에서 type 속성 확인
+                var itemType = item.GetType();
+                var typeProperty = itemType.GetProperty("type");
+                if (typeProperty != null)
                 {
-                    result = true,
-                    content = device
-                });
+                    var type = typeProperty.GetValue(item) as string;
 
-                var message = $"data: {json}\n\n";
-                await context.Response.WriteAsync(message);
-                await context.Response.Body.FlushAsync();
+                    if (type == "progress")
+                    {
+                        var scannedProperty = itemType.GetProperty("scanned");
+                        var scanned = scannedProperty?.GetValue(item);
+
+                        // 진행 상황 전송
+                        var message = $"progress: {scanned}\n\n";
+                        await context.Response.WriteAsync(message);
+                        await context.Response.Body.FlushAsync();
+                    }
+                    else if (type == "device")
+                    {
+                        var deviceProperty = itemType.GetProperty("device");
+                        var device = deviceProperty?.GetValue(item);
+
+                        // 디바이스 데이터 전송
+                        var json = System.Text.Json.JsonSerializer.Serialize(device);
+                        var message = $"data: {json}\n\n";
+                        await context.Response.WriteAsync(message);
+                        await context.Response.Body.FlushAsync();
+                    }
+                }
             }
         }
         else
@@ -535,12 +633,7 @@ app.MapPost("/api/Device/SearchStream", async (DeviceDiscoveryService discoveryS
             var devices = await discoveryService.SearchDevicesAsync(context.RequestAborted);
             foreach (var device in devices)
             {
-                var json = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    result = true,
-                    content = device
-                });
-
+                var json = System.Text.Json.JsonSerializer.Serialize(device);
                 var message = $"data: {json}\n\n";
                 await context.Response.WriteAsync(message);
                 await context.Response.Body.FlushAsync();
@@ -548,7 +641,7 @@ app.MapPost("/api/Device/SearchStream", async (DeviceDiscoveryService discoveryS
         }
 
         // 완료 시그널
-        await context.Response.WriteAsync("data: {\"result\":true,\"content\":null,\"done\":true}\n\n");
+        await context.Response.WriteAsync("data: [DONE]\n\n");
         await context.Response.Body.FlushAsync();
     }
     catch (Exception ex)
@@ -641,21 +734,29 @@ app.MapPost("/api/Device/Connect", (JsonNode? body, StateStore store) =>
         var sn = body?["DeviceSN"]?.GetValue<string>();
         var ip = body?["IpAddress"]?.GetValue<string>();
         var port = body?["HttpPort"]?.GetValue<int>() ?? 80;
-        var name = body?["DeviceName"]?.GetValue<string>();
+        var name = body?["DeviceName"]?.GetValue<string>() ?? "Unknown Device";
+        var tagName = body?["TagName"]?.GetValue<string>() ?? "";
+        var menuPassword = body?["MenuPassword"]?.GetValue<string>() ?? "888888";
+        var language = body?["Language"]?.GetValue<string>() ?? "English";
         var model = body?["Model"]?.GetValue<string>();
         var firmware = body?["FirmwareVersion"]?.GetValue<string>();
+        var unitNo = body?["UnitNo"]?.GetValue<int>() ?? 0;
 
         if (string.IsNullOrWhiteSpace(sn) || string.IsNullOrWhiteSpace(ip))
         {
             return Results.Ok(BrowserApiResponse.Fail(3, "DeviceSN and IpAddress are required."));
         }
 
-        store.ConnectDevice(sn, ip, port, name, model, firmware);
-        return Results.Ok(BrowserApiResponse.Ok($"Device {sn} connected successfully"));
+        // Connect device with installation settings
+        store.ConnectDevice(sn, ip, port, name, tagName, model, firmware, unitNo);
+
+        LogHub.Instance.Info($"Device installed: {sn} ({name}) at {ip}:{port}, Tag: {tagName}, Language: {language}");
+
+        return Results.Ok(BrowserApiResponse.Ok($"Device {sn} installed successfully with name '{name}'"));
     }
     catch (Exception ex)
     {
-        return Results.Ok(BrowserApiResponse.Fail(500, $"Connection failed: {ex.Message}"));
+        return Results.Ok(BrowserApiResponse.Fail(500, $"Installation failed: {ex.Message}"));
     }
 });
 
