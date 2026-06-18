@@ -87,6 +87,10 @@ public class PersonInfo
     public string? Password { get; set; }
     public int AccessType { get; set; }
     public string? PhotoUrl { get; set; }
+
+    // Photo binary data (Base64 encoded for JSON transmission)
+    [System.ComponentModel.Browsable(false)]
+    public byte[]? PhotoData { get; set; }
 }
 
 // Attendance models

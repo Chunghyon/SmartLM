@@ -14,8 +14,46 @@ public partial class MainForm : Form
         InitializeComponent();
         _httpClient = new HttpClient { BaseAddress = new Uri(_serverUrl) };
         SetupDeviceGrid();
+        SetupDiscoveredDevicesGrid();
+        SetupPersonnelGrid();
+        SetupAttendanceGrid();
         SetupDeviceContextMenu();
         LoadInitialData();
+    }
+
+    private void SetupDiscoveredDevicesGrid()
+    {
+        // Setup columns for discovered devices grid (IP, Port, Serial Number only)
+        dgvDiscoveredDevices.AutoGenerateColumns = false;
+        dgvDiscoveredDevices.AllowUserToAddRows = false;
+        dgvDiscoveredDevices.ReadOnly = true;
+        dgvDiscoveredDevices.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+        dgvDiscoveredDevices.Columns.Clear();
+
+        dgvDiscoveredDevices.Columns.Add(new DataGridViewTextBoxColumn 
+        { 
+            Name = "IpAddress", 
+            HeaderText = "IP", 
+            DataPropertyName = "IpAddress",
+            Width = 150 
+        });
+
+        dgvDiscoveredDevices.Columns.Add(new DataGridViewTextBoxColumn 
+        { 
+            Name = "HttpPort", 
+            HeaderText = "포트", 
+            DataPropertyName = "HttpPort",
+            Width = 80 
+        });
+
+        dgvDiscoveredDevices.Columns.Add(new DataGridViewTextBoxColumn 
+        { 
+            Name = "DeviceSN", 
+            HeaderText = "시리얼넘버", 
+            DataPropertyName = "DeviceSN",
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
+        });
     }
 
     private void SetupDeviceGrid()
@@ -30,7 +68,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
             Name = "No", 
-            HeaderText = "No.", 
+            HeaderText = "순번", 
             DataPropertyName = "", 
             Width = 50,
             ReadOnly = true 
@@ -39,7 +77,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewCheckBoxColumn 
         { 
             Name = "Selected", 
-            HeaderText = "Selected", 
+            HeaderText = "선택", 
             Width = 70,
             ReadOnly = false 
         });
@@ -47,7 +85,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
             Name = "DeviceName", 
-            HeaderText = "Door", 
+            HeaderText = "단말기명", 
             DataPropertyName = "DeviceName",
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
         });
@@ -55,23 +93,15 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
             Name = "TagName", 
-            HeaderText = "Tag Name", 
+            HeaderText = "위치", 
             DataPropertyName = "TagName",
             Width = 120 
         });
 
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
-            Name = "Model", 
-            HeaderText = "Model", 
-            DataPropertyName = "Model",
-            Width = 100 
-        });
-
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
             Name = "SN", 
-            HeaderText = "SN", 
+            HeaderText = "시리얼넘버", 
             DataPropertyName = "SN",
             Width = 150 
         });
@@ -86,16 +116,8 @@ public partial class MainForm : Form
 
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
-            Name = "UnitNo", 
-            HeaderText = "Unit No.", 
-            DataPropertyName = "UnitNo",
-            Width = 80 
-        });
-
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
             Name = "Status", 
-            HeaderText = "Status", 
+            HeaderText = "상태", 
             DataPropertyName = "Status",
             Width = 80 
         });
@@ -103,6 +125,106 @@ public partial class MainForm : Form
         // Add double-click event handler
         dgvDevices.CellDoubleClick += DgvDevices_CellDoubleClick;
         dgvDevices.RowPostPaint += DgvDevices_RowPostPaint;
+    }
+
+    private void SetupPersonnelGrid()
+    {
+        dgvPersonnel.AutoGenerateColumns = false;
+        dgvPersonnel.AllowUserToAddRows = false;
+        dgvPersonnel.ReadOnly = true;
+        dgvPersonnel.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+        dgvPersonnel.Columns.Clear();
+
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "사용자번호",
+            HeaderText = "사용자번호",
+            DataPropertyName = "UserID",
+            Width = 120
+        });
+
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "사용자명",
+            HeaderText = "사용자명",
+            DataPropertyName = "Name",
+            Width = 150
+        });
+
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "사진등록",
+            HeaderText = "사진등록",
+            DataPropertyName = "PhotoUrl",
+            Width = 200
+        });
+
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "패스워드",
+            HeaderText = "패스워드",
+            DataPropertyName = "Password",
+            Width = 100
+        });
+
+        // Add a calculated column for "할당된 단말기수"
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "할당된단말기수",
+            HeaderText = "할당된 단말기수",
+            Width = 120
+        });
+    }
+
+    private void SetupAttendanceGrid()
+    {
+        dgvAttendance.AutoGenerateColumns = false;
+        dgvAttendance.AllowUserToAddRows = false;
+        dgvAttendance.ReadOnly = true;
+        dgvAttendance.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+        dgvAttendance.Columns.Clear();
+
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "시간",
+            HeaderText = "시간",
+            DataPropertyName = "Time",
+            Width = 150
+        });
+
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "사용자번호",
+            HeaderText = "사용자번호",
+            DataPropertyName = "UserID",
+            Width = 120
+        });
+
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "사용자명",
+            HeaderText = "사용자명",
+            DataPropertyName = "UserName",
+            Width = 150
+        });
+
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "단말기명",
+            HeaderText = "단말기명",
+            DataPropertyName = "DeviceName",
+            Width = 150
+        });
+
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "이벤트",
+            HeaderText = "이벤트",
+            DataPropertyName = "EventType",
+            Width = 100
+        });
     }
 
     private void DgvDevices_RowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
@@ -365,6 +487,13 @@ public partial class MainForm : Form
 
             dgvPersonnel.DataSource = null;
             dgvPersonnel.DataSource = personnel;
+
+            // Update "할당된 단말기수" column for each row (placeholder - would need API support)
+            foreach (DataGridViewRow row in dgvPersonnel.Rows)
+            {
+                row.Cells["할당된단말기수"].Value = "0"; // Placeholder
+            }
+
             dgvPersonnel.AutoResizeColumns();
         }
         catch (Exception ex)
@@ -381,7 +510,6 @@ public partial class MainForm : Form
             {
                 UserID = txtAttendanceUserID.Text,
                 UserName = txtAttendanceUserName.Text,
-                DepartmentID = cmbAttendanceDepartment.SelectedValue?.ToString(),
                 StartTime = dtpAttendanceStart.Checked ? dtpAttendanceStart.Value : null,
                 EndTime = dtpAttendanceEnd.Checked ? dtpAttendanceEnd.Value : null,
                 PageIndex = 1,
@@ -396,12 +524,12 @@ public partial class MainForm : Form
                 dgvAttendance.DataSource = null;
                 dgvAttendance.DataSource = result.Data.DataList;
                 dgvAttendance.AutoResizeColumns();
-                lblAttendanceCount.Text = $"Total: {result.Data.TotalCount} records";
+                lblAttendanceCount.Text = $"전체: {result.Data.TotalCount}건";
             }
         }
         catch (Exception ex)
         {
-            ShowError($"Failed to refresh attendance: {ex.Message}");
+            ShowError($"출입 조회 실패: {ex.Message}");
         }
     }
 
@@ -762,7 +890,7 @@ public partial class MainForm : Form
 
     private async void btnAddPerson_Click(object sender, EventArgs e)
     {
-        using var form = new PersonForm();
+        using var form = new PersonForm(_httpClient);
         if (form.ShowDialog() == DialogResult.OK)
         {
             try
@@ -793,43 +921,149 @@ public partial class MainForm : Form
         await RefreshAttendance();
     }
 
-    private async void btnGetStatistics_Click(object sender, EventArgs e)
+    private async void btnEditPerson_Click(object sender, EventArgs e)
     {
+        if (dgvPersonnel.SelectedRows.Count == 0)
+        {
+            MessageBox.Show("수정할 사용자를 선택해주세요", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
         try
         {
-            var request = new AttendanceSearchRequest
-            {
-                StartTime = dtpAttendanceStart.Checked ? dtpAttendanceStart.Value : null,
-                EndTime = dtpAttendanceEnd.Checked ? dtpAttendanceEnd.Value : null,
-                PageIndex = 1,
-                PageSize = 1
-            };
+            var row = dgvPersonnel.SelectedRows[0];
+            var userID = row.Cells["사용자번호"].Value?.ToString();
+            var userName = row.Cells["사용자명"].Value?.ToString();
 
-            var response = await _httpClient.PostAsJsonAsync("/api/Attendance/Statistics", request);
-            var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<AttendanceStatistics>>();
+            using var form = new PersonForm(_httpClient);
+            form.SetInitialValues(userID, userName);
 
-            if (result?.Code == 0 && result.Data != null)
+            if (form.ShowDialog() == DialogResult.OK)
             {
-                var stats = result.Data;
-                MessageBox.Show(
-                    $"Total Records: {stats.TotalRecords}\n" +
-                    $"Unique Users: {stats.UniqueUsers}\n" +
-                    $"Unique Departments: {stats.UniqueDepartments}",
-                    "Attendance Statistics",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                // 서버에 수정된 정보 저장
+                var response = await _httpClient.PostAsJsonAsync("/api/People/Update", form.Person);
+                var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+
+                if (result?.Code == 0)
+                {
+                    lblStatus.Text = "사용자 정보가 수정되었습니다";
+                    await RefreshPersonnel();
+                    await RefreshSystemInfo();
+                }
+                else
+                {
+                    ShowError($"사용자 수정 실패: {result?.Msg}");
+                }
             }
         }
         catch (Exception ex)
         {
-            ShowError($"Failed to get statistics: {ex.Message}");
+            ShowError($"사용자 수정 실패: {ex.Message}");
+        }
+    }
+
+    private async void btnDeletePerson_Click(object sender, EventArgs e)
+    {
+        if (dgvPersonnel.SelectedRows.Count == 0)
+        {
+            MessageBox.Show("삭제할 사용자를 선택해주세요", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        try
+        {
+            var row = dgvPersonnel.SelectedRows[0];
+            var userID = row.Cells["사용자번호"].Value?.ToString();
+            var userName = row.Cells["사용자명"].Value?.ToString();
+
+            var result = MessageBox.Show(
+                $"{userName} (사용자번호: {userID})를 삭제하시겠습니까?",
+                "사용자 삭제 확인",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                var deleteRequest = new { UserID = userID };
+                var response = await _httpClient.PostAsJsonAsync("/api/People/Delete", deleteRequest);
+                var apiResult = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+
+                if (apiResult?.Code == 0)
+                {
+                    lblStatus.Text = "사용자가 삭제되었습니다";
+                    await RefreshPersonnel();
+                    await RefreshSystemInfo();
+                }
+                else
+                {
+                    ShowError($"사용자 삭제 실패: {apiResult?.Msg}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"사용자 삭제 실패: {ex.Message}");
+        }
+    }
+
+    private void btnRealTimeView_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            var form = new Form
+            {
+                Text = "실시간 출입 보기",
+                Size = new System.Drawing.Size(900, 600),
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            var checkedListBox = new CheckedListBox
+            {
+                Dock = DockStyle.Top,
+                Height = 150
+            };
+
+            var dgv = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect
+            };
+
+            dgv.Columns.Add("시간", "시간");
+            dgv.Columns.Add("사용자번호", "사용자번호");
+            dgv.Columns.Add("사용자명", "사용자명");
+            dgv.Columns.Add("단말기명", "단말기명");
+            dgv.Columns.Add("이벤트", "이벤트");
+
+            foreach (DataGridViewRow row in dgvDevices.Rows)
+            {
+                var deviceName = row.Cells["DeviceName"].Value?.ToString();
+                if (!string.IsNullOrEmpty(deviceName))
+                {
+                    checkedListBox.Items.Add(deviceName);
+                }
+            }
+
+            var panel = new Panel { Dock = DockStyle.Fill };
+            panel.Controls.Add(dgv);
+            panel.Controls.Add(checkedListBox);
+
+            form.Controls.Add(panel);
+            form.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"실시간 보기 열기 실패: {ex.Message}");
         }
     }
 
     private void btnRefreshDevices_Click(object sender, EventArgs e) => _ = RefreshDevices();
     private void btnRefreshDepartments_Click(object sender, EventArgs e) => _ = RefreshDepartments();
-    private void btnRefreshPersonnel_Click(object sender, EventArgs e) => _ = RefreshPersonnel();
-    private void btnRefreshAttendance_Click(object sender, EventArgs e) => _ = RefreshAttendance();
 
     private void btnRemoteControl_Click(object sender, EventArgs e)
     {

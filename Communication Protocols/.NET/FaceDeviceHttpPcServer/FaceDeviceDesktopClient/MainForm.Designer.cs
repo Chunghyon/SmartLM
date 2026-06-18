@@ -55,7 +55,8 @@ namespace FaceDeviceDesktopClient
 
             // Personnel controls
             this.btnAddPerson = new System.Windows.Forms.Button();
-            this.btnRefreshPersonnel = new System.Windows.Forms.Button();
+            this.btnEditPerson = new System.Windows.Forms.Button();
+            this.btnDeletePerson = new System.Windows.Forms.Button();
             this.dgvPersonnel = new System.Windows.Forms.DataGridView();
             this.cmbDepartment = new System.Windows.Forms.ComboBox();
 
@@ -63,17 +64,14 @@ namespace FaceDeviceDesktopClient
             this.grpAttendanceSearch = new System.Windows.Forms.GroupBox();
             this.txtAttendanceUserID = new System.Windows.Forms.TextBox();
             this.txtAttendanceUserName = new System.Windows.Forms.TextBox();
-            this.cmbAttendanceDepartment = new System.Windows.Forms.ComboBox();
             this.dtpAttendanceStart = new System.Windows.Forms.DateTimePicker();
             this.dtpAttendanceEnd = new System.Windows.Forms.DateTimePicker();
             this.btnSearchAttendance = new System.Windows.Forms.Button();
-            this.btnGetStatistics = new System.Windows.Forms.Button();
-            this.btnRefreshAttendance = new System.Windows.Forms.Button();
+            this.btnRealTimeView = new System.Windows.Forms.Button();
             this.dgvAttendance = new System.Windows.Forms.DataGridView();
             this.lblAttendanceCount = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
 
@@ -99,7 +97,6 @@ namespace FaceDeviceDesktopClient
             // 
             this.tabControl.Controls.Add(this.tabDashboard);
             this.tabControl.Controls.Add(this.tabDevices);
-            this.tabControl.Controls.Add(this.tabDepartments);
             this.tabControl.Controls.Add(this.tabPersonnel);
             this.tabControl.Controls.Add(this.tabAttendance);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -118,7 +115,7 @@ namespace FaceDeviceDesktopClient
             this.tabDashboard.Padding = new System.Windows.Forms.Padding(10);
             this.tabDashboard.Size = new System.Drawing.Size(1192, 572);
             this.tabDashboard.TabIndex = 0;
-            this.tabDashboard.Text = "Dashboard";
+            this.tabDashboard.Text = "환경설정";
             this.tabDashboard.UseVisualStyleBackColor = true;
 
             // 
@@ -128,8 +125,6 @@ namespace FaceDeviceDesktopClient
             this.grpSystemInfo.Controls.Add(this.lblTotalDevices);
             this.grpSystemInfo.Controls.Add(this.label2);
             this.grpSystemInfo.Controls.Add(this.lblTotalPersonnel);
-            this.grpSystemInfo.Controls.Add(this.label3);
-            this.grpSystemInfo.Controls.Add(this.lblTotalDepartments);
             this.grpSystemInfo.Controls.Add(this.label4);
             this.grpSystemInfo.Controls.Add(this.lblTotalRecords);
             this.grpSystemInfo.Location = new System.Drawing.Point(20, 20);
@@ -137,7 +132,7 @@ namespace FaceDeviceDesktopClient
             this.grpSystemInfo.Size = new System.Drawing.Size(500, 200);
             this.grpSystemInfo.TabIndex = 0;
             this.grpSystemInfo.TabStop = false;
-            this.grpSystemInfo.Text = "System Information";
+            this.grpSystemInfo.Text = "시스템현황";
 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(20, 40);
@@ -159,7 +154,7 @@ namespace FaceDeviceDesktopClient
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(100, 15);
             this.label2.TabIndex = 2;
-            this.label2.Text = "Total Personnel:";
+            this.label2.Text = "사용자 수:";
 
             this.lblTotalPersonnel.AutoSize = true;
             this.lblTotalPersonnel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -174,7 +169,7 @@ namespace FaceDeviceDesktopClient
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(120, 15);
             this.label3.TabIndex = 4;
-            this.label3.Text = "Total Departments:";
+            this.label3.Text = "부서 수:";
 
             this.lblTotalDepartments.AutoSize = true;
             this.lblTotalDepartments.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -185,15 +180,15 @@ namespace FaceDeviceDesktopClient
             this.lblTotalDepartments.Text = "0";
 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(20, 160);
+            this.label4.Location = new System.Drawing.Point(20, 120);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(90, 15);
             this.label4.TabIndex = 6;
-            this.label4.Text = "Total Records:";
+            this.label4.Text = "이벤트 수:";
 
             this.lblTotalRecords.AutoSize = true;
             this.lblTotalRecords.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTotalRecords.Location = new System.Drawing.Point(150, 158);
+            this.lblTotalRecords.Location = new System.Drawing.Point(150, 118);
             this.lblTotalRecords.Name = "lblTotalRecords";
             this.lblTotalRecords.Size = new System.Drawing.Size(19, 21);
             this.lblTotalRecords.TabIndex = 7;
@@ -210,14 +205,13 @@ namespace FaceDeviceDesktopClient
             this.tabDevices.Padding = new System.Windows.Forms.Padding(10);
             this.tabDevices.Size = new System.Drawing.Size(1192, 572);
             this.tabDevices.TabIndex = 1;
-            this.tabDevices.Text = "Device Management";
+            this.tabDevices.Text = "단말기";
             this.tabDevices.UseVisualStyleBackColor = true;
 
             // 
             // grpDeviceSearch
             // 
             this.grpDeviceSearch.Controls.Add(this.btnAutoSearch);
-            this.grpDeviceSearch.Controls.Add(this.btnRefreshDevices);
             this.grpDeviceSearch.Controls.Add(this.dgvDiscoveredDevices);
             this.grpDeviceSearch.Controls.Add(this.btnConnectDevice);
             this.grpDeviceSearch.Dock = System.Windows.Forms.DockStyle.Top;
@@ -226,13 +220,13 @@ namespace FaceDeviceDesktopClient
             this.grpDeviceSearch.Size = new System.Drawing.Size(1172, 250);
             this.grpDeviceSearch.TabIndex = 0;
             this.grpDeviceSearch.TabStop = false;
-            this.grpDeviceSearch.Text = "Device Discovery";
+            this.grpDeviceSearch.Text = "추가";
 
             this.btnAutoSearch.Location = new System.Drawing.Point(10, 25);
             this.btnAutoSearch.Name = "btnAutoSearch";
             this.btnAutoSearch.Size = new System.Drawing.Size(120, 30);
             this.btnAutoSearch.TabIndex = 0;
-            this.btnAutoSearch.Text = "Auto Search";
+            this.btnAutoSearch.Text = "검색";
             this.btnAutoSearch.UseVisualStyleBackColor = true;
             this.btnAutoSearch.Click += new System.EventHandler(this.btnAutoSearch_Click);
 
@@ -240,15 +234,15 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshDevices.Name = "btnRefreshDevices";
             this.btnRefreshDevices.Size = new System.Drawing.Size(120, 30);
             this.btnRefreshDevices.TabIndex = 1;
-            this.btnRefreshDevices.Text = "Refresh";
+            this.btnRefreshDevices.Text = "새로고침";
             this.btnRefreshDevices.UseVisualStyleBackColor = true;
             this.btnRefreshDevices.Click += new System.EventHandler(this.btnRefreshDevices_Click);
 
-            this.btnConnectDevice.Location = new System.Drawing.Point(270, 25);
+            this.btnConnectDevice.Location = new System.Drawing.Point(140, 25);
             this.btnConnectDevice.Name = "btnConnectDevice";
             this.btnConnectDevice.Size = new System.Drawing.Size(120, 30);
-            this.btnConnectDevice.TabIndex = 2;
-            this.btnConnectDevice.Text = "Install Device";
+            this.btnConnectDevice.TabIndex = 1;
+            this.btnConnectDevice.Text = "등록";
             this.btnConnectDevice.UseVisualStyleBackColor = true;
             this.btnConnectDevice.Click += new System.EventHandler(this.btnConnectDevice_Click);
 
@@ -290,13 +284,13 @@ namespace FaceDeviceDesktopClient
             this.grpDeviceManagement.Size = new System.Drawing.Size(1172, 75);
             this.grpDeviceManagement.TabIndex = 2;
             this.grpDeviceManagement.TabStop = false;
-            this.grpDeviceManagement.Text = "Installed Devices - Management";
+            this.grpDeviceManagement.Text = "관리";
 
             this.btnRemoteControl.Location = new System.Drawing.Point(10, 25);
             this.btnRemoteControl.Name = "btnRemoteControl";
             this.btnRemoteControl.Size = new System.Drawing.Size(150, 35);
             this.btnRemoteControl.TabIndex = 0;
-            this.btnRemoteControl.Text = "Remote Control";
+            this.btnRemoteControl.Text = "수정";
             this.btnRemoteControl.UseVisualStyleBackColor = true;
             this.btnRemoteControl.Click += new System.EventHandler(this.btnRemoteControl_Click);
 
@@ -304,7 +298,7 @@ namespace FaceDeviceDesktopClient
             this.btnRemoveDevice.Name = "btnRemoveDevice";
             this.btnRemoveDevice.Size = new System.Drawing.Size(150, 35);
             this.btnRemoveDevice.TabIndex = 1;
-            this.btnRemoveDevice.Text = "Remove Device";
+            this.btnRemoveDevice.Text = "제거";
             this.btnRemoveDevice.ForeColor = System.Drawing.Color.DarkRed;
             this.btnRemoveDevice.UseVisualStyleBackColor = true;
             this.btnRemoveDevice.Click += new System.EventHandler(this.btnRemoveDevice_Click);
@@ -320,7 +314,7 @@ namespace FaceDeviceDesktopClient
             this.tabDepartments.Padding = new System.Windows.Forms.Padding(10);
             this.tabDepartments.Size = new System.Drawing.Size(1192, 572);
             this.tabDepartments.TabIndex = 2;
-            this.tabDepartments.Text = "Departments";
+            this.tabDepartments.Text = "부서";
             this.tabDepartments.UseVisualStyleBackColor = true;
 
             this.btnAddDepartment.Location = new System.Drawing.Point(10, 10);
@@ -356,31 +350,41 @@ namespace FaceDeviceDesktopClient
             // tabPersonnel
             // 
             this.tabPersonnel.Controls.Add(this.btnAddPerson);
-            this.tabPersonnel.Controls.Add(this.btnRefreshPersonnel);
+            this.tabPersonnel.Controls.Add(this.btnEditPerson);
+            this.tabPersonnel.Controls.Add(this.btnDeletePerson);
             this.tabPersonnel.Controls.Add(this.dgvPersonnel);
             this.tabPersonnel.Location = new System.Drawing.Point(4, 24);
             this.tabPersonnel.Name = "tabPersonnel";
             this.tabPersonnel.Padding = new System.Windows.Forms.Padding(10);
             this.tabPersonnel.Size = new System.Drawing.Size(1192, 572);
             this.tabPersonnel.TabIndex = 3;
-            this.tabPersonnel.Text = "Personnel";
+            this.tabPersonnel.Text = "사용자";
             this.tabPersonnel.UseVisualStyleBackColor = true;
 
             this.btnAddPerson.Location = new System.Drawing.Point(10, 10);
             this.btnAddPerson.Name = "btnAddPerson";
-            this.btnAddPerson.Size = new System.Drawing.Size(120, 30);
+            this.btnAddPerson.Size = new System.Drawing.Size(100, 30);
             this.btnAddPerson.TabIndex = 0;
-            this.btnAddPerson.Text = "Add Personnel";
+            this.btnAddPerson.Text = "추가";
             this.btnAddPerson.UseVisualStyleBackColor = true;
             this.btnAddPerson.Click += new System.EventHandler(this.btnAddPerson_Click);
 
-            this.btnRefreshPersonnel.Location = new System.Drawing.Point(140, 10);
-            this.btnRefreshPersonnel.Name = "btnRefreshPersonnel";
-            this.btnRefreshPersonnel.Size = new System.Drawing.Size(120, 30);
-            this.btnRefreshPersonnel.TabIndex = 1;
-            this.btnRefreshPersonnel.Text = "Refresh";
-            this.btnRefreshPersonnel.UseVisualStyleBackColor = true;
-            this.btnRefreshPersonnel.Click += new System.EventHandler(this.btnRefreshPersonnel_Click);
+            this.btnEditPerson.Location = new System.Drawing.Point(120, 10);
+            this.btnEditPerson.Name = "btnEditPerson";
+            this.btnEditPerson.Size = new System.Drawing.Size(100, 30);
+            this.btnEditPerson.TabIndex = 1;
+            this.btnEditPerson.Text = "수정";
+            this.btnEditPerson.UseVisualStyleBackColor = true;
+            this.btnEditPerson.Click += new System.EventHandler(this.btnEditPerson_Click);
+
+            this.btnDeletePerson.Location = new System.Drawing.Point(230, 10);
+            this.btnDeletePerson.Name = "btnDeletePerson";
+            this.btnDeletePerson.Size = new System.Drawing.Size(100, 30);
+            this.btnDeletePerson.TabIndex = 2;
+            this.btnDeletePerson.Text = "제거";
+            this.btnDeletePerson.ForeColor = System.Drawing.Color.DarkRed;
+            this.btnDeletePerson.UseVisualStyleBackColor = true;
+            this.btnDeletePerson.Click += new System.EventHandler(this.btnDeletePerson_Click);
 
             this.dgvPersonnel.AllowUserToAddRows = false;
             this.dgvPersonnel.AllowUserToDeleteRows = false;
@@ -406,7 +410,7 @@ namespace FaceDeviceDesktopClient
             this.tabAttendance.Padding = new System.Windows.Forms.Padding(10);
             this.tabAttendance.Size = new System.Drawing.Size(1192, 572);
             this.tabAttendance.TabIndex = 4;
-            this.tabAttendance.Text = "Attendance";
+            this.tabAttendance.Text = "출입조회";
             this.tabAttendance.UseVisualStyleBackColor = true;
 
             // 
@@ -416,29 +420,26 @@ namespace FaceDeviceDesktopClient
             this.grpAttendanceSearch.Controls.Add(this.txtAttendanceUserID);
             this.grpAttendanceSearch.Controls.Add(this.label6);
             this.grpAttendanceSearch.Controls.Add(this.txtAttendanceUserName);
-            this.grpAttendanceSearch.Controls.Add(this.label7);
-            this.grpAttendanceSearch.Controls.Add(this.cmbAttendanceDepartment);
             this.grpAttendanceSearch.Controls.Add(this.label8);
             this.grpAttendanceSearch.Controls.Add(this.dtpAttendanceStart);
             this.grpAttendanceSearch.Controls.Add(this.label9);
             this.grpAttendanceSearch.Controls.Add(this.dtpAttendanceEnd);
             this.grpAttendanceSearch.Controls.Add(this.btnSearchAttendance);
-            this.grpAttendanceSearch.Controls.Add(this.btnGetStatistics);
-            this.grpAttendanceSearch.Controls.Add(this.btnRefreshAttendance);
+            this.grpAttendanceSearch.Controls.Add(this.btnRealTimeView);
             this.grpAttendanceSearch.Dock = System.Windows.Forms.DockStyle.Top;
             this.grpAttendanceSearch.Location = new System.Drawing.Point(10, 10);
             this.grpAttendanceSearch.Name = "grpAttendanceSearch";
             this.grpAttendanceSearch.Size = new System.Drawing.Size(1172, 120);
             this.grpAttendanceSearch.TabIndex = 0;
             this.grpAttendanceSearch.TabStop = false;
-            this.grpAttendanceSearch.Text = "Attendance Search";
+            this.grpAttendanceSearch.Text = "출입조회";
 
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(10, 25);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(50, 15);
+            this.label5.Size = new System.Drawing.Size(70, 15);
             this.label5.TabIndex = 0;
-            this.label5.Text = "User ID:";
+            this.label5.Text = "사용자번호:";
 
             this.txtAttendanceUserID.Location = new System.Drawing.Point(100, 22);
             this.txtAttendanceUserID.Name = "txtAttendanceUserID";
@@ -448,35 +449,21 @@ namespace FaceDeviceDesktopClient
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(270, 25);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(42, 15);
+            this.label6.Size = new System.Drawing.Size(55, 15);
             this.label6.TabIndex = 2;
-            this.label6.Text = "Name:";
+            this.label6.Text = "사용자명:";
 
-            this.txtAttendanceUserName.Location = new System.Drawing.Point(330, 22);
+            this.txtAttendanceUserName.Location = new System.Drawing.Point(340, 22);
             this.txtAttendanceUserName.Name = "txtAttendanceUserName";
             this.txtAttendanceUserName.Size = new System.Drawing.Size(150, 23);
             this.txtAttendanceUserName.TabIndex = 3;
 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(500, 25);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(73, 15);
-            this.label7.TabIndex = 4;
-            this.label7.Text = "Department:";
-
-            this.cmbAttendanceDepartment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbAttendanceDepartment.FormattingEnabled = true;
-            this.cmbAttendanceDepartment.Location = new System.Drawing.Point(590, 22);
-            this.cmbAttendanceDepartment.Name = "cmbAttendanceDepartment";
-            this.cmbAttendanceDepartment.Size = new System.Drawing.Size(200, 23);
-            this.cmbAttendanceDepartment.TabIndex = 5;
-
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(10, 60);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(65, 15);
+            this.label8.Size = new System.Drawing.Size(55, 15);
             this.label8.TabIndex = 6;
-            this.label8.Text = "Start Time:";
+            this.label8.Text = "시작일시:";
 
             this.dtpAttendanceStart.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpAttendanceStart.CustomFormat = "yyyy-MM-dd HH:mm";
@@ -489,41 +476,33 @@ namespace FaceDeviceDesktopClient
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(320, 60);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(60, 15);
+            this.label9.Size = new System.Drawing.Size(55, 15);
             this.label9.TabIndex = 8;
-            this.label9.Text = "End Time:";
+            this.label9.Text = "종료일시:";
 
             this.dtpAttendanceEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpAttendanceEnd.CustomFormat = "yyyy-MM-dd HH:mm";
-            this.dtpAttendanceEnd.Location = new System.Drawing.Point(400, 57);
+            this.dtpAttendanceEnd.Location = new System.Drawing.Point(540, 57);
             this.dtpAttendanceEnd.Name = "dtpAttendanceEnd";
             this.dtpAttendanceEnd.ShowCheckBox = true;
             this.dtpAttendanceEnd.Size = new System.Drawing.Size(200, 23);
             this.dtpAttendanceEnd.TabIndex = 9;
 
-            this.btnSearchAttendance.Location = new System.Drawing.Point(620, 55);
+            this.btnSearchAttendance.Location = new System.Drawing.Point(760, 55);
             this.btnSearchAttendance.Name = "btnSearchAttendance";
             this.btnSearchAttendance.Size = new System.Drawing.Size(100, 30);
             this.btnSearchAttendance.TabIndex = 10;
-            this.btnSearchAttendance.Text = "Search";
+            this.btnSearchAttendance.Text = "조회";
             this.btnSearchAttendance.UseVisualStyleBackColor = true;
             this.btnSearchAttendance.Click += new System.EventHandler(this.btnSearchAttendance_Click);
 
-            this.btnGetStatistics.Location = new System.Drawing.Point(730, 55);
-            this.btnGetStatistics.Name = "btnGetStatistics";
-            this.btnGetStatistics.Size = new System.Drawing.Size(100, 30);
-            this.btnGetStatistics.TabIndex = 11;
-            this.btnGetStatistics.Text = "Statistics";
-            this.btnGetStatistics.UseVisualStyleBackColor = true;
-            this.btnGetStatistics.Click += new System.EventHandler(this.btnGetStatistics_Click);
-
-            this.btnRefreshAttendance.Location = new System.Drawing.Point(840, 55);
-            this.btnRefreshAttendance.Name = "btnRefreshAttendance";
-            this.btnRefreshAttendance.Size = new System.Drawing.Size(100, 30);
-            this.btnRefreshAttendance.TabIndex = 12;
-            this.btnRefreshAttendance.Text = "Refresh";
-            this.btnRefreshAttendance.UseVisualStyleBackColor = true;
-            this.btnRefreshAttendance.Click += new System.EventHandler(this.btnRefreshAttendance_Click);
+            this.btnRealTimeView.Location = new System.Drawing.Point(870, 55);
+            this.btnRealTimeView.Name = "btnRealTimeView";
+            this.btnRealTimeView.Size = new System.Drawing.Size(120, 30);
+            this.btnRealTimeView.TabIndex = 11;
+            this.btnRealTimeView.Text = "실시간보기";
+            this.btnRealTimeView.UseVisualStyleBackColor = true;
+            this.btnRealTimeView.Click += new System.EventHandler(this.btnRealTimeView_Click);
 
             this.lblAttendanceCount.AutoSize = true;
             this.lblAttendanceCount.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -628,23 +607,21 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.Button btnRefreshDepartments;
         private System.Windows.Forms.DataGridView dgvDepartments;
         private System.Windows.Forms.Button btnAddPerson;
-        private System.Windows.Forms.Button btnRefreshPersonnel;
+        private System.Windows.Forms.Button btnEditPerson;
+        private System.Windows.Forms.Button btnDeletePerson;
         private System.Windows.Forms.DataGridView dgvPersonnel;
         private System.Windows.Forms.ComboBox cmbDepartment;
         private System.Windows.Forms.GroupBox grpAttendanceSearch;
         private System.Windows.Forms.TextBox txtAttendanceUserID;
         private System.Windows.Forms.TextBox txtAttendanceUserName;
-        private System.Windows.Forms.ComboBox cmbAttendanceDepartment;
         private System.Windows.Forms.DateTimePicker dtpAttendanceStart;
         private System.Windows.Forms.DateTimePicker dtpAttendanceEnd;
         private System.Windows.Forms.Button btnSearchAttendance;
-        private System.Windows.Forms.Button btnGetStatistics;
-        private System.Windows.Forms.Button btnRefreshAttendance;
+        private System.Windows.Forms.Button btnRealTimeView;
         private System.Windows.Forms.DataGridView dgvAttendance;
         private System.Windows.Forms.Label lblAttendanceCount;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
     }

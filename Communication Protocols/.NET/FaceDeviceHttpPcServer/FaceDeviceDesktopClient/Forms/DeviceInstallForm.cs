@@ -40,7 +40,7 @@ public class DeviceInstallForm : Form
 
     private void InitializeComponent()
     {
-        Text = "Install Device";
+        Text = "단말기 등록";
         Size = new System.Drawing.Size(450, 320);
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -50,7 +50,7 @@ public class DeviceInstallForm : Form
         // Device SN Label
         var lblSN = new Label
         {
-            Text = "Device SN:",
+            Text = "시리얼넘버:",
             Location = new System.Drawing.Point(20, 20),
             Size = new System.Drawing.Size(120, 25),
             TextAlign = System.Drawing.ContentAlignment.MiddleRight
@@ -69,7 +69,7 @@ public class DeviceInstallForm : Form
         // Device Name
         var lblDeviceName = new Label
         {
-            Text = "Device Name:",
+            Text = "단말기명:",
             Location = new System.Drawing.Point(20, 55),
             Size = new System.Drawing.Size(120, 25),
             TextAlign = System.Drawing.ContentAlignment.MiddleRight
@@ -79,13 +79,13 @@ public class DeviceInstallForm : Form
         {
             Location = new System.Drawing.Point(150, 55),
             Size = new System.Drawing.Size(260, 25),
-            PlaceholderText = "Enter device name (e.g., Main Entrance)"
+            PlaceholderText = "단말기 이름 입력 (예: 정문)"
         };
 
         // Tag Name
         var lblTagName = new Label
         {
-            Text = "Tag Name:",
+            Text = "위치:",
             Location = new System.Drawing.Point(20, 90),
             Size = new System.Drawing.Size(120, 25),
             TextAlign = System.Drawing.ContentAlignment.MiddleRight
@@ -95,13 +95,13 @@ public class DeviceInstallForm : Form
         {
             Location = new System.Drawing.Point(150, 90),
             Size = new System.Drawing.Size(260, 25),
-            PlaceholderText = "Enter tag name (optional)"
+            PlaceholderText = "위치 정보 입력 (선택사항)"
         };
 
         // Menu Password
         var lblMenuPassword = new Label
         {
-            Text = "Menu Password:",
+            Text = "관리패스워드:",
             Location = new System.Drawing.Point(20, 125),
             Size = new System.Drawing.Size(120, 25),
             TextAlign = System.Drawing.ContentAlignment.MiddleRight
@@ -111,7 +111,7 @@ public class DeviceInstallForm : Form
         {
             Location = new System.Drawing.Point(150, 125),
             Size = new System.Drawing.Size(260, 25),
-            PlaceholderText = "Enter menu password (default: 888888)",
+            PlaceholderText = "관리 비밀번호 입력 (기본값: 888888)",
             Text = "888888",
             UseSystemPasswordChar = true
         };
@@ -119,7 +119,7 @@ public class DeviceInstallForm : Form
         // Language
         var lblLanguage = new Label
         {
-            Text = "Language:",
+            Text = "언어:",
             Location = new System.Drawing.Point(20, 160),
             Size = new System.Drawing.Size(120, 25),
             TextAlign = System.Drawing.ContentAlignment.MiddleRight
@@ -153,7 +153,7 @@ public class DeviceInstallForm : Form
         // Info Label
         var lblInfo = new Label
         {
-            Text = "This will install the device and configure its initial settings.\nThe device will be registered with the server.",
+            Text = "단말기를 등록하고 초기 설정을 구성합니다.\n단말기가 서버에 등록됩니다.",
             Location = new System.Drawing.Point(20, 200),
             Size = new System.Drawing.Size(390, 40),
             ForeColor = System.Drawing.Color.Gray,
@@ -163,7 +163,7 @@ public class DeviceInstallForm : Form
         // Buttons
         btnInstall = new Button
         {
-            Text = "Install",
+            Text = "등록",
             DialogResult = DialogResult.OK,
             Location = new System.Drawing.Point(250, 245),
             Size = new System.Drawing.Size(80, 30)
@@ -171,7 +171,7 @@ public class DeviceInstallForm : Form
 
         btnCancel = new Button
         {
-            Text = "Cancel",
+            Text = "취소",
             DialogResult = DialogResult.Cancel,
             Location = new System.Drawing.Point(340, 245),
             Size = new System.Drawing.Size(80, 30)

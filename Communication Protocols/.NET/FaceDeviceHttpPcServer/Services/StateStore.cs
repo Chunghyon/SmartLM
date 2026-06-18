@@ -83,6 +83,21 @@ public sealed class StateStore
         }
     }
 
+    public bool UpdatePerson(PersonInfo person)
+    {
+        lock (_sync)
+        {
+            if (!_state.People.ContainsKey(person.UserID))
+            {
+                return false;
+            }
+
+            _state.People[person.UserID] = Clone(person);
+            SaveState();
+            return true;
+        }
+    }
+
     public bool DeletePerson(string userId)
     {
         lock (_sync)

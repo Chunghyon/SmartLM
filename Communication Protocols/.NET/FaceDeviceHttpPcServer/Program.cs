@@ -901,6 +901,32 @@ app.MapPost("/api/People/New", async (HttpRequest request, StateStore store) =>
         : Results.Ok(BrowserApiResponse.Fail(23, "UserID or card number duplicated."));
 });
 
+// 式式 /api/People/Update 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+app.MapPost("/api/People/Update", async (HttpRequest request, StateStore store) =>
+{
+    PersonInfo? person = null;
+
+    if (request.HasFormContentType)
+    {
+        var form = await request.ReadFormAsync();
+        var json = form["PeopleJson"].ToString();
+        if (!string.IsNullOrWhiteSpace(json))
+            person = System.Text.Json.JsonSerializer.Deserialize<PersonInfo>(json);
+    }
+    else
+    {
+        person = await request.ReadFromJsonAsync<PersonInfo>();
+    }
+
+    if (person is null || string.IsNullOrWhiteSpace(person.UserID))
+        return Results.Ok(BrowserApiResponse.Fail(11, "Personnel parameter verification failed."));
+
+    var normalized = NormalizePerson(person);
+    return store.UpdatePerson(normalized)
+        ? Results.Ok(BrowserApiResponse.Ok())
+        : Results.Ok(BrowserApiResponse.Fail(3, "Person not found."));
+});
+
 // 式式 /api/People/Delete 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 app.MapPost("/api/People/Delete", (JsonNode? body, StateStore store) =>
 {
