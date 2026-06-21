@@ -26,7 +26,7 @@
 
 ## **Call process**
 
--The device send a heartbeat packet to the server first, and the server responds with an OK message
+- The device send a heartbeat packet to the server first, and the server responds with an OK message
 - Device sends working parameters to the service
 - After the server responds to the heartbeat protection package, it decides the next request to be initiated based on the response content
 - **Priority syncParameter > Remote > deletePeople > addPeople**

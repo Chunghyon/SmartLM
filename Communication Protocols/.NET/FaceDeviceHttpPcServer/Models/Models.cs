@@ -10,6 +10,19 @@ public record ApiResponse(int Success, string? Message = null)
     public static ApiResponse Ok(string? message = null) => new(0, message);
 }
 
+/// <summary>HTTP-Docking protocol response with Content field</summary>
+public sealed class ApiResponseWithContent
+{
+    public int Success { get; set; }
+    public object? Content { get; set; }
+
+    public static ApiResponseWithContent Ok(object? content = null) => 
+        new() { Success = 0, Content = content };
+
+    public static ApiResponseWithContent Error(int code, string? message = null) => 
+        new() { Success = code, Content = message };
+}
+
 /// <summary>Browser-UI protocol unified response</summary>
 public sealed class BrowserApiResponse
 {

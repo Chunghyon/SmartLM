@@ -92,6 +92,7 @@ app.MapGet("/api-info", () => Results.Ok(new
         "/DevicePass/SelectDeleteInfo",
         "/People/SelectDeleteInfo",
         "/Record/UploadIdentifyRecord",
+        "/Record/UploadSystemRecord",
         "/admin",
         "/admin/devices",
         "/admin/people",
@@ -145,9 +146,13 @@ app.MapPost("/Device/DownloadWorkSetting", async (HttpRequest request, StateStor
     }
 
     var workSetting = store.GetWorkSettingForDownload(sn);
-    return workSetting is null
-        ? Results.Ok(new ApiResponse(404, "No work-setting snapshot is available for this device yet."))
-        : Results.Ok(workSetting);
+    if (workSetting is null)
+    {
+        return Results.Ok(new ApiResponseWithContent { Success = 404, Content = "No work-setting snapshot available" });
+    }
+
+    // Return with Content field as per protocol
+    return Results.Ok(new ApiResponseWithContent { Success = 0, Content = workSetting });
 });
 
 app.MapPost("/People/DownloadPeopleList", DownloadPeopleList);
@@ -197,6 +202,51 @@ app.MapPost("/Record/UploadIdentifyRecord", async (HttpRequest request, StateSto
 
     var photo = form.Files.GetFile("Photo") ?? form.Files.GetFile("pic");
     store.SaveIdentifyRecord(sn, recordNode, photo);
+    return Results.Ok(ApiResponse.Ok());
+});
+
+app.MapPost("/Record/UploadSystemRecord", async (HttpRequest request, StateStore store) =>
+{
+    if (!request.HasFormContentType)
+    {
+        return Results.BadRequest(new ApiResponse(400, "multipart/form-data is required."));
+    }
+
+    var form = await request.ReadFormAsync();
+    var sn = FirstNonEmpty(form["SN"].ToString(), form["DeviceSN"].ToString());
+    if (string.IsNullOrWhiteSpace(sn))
+    {
+        return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    }
+
+    var recordJson = FirstNonEmpty(
+        form["RecordDetail"].ToString(),
+        form["recordJson"].ToString());
+
+    if (string.IsNullOrWhiteSpace(recordJson))
+    {
+        recordJson = await ReadMultipartValueAsync(form, "RecordDetail")
+                     ?? await ReadMultipartValueAsync(form, "recordJson");
+    }
+
+    if (string.IsNullOrWhiteSpace(recordJson))
+    {
+        return Results.BadRequest(new ApiResponse(400, "RecordDetail or recordJson is required."));
+    }
+
+    JsonNode? recordNode;
+    try
+    {
+        recordNode = JsonNode.Parse(recordJson);
+    }
+    catch (JsonException ex)
+    {
+        return Results.BadRequest(new ApiResponse(400, $"Invalid record JSON: {ex.Message}"));
+    }
+
+    // System records typically don't have photos
+    store.SaveSystemRecord(sn, recordNode);
+    LogHub.Instance.Info($"System record uploaded from device {sn}");
     return Results.Ok(ApiResponse.Ok());
 });
 

@@ -230,6 +230,31 @@ public sealed class StateStore
         }
     }
 
+    public void SaveSystemRecord(string deviceSn, JsonNode? recordNode)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            var recordId = SanitizeForFileName(recordNode?["RecordID"]?.ToString())
+                           ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            var uniqueId = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}_SYS_{recordId}";
+
+            var recordFile = Path.Combine(_recordsPath, $"{SanitizeForFileName(deviceSn)}_{uniqueId}.json");
+            File.WriteAllText(recordFile, recordNode?.ToJsonString(_serializerOptions) ?? "{} ");
+
+            device.Records.Add(new RecordSnapshot
+            {
+                Id = uniqueId,
+                ReceivedAtUtc = DateTimeOffset.UtcNow,
+                RecordJsonPath = recordFile,
+                PhotoPath = null,
+                RecordDetail = recordNode?.DeepClone()
+            });
+
+            SaveState();
+        }
+    }
+
     public IReadOnlyCollection<DeviceSummary> GetDeviceSummaries()
     {
         lock (_sync)
