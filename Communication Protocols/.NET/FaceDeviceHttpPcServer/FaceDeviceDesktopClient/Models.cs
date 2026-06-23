@@ -86,7 +86,15 @@ public class PersonInfo
     public string? CardNum { get; set; }
     public string? Password { get; set; }
     public int AccessType { get; set; }
-    public string? PhotoUrl { get; set; }
+
+    // Backend uses Photo field, client uses PhotoUrl for display
+    public string? Photo { get; set; }
+
+    public string? PhotoUrl
+    {
+        get => Photo; // Map Photo to PhotoUrl for backward compatibility
+        set => Photo = value;
+    }
 
     // Photo binary data (Base64 encoded for JSON transmission)
     [System.ComponentModel.Browsable(false)]

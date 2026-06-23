@@ -158,7 +158,7 @@ public partial class MainForm : Form
             Name = "사진등록",
             HeaderText = "사진등록",
             DataPropertyName = "PhotoUrl",
-            Width = 200
+            Width = 100
         });
 
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
@@ -176,6 +176,43 @@ public partial class MainForm : Form
             HeaderText = "할당된 단말기수",
             Width = 120
         });
+
+        // Add cell formatting for photo and password columns
+        dgvPersonnel.CellFormatting += (sender, e) =>
+        {
+            if (e.ColumnIndex == dgvPersonnel.Columns["사진등록"].Index && e.Value != null)
+            {
+                var photoValue = e.Value.ToString();
+                if (!string.IsNullOrWhiteSpace(photoValue) && photoValue.Length > 50)
+                {
+                    e.Value = "사진 있음";
+                    e.FormattingApplied = true;
+                }
+                else if (string.IsNullOrWhiteSpace(photoValue))
+                {
+                    e.Value = "사진 없음";
+                    e.FormattingApplied = true;
+                }
+            }
+            else if (e.ColumnIndex == dgvPersonnel.Columns["패스워드"].Index && e.Value != null)
+            {
+                var passwordValue = e.Value.ToString();
+                if (!string.IsNullOrWhiteSpace(passwordValue))
+                {
+                    e.Value = new string('●', Math.Min(passwordValue.Length, 8));
+                    e.FormattingApplied = true;
+                }
+            }
+        };
+
+        // Add double-click event to edit person
+        dgvPersonnel.CellDoubleClick += (sender, e) =>
+        {
+            if (e.RowIndex >= 0)
+            {
+                btnEditPerson_Click(sender, EventArgs.Empty);
+            }
+        };
     }
 
     private void SetupAttendanceGrid()
@@ -1189,7 +1226,20 @@ public partial class MainForm : Form
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("/api/People/New", form.Person);
+                // Prepare PersonInfo with Base64 photo
+                var person = form.Person;
+
+                // Convert PhotoData to Base64 and store in Photo field for JSON transmission
+                if (person.PhotoData != null && person.PhotoData.Length > 0)
+                {
+                    person.Photo = Convert.ToBase64String(person.PhotoData);
+                }
+                else
+                {
+                    person.Photo = null; // Clear Photo if no photo
+                }
+
+                var response = await _httpClient.PostAsJsonAsync("/api/People/New", person);
                 var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
 
                 if (result?.Code == 0)
@@ -1228,26 +1278,59 @@ public partial class MainForm : Form
         {
             var row = dgvPersonnel.SelectedRows[0];
             var userID = row.Cells["사용자번호"].Value?.ToString();
-            var userName = row.Cells["사용자명"].Value?.ToString();
 
+            // Fetch full person data from backend
+            var getResponse = await _httpClient.PostAsJsonAsync("/api/People/GetDetail", new { UserID = userID });
+            var getResult = await getResponse.Content.ReadFromJsonAsync<BrowserApiResponse<PersonInfo>>();
+
+            if (getResult?.Code != 0 || getResult.Content == null)
+            {
+                ShowError($"사용자 정보 조회 실패: {getResult?.Msg}");
+                return;
+            }
+
+            var person = getResult.Content;
             using var form = new PersonForm(_httpClient);
-            form.SetInitialValues(userID, userName);
+
+            // Set initial values including photo and password
+            form.SetInitialValues(person.UserID, person.Name, person.Photo, person.Password);
 
             if (form.ShowDialog() == DialogResult.OK)
             {
-                // 서버에 수정된 정보 저장
-                var response = await _httpClient.PostAsJsonAsync("/api/People/Update", form.Person);
-                var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+                try
+                {
+                    // Convert PhotoData to Base64 for transmission
+                    if (form.Person.PhotoData != null && form.Person.PhotoData.Length > 0)
+                    {
+                        form.Person.Photo = Convert.ToBase64String(form.Person.PhotoData);
+                    }
+                    else
+                    {
+                        // Keep existing photo if not changed, or set to null if explicitly removed
+                        if (string.IsNullOrWhiteSpace(form.Person.Photo))
+                        {
+                            form.Person.Photo = null;
+                        }
+                    }
 
-                if (result?.Code == 0)
-                {
-                    lblStatus.Text = "사용자 정보가 수정되었습니다";
-                    await RefreshPersonnel();
-                    await RefreshSystemInfo();
+                    // 서버에 수정된 정보 저장
+                    var response = await _httpClient.PostAsJsonAsync("/api/People/Update", form.Person);
+                    var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+
+                    if (result?.Code == 0)
+                    {
+                        lblStatus.Text = "사용자 정보가 수정되었습니다";
+                        await RefreshPersonnel();
+                        await RefreshSystemInfo();
+                    }
+                    else
+                    {
+                        ShowError($"사용자 수정 실패: {result?.Msg}");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    ShowError($"사용자 수정 실패: {result?.Msg}");
+                    ShowError($"사용자 수정 중 오류 발생: {ex.Message}");
                 }
             }
         }

@@ -52,7 +52,31 @@ public partial class PersonForm : Form
         if (!string.IsNullOrEmpty(name))
             txtName.Text = name;
         if (!string.IsNullOrEmpty(photoUrl))
-            txtPhotoUrl.Text = photoUrl;
+        {
+            // Check if photoUrl is Base64 or a file path
+            if (photoUrl.Length > 100) // Likely Base64
+            {
+                try
+                {
+                    Person.PhotoData = Convert.FromBase64String(photoUrl);
+                    txtPhotoUrl.Text = "(등록된 사진)";
+
+                    // Show preview
+                    using (var ms = new MemoryStream(Person.PhotoData))
+                    {
+                        picPhotoPreview.Image = Image.FromStream(ms);
+                    }
+                }
+                catch
+                {
+                    txtPhotoUrl.Text = photoUrl;
+                }
+            }
+            else
+            {
+                txtPhotoUrl.Text = photoUrl;
+            }
+        }
         if (!string.IsNullOrEmpty(password))
             txtPassword.Text = password;
     }
@@ -177,7 +201,7 @@ public partial class PersonForm : Form
         {
             Text = "단말기 할당",
             Location = new Point(10, y),
-            Size = new Size(590, 200)
+            Size = new Size(590, 170)
         };
 
         lstDevices = new CheckedListBox
@@ -188,23 +212,23 @@ public partial class PersonForm : Form
         };
         grpDevices.Controls.Add(lstDevices);
 
-        btnUploadToDevices = new Button
-        {
-            Text = "선택한 단말기로 전송",
-            Location = new Point(10, 160),
-            Size = new Size(560, 30)
-        };
-        btnUploadToDevices.Click += BtnUploadToDevices_Click;
-        grpDevices.Controls.Add(btnUploadToDevices);
-
         mainPanel.Controls.Add(grpDevices);
-        y += 220;
+        y += 190;
 
         // 하단 버튼
+        btnUploadToDevices = new Button
+        {
+            Text = "저장 및 선택한 단말기로 전송",
+            Location = new Point(10, y),
+            Size = new Size(240, 35)
+        };
+        btnUploadToDevices.Click += BtnUploadToDevices_Click;
+        mainPanel.Controls.Add(btnUploadToDevices);
+
         btnOK = new Button
         {
-            Text = "확인",
-            Location = new Point(370, y),
+            Text = "저장",
+            Location = new Point(260, y),
             Size = new Size(100, 35)
         };
         btnOK.Click += BtnOK_Click;
@@ -213,7 +237,7 @@ public partial class PersonForm : Form
         btnCancel = new Button
         {
             Text = "취소",
-            Location = new Point(480, y),
+            Location = new Point(370, y),
             Size = new Size(100, 35),
             DialogResult = DialogResult.Cancel
         };
@@ -292,6 +316,13 @@ public partial class PersonForm : Form
 
     private async void BtnUploadToDevices_Click(object? sender, EventArgs e)
     {
+        if (_httpClient == null)
+        {
+            MessageBox.Show("HTTP 클라이언트가 초기화되지 않았습니다", "오류",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
         var selectedIndices = lstDevices.CheckedIndices;
         if (selectedIndices.Count == 0)
         {
@@ -313,19 +344,43 @@ public partial class PersonForm : Form
             btnUploadToDevices.Enabled = false;
             btnUploadToDevices.Text = "전송 중...";
 
-            // 전송할 사용자 데이터 준비
-            var userData = new
+            // 1단계: 서버에 사용자 추가 (또는 업데이트)
+            var personInfo = new PersonInfo
             {
                 UserID = txtUserID.Text.Trim(),
                 Name = txtName.Text.Trim(),
-                Password = txtPassword.Text.Trim(),
-                PhotoData = Person.PhotoData != null ? Convert.ToBase64String(Person.PhotoData) : null
+                Password = txtPassword.Text.Trim()
             };
 
+            // 사진 데이터를 Base64로 변환하여 Photo 필드에 저장
+            if (Person.PhotoData != null && Person.PhotoData.Length > 0)
+            {
+                personInfo.Photo = Convert.ToBase64String(Person.PhotoData);
+            }
+
+            // 수정 모드인지 확인 (IsEditMode 또는 _originalUserID로 판단)
+            bool isEditMode = IsEditMode && !string.IsNullOrEmpty(_originalUserID);
+            string apiEndpoint = isEditMode ? "/api/People/Update" : "/api/People/New";
+
+            // 서버에 사용자 추가/업데이트
+            var addResponse = await _httpClient.PostAsJsonAsync(apiEndpoint, personInfo);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+
+            if (addResult == null || addResult.Code != 0)
+            {
+                MessageBox.Show(
+                    $"서버에 사용자 {(isEditMode ? "업데이트" : "추가")} 실패: {addResult?.Msg ?? "알 수 없는 오류"}",
+                    "오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            // 2단계: 선택된 각 단말기로 전송 요청
             var successCount = 0;
             var failCount = 0;
+            var errorMessages = new List<string>();
 
-            // 선택된 각 단말기로 전송
             foreach (int index in selectedIndices)
             {
                 if (index < _allDevices.Count)
@@ -333,33 +388,56 @@ public partial class PersonForm : Form
                     var device = _allDevices[index];
                     try
                     {
-                        // 실제 단말기 API 호출 (placeholder - 실제 구현 필요)
-                        // var response = await _httpClient.PostAsJsonAsync($"/api/Device/{device.SN}/UploadUser", userData);
+                        // 단말기에 사용자 추가 요청
+                        var deviceResponse = await _httpClient.PostAsync(
+                            $"/admin/devices/{device.SN}/request-add-people",
+                            null);
 
-                        // 시뮬레이션
-                        await Task.Delay(200);
-                        successCount++;
+                        if (deviceResponse.IsSuccessStatusCode)
+                        {
+                            successCount++;
+                        }
+                        else
+                        {
+                            failCount++;
+                            errorMessages.Add($"{device.DeviceName}: HTTP {deviceResponse.StatusCode}");
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         failCount++;
+                        errorMessages.Add($"{device.DeviceName}: {ex.Message}");
                     }
                 }
             }
 
+            // 3단계: 결과 표시
             if (failCount == 0)
             {
                 MessageBox.Show(
-                    $"성공: {successCount}개 단말기로 사용자 정보를 전송했습니다" +
+                    $"성공: {successCount}개 단말기로 사용자 전송을 요청했습니다.\n\n" +
+                    $"단말기가 다음 Keepalive 신호를 보낼 때 사용자 정보를 다운로드합니다." +
                     (Person.PhotoData != null ? "\n(얼굴 사진 포함)" : ""),
                     "전송 성공",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
+
+                // Update Person object for parent form
+                Person.UserID = personInfo.UserID;
+                Person.Name = personInfo.Name;
+                Person.Password = personInfo.Password;
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
             else
             {
+                var errorDetail = errorMessages.Count > 0
+                    ? "\n\n오류 상세:\n" + string.Join("\n", errorMessages.Take(5))
+                    : "";
+
                 MessageBox.Show(
-                    $"전송 완료: 성공 {successCount}개, 실패 {failCount}개",
+                    $"전송 완료: 성공 {successCount}개, 실패 {failCount}개{errorDetail}",
                     "전송 결과",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);

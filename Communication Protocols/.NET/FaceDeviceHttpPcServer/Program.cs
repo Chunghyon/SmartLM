@@ -218,51 +218,6 @@ app.MapPost("/Record/UploadIdentifyRecord", async (HttpRequest request, StateSto
     return Results.Ok(ApiResponse.Ok());
 });
 
-app.MapPost("/Record/UploadSystemRecord", async (HttpRequest request, StateStore store) =>
-{
-    if (!request.HasFormContentType)
-    {
-        return Results.BadRequest(new ApiResponse(400, "multipart/form-data is required."));
-    }
-
-    var form = await request.ReadFormAsync();
-    var sn = FirstNonEmpty(form["SN"].ToString(), form["DeviceSN"].ToString());
-    if (string.IsNullOrWhiteSpace(sn))
-    {
-        return Results.BadRequest(new ApiResponse(400, "SN is required."));
-    }
-
-    var recordJson = FirstNonEmpty(
-        form["RecordDetail"].ToString(),
-        form["recordJson"].ToString());
-
-    if (string.IsNullOrWhiteSpace(recordJson))
-    {
-        recordJson = await ReadMultipartValueAsync(form, "RecordDetail")
-                     ?? await ReadMultipartValueAsync(form, "recordJson");
-    }
-
-    if (string.IsNullOrWhiteSpace(recordJson))
-    {
-        return Results.BadRequest(new ApiResponse(400, "RecordDetail or recordJson is required."));
-    }
-
-    JsonNode? recordNode;
-    try
-    {
-        recordNode = JsonNode.Parse(recordJson);
-    }
-    catch (JsonException ex)
-    {
-        return Results.BadRequest(new ApiResponse(400, $"Invalid record JSON: {ex.Message}"));
-    }
-
-    // System records typically don't have photos
-    store.SaveSystemRecord(sn, recordNode);
-    LogHub.Instance.Info($"System record uploaded from device {sn}");
-    return Results.Ok(ApiResponse.Ok());
-});
-
 app.MapGet("/admin/people", (StateStore store) => Results.Ok(store.GetPeople()));
 
 app.MapPost("/admin/people", (PersonInfo person, StateStore store) =>
@@ -1051,7 +1006,16 @@ app.MapPost("/api/People/New", async (HttpRequest request, StateStore store) =>
         return Results.Ok(BrowserApiResponse.Fail(11, "Personnel parameter verification failed."));
 
     var normalized = NormalizePerson(person);
-    return store.TryAddPerson(normalized)
+    var success = store.TryAddPerson(normalized);
+
+    if (!success)
+    {
+        var existingPeople = store.GetPeople();
+        LogHub.Instance.Warn($"Failed to add person {normalized.UserID}. Current people count: {existingPeople.Count}. " +
+            $"Existing UserIDs: [{string.Join(", ", existingPeople.Select(p => p.UserID))}]");
+    }
+
+    return success
         ? Results.Ok(BrowserApiResponse.Ok())
         : Results.Ok(BrowserApiResponse.Fail(23, "UserID or card number duplicated."));
 });
@@ -1383,32 +1347,58 @@ static IResult SelectDeleteInfo(SelectDeleteInfoRequest request, StateStore stor
     });
 }
 
-static PersonInfo NormalizePerson(PersonInfo person) => new()
+static PersonInfo NormalizePerson(PersonInfo person)
 {
-    UserID = person.UserID?.Trim() ?? string.Empty,
-    Name = person.Name?.Trim() ?? string.Empty,
-    Job = person.Job?.Trim() ?? string.Empty,
-    Department = person.Department?.Trim() ?? string.Empty,
-    IdentityCard = person.IdentityCard?.Trim() ?? string.Empty,
-    Attachment = person.Attachment?.Trim() ?? string.Empty,
-    Photo = person.Photo?.Trim() ?? string.Empty,
-    PhotoMD5 = person.PhotoMD5?.Trim() ?? string.Empty,
-    PhotoLen = person.PhotoLen,
-    Password = person.Password?.Trim() ?? string.Empty,
-    CardNum = person.CardNum?.Trim() ?? string.Empty,
-    QRCode = person.QRCode?.Trim() ?? string.Empty,
-    AccessType = Math.Clamp(person.AccessType, 0, 2),
-    ExpirationDate = person.ExpirationDate,
-    OpenTimes = person.OpenTimes <= 0 ? 65535 : person.OpenTimes,
-    KeepOpen = person.KeepOpen,
-    Timegroup = person.Timegroup,
-    Holidays = person.Holidays?.Trim() ?? string.Empty,
-    Elevators = person.Elevators?.Trim() ?? string.Empty,
-    FaceFeature = person.FaceFeature?.Trim() ?? string.Empty,
-    FaceFeatureMD5 = person.FaceFeatureMD5?.Trim() ?? string.Empty,
-    Fingerprints = person.Fingerprints ?? new(),
-    Palmveins = person.Palmveins ?? new()
-};
+    var normalized = new PersonInfo
+    {
+        UserID = person.UserID?.Trim() ?? string.Empty,
+        Name = person.Name?.Trim() ?? string.Empty,
+        Job = person.Job?.Trim() ?? string.Empty,
+        Department = person.Department?.Trim() ?? string.Empty,
+        IdentityCard = person.IdentityCard?.Trim() ?? string.Empty,
+        Attachment = person.Attachment?.Trim() ?? string.Empty,
+        Photo = person.Photo?.Trim() ?? string.Empty,
+        PhotoMD5 = person.PhotoMD5?.Trim() ?? string.Empty,
+        PhotoLen = person.PhotoLen,
+        Password = person.Password?.Trim() ?? string.Empty,
+        CardNum = person.CardNum?.Trim() ?? string.Empty,
+        QRCode = person.QRCode?.Trim() ?? string.Empty,
+        AccessType = Math.Clamp(person.AccessType, 0, 2),
+        ExpirationDate = person.ExpirationDate,
+        OpenTimes = person.OpenTimes <= 0 ? 65535 : person.OpenTimes,
+        KeepOpen = person.KeepOpen,
+        Timegroup = person.Timegroup,
+        Holidays = person.Holidays?.Trim() ?? string.Empty,
+        Elevators = person.Elevators?.Trim() ?? string.Empty,
+        FaceFeature = person.FaceFeature?.Trim() ?? string.Empty,
+        FaceFeatureMD5 = person.FaceFeatureMD5?.Trim() ?? string.Empty,
+        Fingerprints = person.Fingerprints ?? new(),
+        Palmveins = person.Palmveins ?? new()
+    };
+
+    // Calculate PhotoMD5 and PhotoLen if Photo is Base64 encoded
+    if (!string.IsNullOrWhiteSpace(normalized.Photo))
+    {
+        try
+        {
+            var photoBytes = Convert.FromBase64String(normalized.Photo);
+            normalized.PhotoLen = photoBytes.Length;
+
+            if (string.IsNullOrWhiteSpace(normalized.PhotoMD5))
+            {
+                using var md5 = System.Security.Cryptography.MD5.Create();
+                var hash = md5.ComputeHash(photoBytes);
+                normalized.PhotoMD5 = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
+        }
+        catch
+        {
+            // Photo is not Base64, keep original values
+        }
+    }
+
+    return normalized;
+}
 
 static async Task<string?> ReadMultipartValueAsync(IFormCollection form, string key)
 {
