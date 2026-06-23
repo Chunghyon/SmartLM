@@ -327,79 +327,84 @@ public partial class DeviceDetailForm : Form
             btnUpload.Enabled = false;
             btnUpload.Text = "업로드 중...";
 
-            var deviceUrl = $"http://{_device.IpAddress}:{_device.HttpPort}";
+            // HTTPv2 프로토콜: 서버에 사용자 정보 저장 → Keepalive를 통해 장치가 다운로드
+            int successCount = 0;
+            int failCount = 0;
 
-            using (var deviceClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+            foreach (var user in _assignedUsers)
             {
-                deviceClient.BaseAddress = new Uri(deviceUrl);
-
-                int successCount = 0;
-                int failCount = 0;
-
-                foreach (var user in _assignedUsers)
+                try
                 {
-                    try
+                    // 서버 DB에 사용자 추가/업데이트
+                    var response = await _httpClient.PostAsJsonAsync("/api/People/New", user);
+                    var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+
+                    if (result?.Code == 0)
                     {
-                        // 단말기에 사용자 추가
-                        var userData = new
-                        {
-                            id = user.UserID,
-                            name = user.Name,
-                            password = user.Password ?? "",
-                            cardNum = user.CardNum ?? "",
-                            faceData = user.PhotoData != null ? Convert.ToBase64String(user.PhotoData) : null
-                        };
-
-                        var response = await deviceClient.PostAsJsonAsync("/personnel/new", userData);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var content = await response.Content.ReadAsStringAsync();
-                            var jsonDoc = JsonDocument.Parse(content);
-                            var root = jsonDoc.RootElement;
-
-                            if (root.TryGetProperty("result", out var result) && result.GetBoolean())
-                            {
-                                successCount++;
-                            }
-                            else
-                            {
-                                failCount++;
-                            }
-                        }
+                        successCount++;
+                    }
+                    else
+                    {
+                        // 이미 존재하면 업데이트 시도
+                        response = await _httpClient.PostAsJsonAsync("/api/People/Update", user);
+                        result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+                        if (result?.Code == 0)
+                            successCount++;
                         else
-                        {
                             failCount++;
-                        }
-                    }
-                    catch
-                    {
-                        failCount++;
                     }
                 }
+                catch
+                {
+                    failCount++;
+                }
+            }
 
-                if (failCount == 0)
+            if (successCount > 0)
+            {
+                // 서버에 장치 동기화 요청 (HTTPv2: Keepalive 응답에서 AddPeople 플래그 설정)
+                try
                 {
-                    MessageBox.Show(
-                        $"성공: {successCount}명의 사용자 정보를 단말기로 전송했습니다",
-                        "업로드 성공",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
+                    var syncResponse = await _httpClient.PostAsync(
+                        $"/admin/devices/{_device.SN}/remote-command",
+                        JsonContent.Create(new { CommandType = "pushallpeople" }));
+
+                    if (syncResponse.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show(
+                            $"서버에 {successCount}명의 사용자 정보를 저장했습니다.\n" +
+                            $"단말기가 다음 Keepalive 시 자동으로 동기화됩니다.\n\n" +
+                            $"성공: {successCount}명\n실패: {failCount}명",
+                            "업로드 완료",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            $"사용자 정보는 저장되었으나 동기화 요청 실패\n성공: {successCount}명\n실패: {failCount}명",
+                            "부분 성공",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
                     MessageBox.Show(
-                        $"업로드 완료\n성공: {successCount}명\n실패: {failCount}명",
-                        "업로드 결과",
+                        $"사용자 정보는 저장되었으나 동기화 요청 실패: {ex.Message}\n성공: {successCount}명",
+                        "부분 성공",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
                 }
             }
-        }
-        catch (TaskCanceledException)
-        {
-            MessageBox.Show("단말기 응답 시간 초과", "시간 초과",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else if (failCount > 0)
+            {
+                MessageBox.Show(
+                    $"모든 사용자 저장 실패\n실패: {failCount}명",
+                    "업로드 실패",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
         catch (Exception ex)
         {
@@ -420,147 +425,55 @@ public partial class DeviceDetailForm : Form
             btnDownload.Enabled = false;
             btnDownload.Text = "다운로드 중...";
 
-            // 단말기로부터 사용자 정보 다운로드
-            var deviceUrl = $"http://{_device.IpAddress}:{_device.HttpPort}";
+            // HTTPv2 프로토콜: 서버 DB에서 사용자 목록 조회
+            // (장치는 Keepalive를 통해 서버로 사용자를 업로드하므로 서버 DB가 최신 상태)
 
-            using (var deviceClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+            var response = await _httpClient.GetAsync("/admin/people");
+
+            if (response.IsSuccessStatusCode)
             {
-                deviceClient.BaseAddress = new Uri(deviceUrl);
+                var allUsers = await response.Content.ReadFromJsonAsync<List<PersonInfo>>();
 
-                // Try different possible endpoints
-                string[] endpoints = new[] 
-                { 
-                    "/personnel/listRecord",
-                    "/cgi-bin/js/personnel/listRecord",
-                    "/person/findList",
-                    "/cgi-bin/person/findList"
-                };
-
-                HttpResponseMessage? response = null;
-                string? successEndpoint = null;
-
-                foreach (var endpoint in endpoints)
+                if (allUsers != null && allUsers.Count > 0)
                 {
-                    try
-                    {
-                        response = await deviceClient.PostAsync(endpoint, null);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            successEndpoint = endpoint;
-                            break;
-                        }
-                    }
-                    catch
-                    {
-                        // Try next endpoint
-                        continue;
-                    }
-                }
+                    MessageBox.Show(
+                        $"서버로부터 {allUsers.Count}명의 사용자 정보를 조회했습니다.\n\n" +
+                        $"참고: HTTPv2 프로토콜에서는 장치가 Keepalive를 통해\n" +
+                        $"서버로 데이터를 전송합니다. 서버 DB가 최신 상태입니다.",
+                        "다운로드 성공",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
 
-                if (response?.IsSuccessStatusCode == true && successEndpoint != null)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-
-                    // JSON 파싱하여 사용자 정보 추출
-                    var jsonDoc = JsonDocument.Parse(content);
-                    var root = jsonDoc.RootElement;
-
-                    if (root.TryGetProperty("result", out var result) && result.GetBoolean())
-                    {
-                        if (root.TryGetProperty("content", out var contentObj) &&
-                            contentObj.TryGetProperty("record", out var records))
-                        {
-                            var downloadedUsers = new List<PersonInfo>();
-
-                            foreach (var record in records.EnumerateArray())
-                            {
-                                var person = new PersonInfo
-                                {
-                                    UserID = record.TryGetProperty("id", out var id) ? id.GetString() ?? "" : "",
-                                    Name = record.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
-                                    Password = record.TryGetProperty("password", out var pwd) ? pwd.GetString() : null,
-                                    CardNum = record.TryGetProperty("cardNum", out var card) ? card.GetString() : null
-                                };
-
-                                downloadedUsers.Add(person);
-                            }
-
-                            // 서버에 다운로드된 사용자 정보 저장
-                            foreach (var person in downloadedUsers)
-                            {
-                                try
-                                {
-                                    await _httpClient.PostAsJsonAsync("/api/People/New", person);
-                                }
-                                catch
-                                {
-                                    // 이미 존재하는 사용자일 수 있으므로 업데이트 시도
-                                    await _httpClient.PostAsJsonAsync("/api/People/Update", person);
-                                }
-                            }
-
-                            MessageBox.Show(
-                                $"성공: 단말기로부터 {downloadedUsers.Count}명의 사용자 정보를 수신했습니다\n" +
-                                $"사용된 엔드포인트: {successEndpoint}",
-                                "다운로드 성공",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Information);
-                        }
-                        else
-                        {
-                            MessageBox.Show("단말기에 등록된 사용자가 없습니다", "안내",
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    else
-                    {
-                        var errMsg = root.TryGetProperty("error", out var error) ? error.GetString() : "알 수 없는 오류";
-                        MessageBox.Show($"다운로드 실패: {errMsg}", "오류",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    // 필요시 현재 장치에 할당된 사용자만 필터링
+                    // _assignedUsers = allUsers.Where(...).ToList();
                 }
                 else
                 {
-                    var statusCode = response?.StatusCode.ToString() ?? "NotFound";
                     MessageBox.Show(
-                        $"단말기 통신 실패 (HTTP {statusCode})\n" +
-                        $"단말기 주소: {deviceUrl}\n\n" +
-                        $"참고: 이 단말기는 웹 브라우저에서 로그인이 필요한 장치입니다.\n" +
-                        $"현재 프로그램은 단말기의 HTTP API를 직접 사용할 수 없습니다.\n\n" +
-                        $"해결 방법:\n" +
-                        $"1. 단말기의 HTTP API가 활성화되어 있는지 확인\n" +
-                        $"2. 단말기 설정에서 인증 없이 API 접근 허용 설정 확인\n" +
-                        $"3. 단말기 펌웨어 버전 및 API 문서 확인",
-                        "통신 오류",
+                        "서버에 등록된 사용자가 없습니다.",
+                        "안내",
                         MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+                        MessageBoxIcon.Information);
                 }
             }
-        }
-        catch (TaskCanceledException)
-        {
-            MessageBox.Show(
-                "단말기 응답 시간 초과\n" +
-                $"단말기 ({_device.IpAddress}:{_device.HttpPort})가 응답하지 않습니다",
-                "시간 초과",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-        }
-        catch (HttpRequestException ex)
-        {
-            MessageBox.Show(
-                $"단말기 연결 실패\n" +
-                $"주소: {_device.IpAddress}:{_device.HttpPort}\n" +
-                $"오류: {ex.Message}\n\n" +
-                $"네트워크 연결 및 단말기 상태를 확인해주세요",
-                "연결 오류",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
+            else
+            {
+                MessageBox.Show(
+                    $"서버 통신 실패 (HTTP {response.StatusCode})",
+                    "통신 오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"다운로드 실패: {ex.Message}", "오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(
+                $"다운로드 실패: {ex.Message}\n\n" +
+                $"HTTPv2 프로토콜에서는 장치가 서버로 데이터를 전송하므로\n" +
+                $"서버 DB를 조회하는 방식입니다.",
+                "오류",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
         }
         finally
         {
@@ -585,52 +498,54 @@ public partial class DeviceDetailForm : Form
             btnInitialize.Enabled = false;
             btnInitialize.Text = "초기화 중...";
 
-            var deviceUrl = $"http://{_device.IpAddress}:{_device.HttpPort}";
+            // HTTPv2 프로토콜: 서버에 초기화 명령 전송 → Keepalive를 통해 장치가 삭제 수행
+            var response = await _httpClient.PostAsync(
+                $"/admin/devices/{_device.SN}/remote-command",
+                JsonContent.Create(new { CommandType = "deleteallpeople" }));
 
-            using (var deviceClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+            if (response.IsSuccessStatusCode)
             {
-                deviceClient.BaseAddress = new Uri(deviceUrl);
+                var apiResult = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
 
-                // 단말기 초기화 명령 전송
-                var response = await deviceClient.PostAsync("/personnel/deleteAll", null);
-
-                if (response.IsSuccessStatusCode)
+                if (apiResult?.Code == 0)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var jsonDoc = JsonDocument.Parse(content);
-                    var root = jsonDoc.RootElement;
+                    _assignedUsers.Clear();
+                    RefreshUserList();
 
-                    if (root.TryGetProperty("result", out var resultProp) && resultProp.GetBoolean())
-                    {
-                        _assignedUsers.Clear();
-                        RefreshUserList();
-
-                        MessageBox.Show("단말기가 초기화되었습니다", "초기화 완료",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        var errMsg = root.TryGetProperty("error", out var error) ? error.GetString() : "알 수 없는 오류";
-                        MessageBox.Show($"초기화 실패: {errMsg}", "오류",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    MessageBox.Show(
+                        "서버에서 모든 사용자 정보를 삭제했습니다.\n" +
+                        "단말기가 다음 Keepalive 시 자동으로 동기화됩니다.\n\n" +
+                        $"메시지: {apiResult.Content}",
+                        "초기화 완료",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show($"단말기 통신 실패 (HTTP {response.StatusCode})", "통신 오류",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(
+                        $"초기화 실패: {apiResult?.Content ?? "알 수 없는 오류"}",
+                        "오류",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
             }
-        }
-        catch (TaskCanceledException)
-        {
-            MessageBox.Show("단말기 응답 시간 초과", "시간 초과",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            else
+            {
+                MessageBox.Show(
+                    $"서버 통신 실패 (HTTP {response.StatusCode})",
+                    "통신 오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"초기화 실패: {ex.Message}", "오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(
+                $"초기화 실패: {ex.Message}\n\n" +
+                $"HTTPv2 프로토콜에서는 서버를 통해 단말기를 초기화합니다.",
+                "오류",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
         }
         finally
         {

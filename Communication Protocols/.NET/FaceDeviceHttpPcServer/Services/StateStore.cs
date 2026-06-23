@@ -31,13 +31,31 @@ public sealed class StateStore
         _state = LoadState();
     }
 
-    public KeepaliveResponse UpsertKeepalive(KeepaliveRequest request)
+    public KeepaliveResponse UpsertKeepalive(KeepaliveRequest request, string? deviceIp = null)
     {
         lock (_sync)
         {
             var device = GetOrCreateDevice(request.SN);
             device.LastKeepalive = request;
             device.LastKeepaliveAtUtc = DateTimeOffset.UtcNow;
+
+            // Keepalive를 통해 IP 주소 자동 업데이트 (처음 연결 시 또는 IP 변경 시)
+            if (!string.IsNullOrWhiteSpace(deviceIp))
+            {
+                if (string.IsNullOrWhiteSpace(device.IpAddress))
+                {
+                    // 처음 연결된 디바이스: IP 주소 저장
+                    device.IpAddress = deviceIp;
+                    device.ConnectedAtUtc = DateTimeOffset.UtcNow;
+                }
+                else if (device.IpAddress != deviceIp)
+                {
+                    // IP 주소 변경됨: 업데이트
+                    device.IpAddress = deviceIp;
+                    device.ConnectedAtUtc = DateTimeOffset.UtcNow;
+                }
+            }
+
             SaveState();
 
             return new KeepaliveResponse
@@ -122,6 +140,51 @@ public sealed class StateStore
 
             SaveState();
             return true;
+        }
+    }
+
+    public int DeleteAllPeople(string? deviceSn = null)
+    {
+        lock (_sync)
+        {
+            var allUserIds = _state.People.Keys.ToList();
+            var deletedCount = allUserIds.Count;
+
+            foreach (var userId in allUserIds)
+            {
+                _state.People.Remove(userId);
+
+                if (!_state.DeletedUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                {
+                    _state.DeletedUserIds.Add(userId);
+                }
+
+                if (deviceSn != null)
+                {
+                    // Mark for deletion on specific device only
+                    if (_state.Devices.TryGetValue(deviceSn, out var device))
+                    {
+                        if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                        {
+                            device.PendingDeleteUserIds.Add(userId);
+                        }
+                    }
+                }
+                else
+                {
+                    // Mark for deletion on all devices
+                    foreach (var device in _state.Devices.Values)
+                    {
+                        if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                        {
+                            device.PendingDeleteUserIds.Add(userId);
+                        }
+                    }
+                }
+            }
+
+            SaveState();
+            return deletedCount;
         }
     }
 

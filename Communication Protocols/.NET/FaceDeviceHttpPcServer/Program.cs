@@ -66,7 +66,13 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<DeviceDiscoveryService>();
 builder.Services.AddHttpClient();
 
+// 요청 압축 해제 지원 추가 (GZIP, Deflate, Brotli)
+builder.Services.AddRequestDecompression();
+
 var app = builder.Build();
+
+// 요청 압축 해제 미들웨어 (HttpLoggingMiddleware보다 먼저 실행되어야 함)
+app.UseRequestDecompression();
 
 // HTTP 요청 로깅 미들웨어 추가
 app.UseMiddleware<HttpLoggingMiddleware>();
@@ -105,14 +111,21 @@ app.MapGet("/api-info", () => Results.Ok(new
     }
 }));
 
-app.MapPost("/Device/Keepalive", (KeepaliveRequest request, StateStore store) =>
+app.MapPost("/Device/Keepalive", (KeepaliveRequest request, HttpContext httpContext, StateStore store) =>
 {
     if (string.IsNullOrWhiteSpace(request.SN))
     {
         return Results.BadRequest(new ApiResponse(400, "SN is required."));
     }
 
-    var response = store.UpsertKeepalive(request);
+    // 디바이스 IP 주소 추출
+    var deviceIp = httpContext.Connection.RemoteIpAddress?.ToString();
+    if (deviceIp == "::1" || deviceIp == "127.0.0.1")
+    {
+        deviceIp = null; // 로컬 연결은 IP 저장 안 함
+    }
+
+    var response = store.UpsertKeepalive(request, deviceIp);
     return Results.Ok(response);
 });
 
@@ -341,9 +354,9 @@ app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, St
                 return Results.Ok(ApiResponse.Ok($"Push all people command queued ({peopleCount} people)"));
 
             case "deleteallpeople":
-                // This would require special handling to delete all people
-                LogHub.Instance.Warn($"Remote command: Delete all people from {sn} - NOT IMPLEMENTED");
-                return Results.Ok(ApiResponse.Ok("Delete all people command queued (not implemented)"));
+                var deletedCount = store.DeleteAllPeople(sn);
+                LogHub.Instance.Info($"Remote command: Delete all people from {sn} ({deletedCount} people marked for deletion)");
+                return Results.Ok(ApiResponse.Ok($"Delete all people command queued ({deletedCount} people)"));
 
             case "clearrecords":
                 store.QueueRemoteCommand(sn, clearRecord: true);
@@ -370,13 +383,17 @@ app.MapDelete("/admin/devices/{sn}", (string sn, StateStore store) =>
 {
     try
     {
+        LogHub.Instance.Info($"디바이스 제거 요청: {sn}");
+
         if (store.RemoveDevice(sn))
         {
-            LogHub.Instance.Info($"Device removed: {sn}");
+            LogHub.Instance.Info($"디바이스 제거 완료: {sn}");
+
             return Results.Ok(ApiResponse.Ok($"Device {sn} removed successfully"));
         }
         else
         {
+            LogHub.Instance.Warn($"디바이스 제거 실패: {sn} (찾을 수 없음)");
             return Results.NotFound(new ApiResponse(404, "Device not found"));
         }
     }
@@ -598,6 +615,26 @@ app.MapGet("/api/Device/FunctionList", () => Results.Ok(BrowserApiResponse.Ok(ne
     Websocket_V1 = true, Websocket_V2 = true
 })));
 
+// ── /api/Device/GetNetworkInterfaces ──────────────────────────────────────────
+app.MapGet("/api/Device/GetNetworkInterfaces", (DeviceDiscoveryService discoveryService) =>
+{
+    try
+    {
+        var interfaces = discoveryService.GetValidNetworkInterfaces();
+        var result = interfaces.Select(i => new NetworkInterfaceInfo
+        {
+            LocalIp = i.localIp.ToString(),
+            BroadcastIp = i.broadcastIp.ToString()
+        }).ToList();
+
+        return Results.Ok(BrowserApiResponse.Ok(result));
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(BrowserApiResponse.Fail(500, $"Failed to get network interfaces: {ex.Message}"));
+    }
+});
+
 // ── /api/Device/Search ────────────────────────────────────────────────────────
 app.MapPost("/api/Device/Search", async (DeviceDiscoveryService discoveryService, JsonNode? body) =>
 {
@@ -605,6 +642,8 @@ app.MapPost("/api/Device/Search", async (DeviceDiscoveryService discoveryService
     {
         var searchType = body?["SearchType"]?.GetValue<string>() ?? "broadcast";
         var subnet = body?["Subnet"]?.GetValue<string>();
+        var localIpAddress = body?["LocalIpAddress"]?.GetValue<string>();
+        var discoveryPort = body?["DiscoveryPort"]?.GetValue<int>() ?? 8101;
 
         List<DeviceDiscoveryService.DiscoveredDevice> devices;
 
@@ -615,8 +654,8 @@ app.MapPost("/api/Device/Search", async (DeviceDiscoveryService discoveryService
         }
         else
         {
-            // UDP 브로드캐스트
-            devices = await discoveryService.SearchDevicesAsync();
+            // UDP 브로드캐스트 (선택된 로컬 IP 사용)
+            devices = await discoveryService.SearchDevicesAsync(localIpAddress, discoveryPort);
         }
 
         return Results.Ok(BrowserApiResponse.Ok(devices));
@@ -680,7 +719,9 @@ app.MapPost("/api/Device/SearchStream", async (DeviceDiscoveryService discoveryS
         else
         {
             // UDP 브로드캐스트
-            var devices = await discoveryService.SearchDevicesAsync(context.RequestAborted);
+            var localIpAddress = body?["LocalIpAddress"]?.GetValue<string>();
+            var discoveryPort = body?["DiscoveryPort"]?.GetValue<int>() ?? 8101;
+            var devices = await discoveryService.SearchDevicesAsync(localIpAddress, discoveryPort, context.RequestAborted);
             foreach (var device in devices)
             {
                 var json = System.Text.Json.JsonSerializer.Serialize(device);
@@ -773,6 +814,70 @@ app.MapPost("/api/Device/ProbeDevice", async (JsonNode? body, IHttpClientFactory
     catch (Exception ex)
     {
         return Results.Ok(BrowserApiResponse.Fail(500, $"Probe failed: {ex.Message}"));
+    }
+});
+
+// ── /api/Device/Register ─────────────────────────────────────────────────────
+// 단순히 IP 주소로 디바이스 등록 (HTTPv2 프로토콜에 따라 디바이스가 서버로 접속함)
+app.MapPost("/api/Device/Register", (JsonNode? body, StateStore store) =>
+{
+    try
+    {
+        var ip = body?["IpAddress"]?.GetValue<string>();
+        var sn = body?["DeviceSN"]?.GetValue<string>();
+
+        if (string.IsNullOrWhiteSpace(ip))
+        {
+            return Results.Ok(BrowserApiResponse.Fail(3, "IpAddress is required."));
+        }
+
+        // SN이 없으면 IP를 SN으로 사용
+        if (string.IsNullOrWhiteSpace(sn))
+        {
+            sn = $"Device-{ip.Replace(".", "-")}";
+        }
+
+        // 이미 등록된 디바이스인지 확인
+        var existingDevices = store.GetDeviceSummaries();
+
+        LogHub.Instance.Info($"등록 요청: {sn} at {ip} (현재 {existingDevices.Count}개 디바이스 등록됨)");
+
+        var existingBySN = existingDevices.FirstOrDefault(d => d.SN == sn);
+        var existingByIP = existingDevices.FirstOrDefault(d => d.IpAddress == ip);
+
+        // 완전히 동일한 디바이스 (SN과 IP 모두 일치)
+        if (existingBySN != null && existingBySN.IpAddress == ip)
+        {
+            LogHub.Instance.Warn($"디바이스 중복 등록 시도: {sn} at {ip} (이미 등록됨)");
+            return Results.Ok(BrowserApiResponse.Fail(409, $"디바이스가 이미 등록되어 있습니다. (SN: {sn}, IP: {ip})"));
+        }
+
+        // SN은 같지만 IP가 다름 (Keepalive로 자동 등록된 경우) → IP 업데이트
+        if (existingBySN != null && existingBySN.IpAddress != ip)
+        {
+            LogHub.Instance.Info($"디바이스 IP 업데이트: {sn} ({existingBySN.IpAddress ?? "(없음)"} → {ip})");
+            store.ConnectDevice(sn, ip, 80, sn, "", null, null, 0);
+            return Results.Ok(BrowserApiResponse.Ok($"디바이스 {sn}의 IP 주소가 {ip}로 업데이트되었습니다."));
+        }
+
+        // IP는 같지만 SN이 다름 → 기존 디바이스 제거 후 새로 등록
+        if (existingByIP != null && existingByIP.SN != sn)
+        {
+            LogHub.Instance.Info($"IP 중복 발견: {ip}에 기존 디바이스 {existingByIP.SN} 있음 → 제거 후 {sn} 등록");
+            store.RemoveDevice(existingByIP.SN);
+        }
+
+        // IP 주소만으로 디바이스 등록 (포트 80 기본값)
+        // 디바이스는 HTTPv2 프로토콜에 따라 이 서버의 80번 포트로 Keepalive를 보냄
+        store.ConnectDevice(sn, ip, 80, sn, "", null, null, 0);
+
+        LogHub.Instance.Info($"디바이스 등록: {sn} at {ip} (HTTPv2 프로토콜 대기)");
+
+        return Results.Ok(BrowserApiResponse.Ok($"디바이스 {sn}이(가) 성공적으로 등록되었습니다."));
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(BrowserApiResponse.Fail(500, $"등록 실패: {ex.Message}"));
     }
 });
 
@@ -1171,6 +1276,39 @@ app.MapPost("/api/Record/Delete/ByType", (DeleteRecordsByTypeRequest req, StateS
 
 // HTTP 서버를 백그라운드에서 실행
 var cts = new CancellationTokenSource();
+
+// Windows 방화벽 체크
+try
+{
+    var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
+    if (!string.IsNullOrEmpty(exePath))
+    {
+        if (!FirewallHelper.CheckFirewallRule("FDDC UDP Discovery"))
+        {
+            LogHub.Instance.Warn("?? Windows 방화벽 규칙이 없습니다. UDP 브로드캐스트 검색이 차단될 수 있습니다.");
+            LogHub.Instance.Info("방화벽 규칙 추가를 시도합니다...");
+
+            if (FirewallHelper.AddUdpFirewallRule(exePath))
+            {
+                LogHub.Instance.Info("? 방화벽 규칙이 추가되었습니다.");
+            }
+            else
+            {
+                LogHub.Instance.Warn("?? 방화벽 규칙 추가 실패. 수동으로 추가해야 합니다:");
+                LogHub.Instance.Warn(FirewallHelper.GetManualFirewallInstructions());
+            }
+        }
+        else
+        {
+            LogHub.Instance.Info("? Windows 방화벽 규칙이 설정되어 있습니다.");
+        }
+    }
+}
+catch (Exception ex)
+{
+    LogHub.Instance.Warn($"방화벽 체크 실패: {ex.Message}");
+}
+
 var serverTask = app.RunAsync(cts.Token);
 
 // 서버 URL 가져오기 및 브라우저용으로 변환

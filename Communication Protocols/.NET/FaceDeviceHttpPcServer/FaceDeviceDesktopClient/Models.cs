@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace FaceDeviceDesktopClient;
 
@@ -57,7 +58,6 @@ public class DiscoveredDevice
     public string? DeviceName { get; set; }
     public string? Model { get; set; }
     public string? FirmwareVersion { get; set; }
-    public int HttpPort { get; set; } = 80;
 }
 
 public class DeviceProbeInfo
@@ -133,4 +133,11 @@ public class AttendanceStatistics
     public int UniqueDepartments { get; set; }
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
+}
+
+// Network Interface model
+public class NetworkInterfaceInfo
+{
+    public string LocalIp { get; set; } = string.Empty;
+    public string BroadcastIp { get; set; } = string.Empty;
 }

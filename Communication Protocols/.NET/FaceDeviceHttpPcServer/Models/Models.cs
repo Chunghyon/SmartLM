@@ -139,7 +139,8 @@ public sealed class KeepaliveRequest
 
 public sealed record KeepaliveResponse : ApiResponse
 {
-    public KeepaliveResponse() : base(0)
+    // HTTPv2 protocol requires Success: 1 for keepalive responses (different from other APIs)
+    public KeepaliveResponse() : base(1)
     {
     }
 
@@ -420,4 +421,12 @@ public sealed class AttendanceStatistics
     public int UniqueDepartments { get; set; }
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
+}
+
+// 式式式 Network Interface 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+
+public sealed class NetworkInterfaceInfo
+{
+    public string LocalIp { get; set; } = string.Empty;
+    public string BroadcastIp { get; set; } = string.Empty;
 }
