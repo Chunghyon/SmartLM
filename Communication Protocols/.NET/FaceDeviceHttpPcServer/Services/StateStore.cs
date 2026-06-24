@@ -80,6 +80,38 @@ public sealed class StateStore
         }
     }
 
+    public Dictionary<string, int> GetDeviceAssignments()
+    {
+        lock (_sync)
+        {
+            var assignments = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            // Initialize all people with 0
+            foreach (var userId in _state.People.Keys)
+            {
+                assignments[userId] = 0;
+            }
+
+            // Count devices that have each user
+            foreach (var device in _state.Devices.Values)
+            {
+                foreach (var userId in device.DownloadedUserIds)
+                {
+                    if (_state.People.ContainsKey(userId))
+                    {
+                        if (!assignments.ContainsKey(userId))
+                        {
+                            assignments[userId] = 0;
+                        }
+                        assignments[userId]++;
+                    }
+                }
+            }
+
+            return assignments;
+        }
+    }
+
     public bool TryAddPerson(PersonInfo person)
     {
         lock (_sync)
@@ -113,6 +145,29 @@ public sealed class StateStore
             _state.People[person.UserID] = Clone(person);
             SaveState();
             return true;
+        }
+    }
+
+    public int FixTimegroupForAllPeople()
+    {
+        lock (_sync)
+        {
+            int count = 0;
+            foreach (var person in _state.People.Values)
+            {
+                if (person.Timegroup == 0)
+                {
+                    person.Timegroup = 1;
+                    count++;
+                }
+            }
+
+            if (count > 0)
+            {
+                SaveState();
+            }
+
+            return count;
         }
     }
 
@@ -193,15 +248,45 @@ public sealed class StateStore
         lock (_sync)
         {
             var device = GetOrCreateDevice(deviceSn);
-            var effectiveLimit = limit <= 0 ? 1000 : Math.Min(limit, 1000);
+
+            // Only return people if there are pending adds
+            if (device.PendingAddPeopleCount <= 0)
+            {
+                return Array.Empty<PersonInfo>();
+            }
+
+            // Protocol allows up to 1000 people per request
+            // Use device-requested limit or default to 1000
+            var batchSize = limit > 0 ? Math.Min(limit, 1000) : 1000;
+
+            // Get people not yet downloaded by this device
             var people = _state.People.Values
+                .Where(p => !device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
                 .OrderBy(person => person.UserID, StringComparer.OrdinalIgnoreCase)
-                .Take(effectiveLimit)
+                .Take(batchSize)
                 .Select(Clone)
                 .ToArray();
 
-            device.PendingAddPeopleCount = 0;
+            // Mark these users as sent (but not confirmed yet)
+            foreach (var person in people)
+            {
+                if (!device.DownloadedUserIds.Contains(person.UserID, StringComparer.OrdinalIgnoreCase))
+                {
+                    device.DownloadedUserIds.Add(person.UserID);
+                }
+            }
+
+            // If all people have been sent, clear pending count
+            var remainingPeople = _state.People.Values
+                .Count(p => !device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase));
+
+            if (remainingPeople == 0)
+            {
+                device.PendingAddPeopleCount = 0;
+            }
+
             SaveState();
+
             return people;
         }
     }
@@ -215,6 +300,27 @@ public sealed class StateStore
             device.PendingDeleteUserIds.Clear();
             SaveState();
             return deleteList;
+        }
+    }
+
+    public void ConfirmPeopleDownloaded(string deviceSn, int successCount)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+
+            // Check if all people have been downloaded
+            var remainingPeople = _state.People.Values
+                .Count(p => !device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase));
+
+            if (remainingPeople == 0)
+            {
+                // All people sent successfully - clear pending count only
+                device.PendingAddPeopleCount = 0;
+                // DON'T clear DownloadedUserIds - it's a permanent record of users on this device!
+                SaveState();
+            }
+            // If there are more people to send, PendingAddPeopleCount stays > 0
         }
     }
 
@@ -367,6 +473,21 @@ public sealed class StateStore
         }
     }
 
+    public void ResetPendingState(string deviceSn)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.PendingAddPeopleCount = 0;
+            device.PendingDeleteUserIds.Clear();
+            device.PendingSyncParameter = false;
+            device.PendingUploadWorkParameter = false;
+            device.PendingRemote = null;
+            device.DownloadedUserIds.Clear();  // Clear download tracking
+            SaveState();
+        }
+    }
+
     public void MarkUploadWorkSettingRequested(string deviceSn)
     {
         lock (_sync)
@@ -383,6 +504,7 @@ public sealed class StateStore
         {
             var device = GetOrCreateDevice(deviceSn);
             device.PendingAddPeopleCount = _state.People.Count;
+            device.DownloadedUserIds.Clear(); // Reset tracking for new download session
             SaveState();
             return device.PendingAddPeopleCount;
         }
@@ -502,16 +624,31 @@ public sealed class StateStore
 
     // 式式 People push from device 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
-    public (int success, int fail) SavePushedPeople(List<PersonInfo> people)
+    public (int success, int fail) SavePushedPeople(string deviceSn, List<PersonInfo> people)
     {
         lock (_sync)
         {
             int success = 0, fail = 0;
+            var device = GetOrCreateDevice(deviceSn);
+
             foreach (var p in people)
             {
                 if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
+
+                // If Photo field contains a device file path (e.g., /data/attend_data/photo/frame...),
+                // keep it as-is for now - it indicates the person has a photo on the device
+                // Later we can implement photo download from device if needed
+                // The UI will show "O" if Photo field is not empty (length > 50 check)
+
                 _state.People[p.UserID] = Clone(p);
                 _state.DeletedUserIds.RemoveAll(id => string.Equals(id, p.UserID, StringComparison.OrdinalIgnoreCase));
+
+                // Mark this user as being on this device for device assignment tracking
+                if (!device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
+                {
+                    device.DownloadedUserIds.Add(p.UserID);
+                }
+
                 success++;
             }
 

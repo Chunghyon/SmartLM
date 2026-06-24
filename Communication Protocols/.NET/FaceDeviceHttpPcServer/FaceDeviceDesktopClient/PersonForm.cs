@@ -13,6 +13,9 @@ public partial class PersonForm : Form
     public bool IsEditMode { get; set; }
     private string? _originalUserID;
 
+    // Flag to indicate if person was already saved (via "저장 및 선택한 단말기로 전송")
+    public bool AlreadySaved { get; private set; }
+
     private TextBox txtUserID = null!;
     private TextBox txtName = null!;
     private TextBox txtPhotoUrl = null!;
@@ -53,8 +56,15 @@ public partial class PersonForm : Form
             txtName.Text = name;
         if (!string.IsNullOrEmpty(photoUrl))
         {
-            // Check if photoUrl is Base64 or a file path
-            if (photoUrl.Length > 100) // Likely Base64
+            // Check if photoUrl is a device file path (e.g., /data/attend_data/photo/frame_...)
+            if (photoUrl.StartsWith("/") || photoUrl.Contains("/") || photoUrl.Contains("\\"))
+            {
+                // This is a device file path - show indicator but don't try to display
+                txtPhotoUrl.Text = "(단말기에 저장된 사진)";
+                // Optionally: In the future, we could implement downloading the photo from the device
+            }
+            // Try to decode as Base64
+            else
             {
                 try
                 {
@@ -69,12 +79,9 @@ public partial class PersonForm : Form
                 }
                 catch
                 {
+                    // If decoding fails, it might be a regular string path or invalid data
                     txtPhotoUrl.Text = photoUrl;
                 }
-            }
-            else
-            {
-                txtPhotoUrl.Text = photoUrl;
             }
         }
         if (!string.IsNullOrEmpty(password))
@@ -130,15 +137,6 @@ public partial class PersonForm : Form
             MaxLength = 32
         };
         mainPanel.Controls.Add(txtUserID);
-
-        var lblHint = new Label
-        {
-            Text = "(10001~999999)",
-            Location = new Point(500, y),
-            Width = 120,
-            ForeColor = Color.Gray
-        };
-        mainPanel.Controls.Add(lblHint);
         y += 40;
 
         // 3. 사진등록 (경로 표시)
@@ -358,8 +356,18 @@ public partial class PersonForm : Form
                 personInfo.Photo = Convert.ToBase64String(Person.PhotoData);
             }
 
-            // 수정 모드인지 확인 (IsEditMode 또는 _originalUserID로 판단)
-            bool isEditMode = IsEditMode && !string.IsNullOrEmpty(_originalUserID);
+            // 서버에서 사용자 존재 여부 확인
+            bool userExists = false;
+            try
+            {
+                var checkResponse = await _httpClient.PostAsJsonAsync("/api/People/GetDetail", new { UserID = personInfo.UserID });
+                var checkResult = await checkResponse.Content.ReadFromJsonAsync<BrowserApiResponse<PersonInfo>>();
+                userExists = checkResult?.Code == 0;
+            }
+            catch { }
+
+            // 존재하면 Update, 없으면 New
+            bool isEditMode = userExists || (IsEditMode && !string.IsNullOrEmpty(_originalUserID));
             string apiEndpoint = isEditMode ? "/api/People/Update" : "/api/People/New";
 
             // 서버에 사용자 추가/업데이트
@@ -389,9 +397,8 @@ public partial class PersonForm : Form
                     try
                     {
                         // 단말기에 사용자 추가 요청
-                        var deviceResponse = await _httpClient.PostAsync(
-                            $"/admin/devices/{device.SN}/request-add-people",
-                            null);
+                        var requestUrl = $"/admin/devices/{device.SN}/request-add-people";
+                        var deviceResponse = await _httpClient.PostAsync(requestUrl, null);
 
                         if (deviceResponse.IsSuccessStatusCode)
                         {
@@ -417,7 +424,8 @@ public partial class PersonForm : Form
                 MessageBox.Show(
                     $"성공: {successCount}개 단말기로 사용자 전송을 요청했습니다.\n\n" +
                     $"단말기가 다음 Keepalive 신호를 보낼 때 사용자 정보를 다운로드합니다." +
-                    (Person.PhotoData != null ? "\n(얼굴 사진 포함)" : ""),
+                    (Person.PhotoData != null ? "\n(얼굴 사진 포함)" : "") +
+                    "\n\n서버 콘솔에서 전송 과정을 확인할 수 있습니다.",
                     "전송 성공",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -427,6 +435,7 @@ public partial class PersonForm : Form
                 Person.Name = personInfo.Name;
                 Person.Password = personInfo.Password;
 
+                AlreadySaved = true; // Person was saved by this button
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
@@ -474,22 +483,12 @@ public partial class PersonForm : Form
             return;
         }
 
-        // Validate user ID range only for new users
+        // Validate user ID only for new users (just check it's not empty)
         if (!IsEditMode)
         {
-            if (int.TryParse(txtUserID.Text, out int userId))
+            if (string.IsNullOrWhiteSpace(txtUserID.Text))
             {
-                if (userId < 10001 || userId > 999999)
-                {
-                    MessageBox.Show("사용자번호는 10001~999999 범위여야 합니다", "입력 오류",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    txtUserID.Focus();
-                    return;
-                }
-            }
-            else
-            {
-                MessageBox.Show("사용자번호는 숫자여야 합니다", "입력 오류",
+                MessageBox.Show("사용자번호를 입력해주세요", "입력 오류",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtUserID.Focus();
                 return;

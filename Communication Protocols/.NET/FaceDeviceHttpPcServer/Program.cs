@@ -48,6 +48,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.WriteIndented = true;
     options.SerializerOptions.PropertyNamingPolicy = null;
     options.SerializerOptions.DictionaryKeyPolicy = null;
+    // Ignore null values and empty strings to reduce payload size
+    options.SerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
 });
 
 builder.Services.AddSingleton(sp =>
@@ -125,7 +127,15 @@ app.MapPost("/Device/Keepalive", (KeepaliveRequest request, HttpContext httpCont
         deviceIp = null; // 로컬 연결은 IP 저장 안 함
     }
 
+    LogHub.Instance.Info($"[Keepalive] 수신: 단말기 {request.SN} (IP: {deviceIp})");
+
     var response = store.UpsertKeepalive(request, deviceIp);
+
+    if (response.AddPeople.HasValue && response.AddPeople.Value > 0)
+    {
+        LogHub.Instance.Info($"[Keepalive] 응답: 단말기 {request.SN}에 AddPeople={response.AddPeople} 전송 -> 사용자 다운로드 대기 중");
+    }
+
     return Results.Ok(response);
 });
 
@@ -164,8 +174,8 @@ app.MapPost("/Device/DownloadWorkSetting", async (HttpRequest request, StateStor
         return Results.Ok(new ApiResponseWithContent { Success = 404, Content = "No work-setting snapshot available" });
     }
 
-    // Return with Content field as per protocol
-    return Results.Ok(new ApiResponseWithContent { Success = 0, Content = workSetting });
+    // Return with Content field as per protocol - Success=1 for successful response
+    return Results.Ok(new ApiResponseWithContent { Success = 1, Content = workSetting });
 });
 
 app.MapPost("/People/DownloadPeopleList", DownloadPeopleList);
@@ -220,6 +230,12 @@ app.MapPost("/Record/UploadIdentifyRecord", async (HttpRequest request, StateSto
 
 app.MapGet("/admin/people", (StateStore store) => Results.Ok(store.GetPeople()));
 
+app.MapGet("/admin/people/device-assignments", (StateStore store) =>
+{
+    var assignments = store.GetDeviceAssignments();
+    return Results.Ok(assignments);
+});
+
 app.MapPost("/admin/people", (PersonInfo person, StateStore store) =>
 {
     var normalized = NormalizePerson(person);
@@ -259,7 +275,15 @@ app.MapGet("/admin/devices/{sn}", (string sn, StateStore store) =>
 app.MapPost("/admin/devices/{sn}/request-add-people", (string sn, StateStore store) =>
 {
     var count = store.MarkAddPeopleRequested(sn);
+    LogHub.Instance.Info($"[클라이언트 요청] 단말기 {sn}에 사용자 전송 요청 -> 대기 중인 사용자: {count}명");
     return Results.Ok(ApiResponse.Ok($"AddPeople={count} will be returned on the next keepalive for {sn}."));
+});
+
+app.MapPost("/admin/people/fix-timegroup", (StateStore store) =>
+{
+    var count = store.FixTimegroupForAllPeople();
+    LogHub.Instance.Info($"[관리자] {count}명의 사용자 Timegroup을 1로 수정 완료");
+    return Results.Ok(ApiResponse.Ok($"Fixed Timegroup for {count} people."));
 });
 
 app.MapPost("/admin/devices/{sn}/request-delete-people", (string sn, StateStore store) =>
@@ -275,6 +299,17 @@ app.MapPost("/admin/devices/{sn}/request-sync", (string sn, StateStore store) =>
 {
     store.MarkSyncRequested(sn);
     return Results.Ok(ApiResponse.Ok($"SyncParameter will be returned on the next keepalive for {sn}."));
+});
+
+app.MapPost("/admin/devices/{sn}/reset-pending", (string sn, StateStore store) =>
+{
+    var device = store.GetDevice(sn);
+    if (device == null)
+        return Results.NotFound(new ApiResponse(404, "Device not found"));
+
+    store.ResetPendingState(sn);
+    LogHub.Instance.Info($"[관리자] 단말기 {sn}의 pending 상태 초기화 완료");
+    return Results.Ok(ApiResponse.Ok($"Reset pending state for device {sn}."));
 });
 
 app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, StateStore store) =>
@@ -439,7 +474,30 @@ app.MapPost("/Device/RemoteCommand", (RemoteCommandRequest request, StateStore s
 app.MapPost("/People/DownloadPeopleListResult", (DownloadPeopleListResultRequest request, StateStore store) =>
 {
     if (string.IsNullOrWhiteSpace(request.SN))
+    {
         return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    }
+
+    if (request.FailCount > 0)
+    {
+        LogHub.Instance.Warn($"[결과] 다운로드 실패: 단말기 {request.SN} - 성공 {request.SuccessCount}명, 실패 {request.FailCount}명");
+
+        if (request.FailList != null && request.FailList.Count > 0)
+        {
+            foreach (var fail in request.FailList.Take(3))
+            {
+                LogHub.Instance.Warn($"  실패: UserID={fail.UserID}, 에러={fail.ErrMsg}");
+            }
+        }
+    }
+    else if (request.SuccessCount > 0)
+    {
+        LogHub.Instance.Info($"[결과] 다운로드 성공: 단말기 {request.SN}에 {request.SuccessCount}명 정상 저장 완료!");
+    }
+
+    // Clear pending count only after device confirms successful save
+    store.ConfirmPeopleDownloaded(request.SN, request.SuccessCount);
+
     return Results.Ok(ApiResponse.Ok());
 });
 
@@ -451,7 +509,16 @@ app.MapPost("/People/DeletePeopleList", (DeletePeopleListRequest request, StateS
 
     var effectiveLimit = request.Limit <= 0 ? 50 : Math.Min(request.Limit, 1000);
     var list = store.GetDeletePeople(request.SN).Take(effectiveLimit).ToList();
-    return Results.Ok(new DeletePeopleListResponse { DeleteList = list });
+
+    // Protocol: Stop cycle when Success=0 OR (Success=1 AND DeleteList is empty)
+    // Use Success=0 when list is empty to ensure device stops polling
+    var response = new DeletePeopleListResponse 
+    { 
+        Success = list.Count > 0 ? 1 : 0,  // Stop cycle with Success=0 when empty
+        DeleteList = list 
+    };
+
+    return Results.Ok(response);
 });
 
 // ── /People/DeletePeopleListResult ───────────────────────────────────────────
@@ -467,28 +534,84 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
 {
     List<PersonInfo>? people = null;
     string? sn = null;
+    int pushType = 0;
 
     if (httpRequest.HasFormContentType)
     {
         var form = await httpRequest.ReadFormAsync();
         sn = FirstNonEmpty(form["SN"].ToString(), form["DeviceSN"].ToString());
-        var json = form["PeopleJson"].ToString();
-        if (!string.IsNullOrWhiteSpace(json))
-            people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(json);
+
+        // Try to get PushType
+        if (int.TryParse(form["PushType"].ToString(), out var pt))
+            pushType = pt;
+
+        // The protocol specifies "Detail" field contains the PersonInfo JSON
+        var detailJson = await ReadMultipartValueAsync(form, "Detail");
+        if (string.IsNullOrWhiteSpace(detailJson))
+            detailJson = form["Detail"].ToString();
+
+        // Also try legacy field names
+        if (string.IsNullOrWhiteSpace(detailJson))
+            detailJson = form["PeopleJson"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(detailJson))
+        {
+            // Log the raw Detail JSON to see what the device sends
+            LogHub.Instance.Info($"[PushPeople] Detail JSON 받음: {detailJson}");
+
+            try
+            {
+                // Try to parse as single PersonInfo
+                var person = System.Text.Json.JsonSerializer.Deserialize<PersonInfo>(detailJson);
+                if (person != null)
+                    people = new List<PersonInfo> { person };
+            }
+            catch
+            {
+                // Try to parse as array
+                people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(detailJson);
+            }
+        }
     }
     else
     {
         var payload = await JsonNode.ParseAsync(httpRequest.Body);
         sn = payload?["SN"]?.GetValue<string>();
+        pushType = payload?["PushType"]?.GetValue<int>() ?? 0;
         var listNode = payload?["PeopleList"];
         if (listNode is not null)
             people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(listNode.ToJsonString());
     }
 
     if (string.IsNullOrWhiteSpace(sn))
+    {
         return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    }
 
-    var (success, fail) = store.SavePushedPeople(people ?? new());
+    // Only log if device is pushing non-zero people (suppress routine empty keepalive-driven pushes)
+    if (people != null && people.Count > 0)
+    {
+        LogHub.Instance.Info($"[PushPeople] 단말기 {sn}에서 {people.Count}명 업로드 (PushType={pushType})");
+        foreach (var person in people.Take(3))
+        {
+            LogHub.Instance.Info($"  - UserID={person.UserID}, Name={person.Name}, AccessType={person.AccessType}");
+
+            // Log detailed field analysis to compare with download format
+            LogHub.Instance.Info($"  [비교용] Password={person.Password ?? "null"}, " +
+                $"CardNum={person.CardNum ?? "null"}, QRCode={person.QRCode ?? "null"}, " +
+                $"OpenTimes={person.OpenTimes}, Timegroup={person.Timegroup}, " +
+                $"ExpirationDate={person.ExpirationDate}, PhotoLen={person.PhotoLen}");
+        }
+    }
+
+    var (success, fail) = store.SavePushedPeople(sn, people ?? new());
+
+    // Notify UI to refresh the personnel list
+    if (success > 0)
+    {
+        LogHub.Instance.NotifyPeopleListChanged();
+    }
+
     return Results.Ok(ApiResponse.Ok($"Received {success} people, {fail} failed."));
 });
 
@@ -1327,11 +1450,57 @@ static IResult DownloadPeopleList(DownloadPeopleListRequest request, StateStore 
     }
 
     var people = store.GetPeopleForDownload(request.SN, request.Limit).ToList();
-    return Results.Ok(new DownloadPeopleListResponse
+
+    LogHub.Instance.Info($"[다운로드] 요청: 단말기 {request.SN}가 사용자 목록 요청");
+    LogHub.Instance.Info($"[다운로드] 응답: 단말기 {request.SN}에 {people.Count}명의 사용자 정보 전송");
+
+    if (people.Count > 0)
     {
+        var firstPerson = people.First();
+        var hasPhoto = !string.IsNullOrEmpty(firstPerson.Photo);
+        var photoSize = hasPhoto ? firstPerson.PhotoLen : 0;
+        LogHub.Instance.Info($"  샘플: UserID={firstPerson.UserID}, 이름={firstPerson.Name}, 사진={(hasPhoto ? $"{photoSize}bytes" : "없음")}");
+
+        // Log all fields of first person for debugging
+        LogHub.Instance.Info($"  상세: Password={firstPerson.Password ?? "(null)"}, CardNum={firstPerson.CardNum ?? "(null)"}, " +
+            $"AccessType={firstPerson.AccessType}, OpenTimes={firstPerson.OpenTimes}, " +
+            $"Timegroup={firstPerson.Timegroup}, ExpirationDate={firstPerson.ExpirationDate}");
+
+        // Log statistics
+        var withPhoto = people.Count(p => !string.IsNullOrEmpty(p.Photo));
+        var totalPhotoSize = people.Where(p => !string.IsNullOrEmpty(p.Photo)).Sum(p => p.PhotoLen);
+        LogHub.Instance.Info($"  통계: 사진 있음={withPhoto}명, 총 사진 크기={totalPhotoSize}bytes ({totalPhotoSize/1024}KB)");
+    }
+
+    var response = new DownloadPeopleListResponse
+    {
+        Success = people.Count > 0 ? 1 : 0,  // Stop cycle with Success=0 when empty
         PeopleCount = people.Count,
         PeopleList = people
-    });
+    };
+
+    // Log actual JSON being sent to device for debugging
+    try
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(response);
+
+        // Save full JSON to file for debugging
+        if (people.Count > 0)
+        {
+            var debugPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "last_download_payload.json");
+            File.WriteAllText(debugPath, json);
+            LogHub.Instance.Info($"[디버그] 전체 JSON을 파일로 저장: {debugPath}");
+        }
+
+        var preview = json.Length > 800 ? json.Substring(0, 800) + "..." : json;
+        LogHub.Instance.Info($"[응답] JSON (처음 800자): {preview}");
+    }
+    catch (Exception ex)
+    {
+        LogHub.Instance.Error($"JSON 직렬화 실패: {ex.Message}");
+    }
+
+    return Results.Ok(response);
 }
 
 static IResult SelectDeleteInfo(SelectDeleteInfoRequest request, StateStore store)
@@ -1341,9 +1510,11 @@ static IResult SelectDeleteInfo(SelectDeleteInfoRequest request, StateStore stor
         return Results.BadRequest(new ApiResponse(400, "SN is required."));
     }
 
+    var deleteList = store.GetDeletePeople(request.SN).ToList();
     return Results.Ok(new SelectDeleteInfoResponse
     {
-        DeleteList = store.GetDeletePeople(request.SN).ToList()
+        Success = deleteList.Count > 0 ? 1 : 0,  // Stop cycle with Success=0 when empty
+        DeleteList = deleteList
     });
 }
 
@@ -1352,6 +1523,9 @@ static PersonInfo NormalizePerson(PersonInfo person)
     var normalized = new PersonInfo
     {
         UserID = person.UserID?.Trim() ?? string.Empty,
+        Code = string.IsNullOrWhiteSpace(person.Code?.Trim()) 
+            ? (person.UserID?.Trim() ?? string.Empty)  // Default Code to UserID
+            : person.Code.Trim(),
         Name = person.Name?.Trim() ?? string.Empty,
         Job = person.Job?.Trim() ?? string.Empty,
         Department = person.Department?.Trim() ?? string.Empty,
@@ -1360,14 +1534,14 @@ static PersonInfo NormalizePerson(PersonInfo person)
         Photo = person.Photo?.Trim() ?? string.Empty,
         PhotoMD5 = person.PhotoMD5?.Trim() ?? string.Empty,
         PhotoLen = person.PhotoLen,
-        Password = person.Password?.Trim() ?? string.Empty,
-        CardNum = person.CardNum?.Trim() ?? string.Empty,
+        Password = string.IsNullOrWhiteSpace(person.Password?.Trim()) ? "0000" : person.Password.Trim(),
+        CardNum = string.IsNullOrWhiteSpace(person.CardNum?.Trim()) ? "0" : person.CardNum.Trim(),
         QRCode = person.QRCode?.Trim() ?? string.Empty,
         AccessType = Math.Clamp(person.AccessType, 0, 2),
         ExpirationDate = person.ExpirationDate,
         OpenTimes = person.OpenTimes <= 0 ? 65535 : person.OpenTimes,
         KeepOpen = person.KeepOpen,
-        Timegroup = person.Timegroup,
+        Timegroup = person.Timegroup <= 0 ? 1 : person.Timegroup,  // Default to 1 if 0 or negative
         Holidays = person.Holidays?.Trim() ?? string.Empty,
         Elevators = person.Elevators?.Trim() ?? string.Empty,
         FaceFeature = person.FaceFeature?.Trim() ?? string.Empty,

@@ -58,6 +58,7 @@ namespace FaceDeviceDesktopClient
             this.btnAddPerson = new System.Windows.Forms.Button();
             this.btnEditPerson = new System.Windows.Forms.Button();
             this.btnDeletePerson = new System.Windows.Forms.Button();
+            this.btnRefreshPersonnel = new System.Windows.Forms.Button();
             this.dgvPersonnel = new System.Windows.Forms.DataGridView();
             this.cmbDepartment = new System.Windows.Forms.ComboBox();
 
@@ -362,6 +363,7 @@ namespace FaceDeviceDesktopClient
             this.tabPersonnel.Controls.Add(this.btnAddPerson);
             this.tabPersonnel.Controls.Add(this.btnEditPerson);
             this.tabPersonnel.Controls.Add(this.btnDeletePerson);
+            this.tabPersonnel.Controls.Add(this.btnRefreshPersonnel);
             this.tabPersonnel.Controls.Add(this.dgvPersonnel);
             this.tabPersonnel.Location = new System.Drawing.Point(4, 24);
             this.tabPersonnel.Name = "tabPersonnel";
@@ -395,6 +397,14 @@ namespace FaceDeviceDesktopClient
             this.btnDeletePerson.ForeColor = System.Drawing.Color.DarkRed;
             this.btnDeletePerson.UseVisualStyleBackColor = true;
             this.btnDeletePerson.Click += new System.EventHandler(this.btnDeletePerson_Click);
+
+            this.btnRefreshPersonnel.Location = new System.Drawing.Point(340, 10);
+            this.btnRefreshPersonnel.Name = "btnRefreshPersonnel";
+            this.btnRefreshPersonnel.Size = new System.Drawing.Size(100, 30);
+            this.btnRefreshPersonnel.TabIndex = 3;
+            this.btnRefreshPersonnel.Text = "새로고침";
+            this.btnRefreshPersonnel.UseVisualStyleBackColor = true;
+            this.btnRefreshPersonnel.Click += new System.EventHandler(this.btnRefreshPersonnel_Click);
 
             this.dgvPersonnel.AllowUserToAddRows = false;
             this.dgvPersonnel.AllowUserToDeleteRows = false;
@@ -621,6 +631,7 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.Button btnAddPerson;
         private System.Windows.Forms.Button btnEditPerson;
         private System.Windows.Forms.Button btnDeletePerson;
+        private System.Windows.Forms.Button btnRefreshPersonnel;
         private System.Windows.Forms.DataGridView dgvPersonnel;
         private System.Windows.Forms.ComboBox cmbDepartment;
         private System.Windows.Forms.GroupBox grpAttendanceSearch;

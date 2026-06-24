@@ -12,7 +12,17 @@ public sealed class LogHub
     /// <summary>새 로그 줄이 생성될 때 발생합니다. UI 스레드에서 구독하세요.</summary>
     public event Action<LogEntry>? EntryAdded;
 
+    /// <summary>디버그 로그 창으로 메시지를 전송합니다.</summary>
+    public event Action<string>? DebugMessage;
+
+    /// <summary>사용자 목록이 변경되었을 때 발생합니다. (단말기 PushPeople 또는 새 사용자 추가)</summary>
+    public event Action? PeopleListChanged;
+
     public void Post(LogEntry entry) => EntryAdded?.Invoke(entry);
+
+    public void Debug(string message) => DebugMessage?.Invoke(message);
+
+    public void NotifyPeopleListChanged() => PeopleListChanged?.Invoke();
 
     public void Info(string message, string? detail = null) =>
         Post(new LogEntry(LogLevel.Info, message, detail));

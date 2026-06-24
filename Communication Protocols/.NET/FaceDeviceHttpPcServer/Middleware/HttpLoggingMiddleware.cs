@@ -62,10 +62,20 @@ public sealed class HttpLoggingMiddleware(RequestDelegate next)
             var path    = context.Request.Path + context.Request.QueryString;
             var status  = context.Response.StatusCode;
 
-            // 요청 상세 (본문 or form 필드 요약)
-            var detail = BuildDetail(context, requestBody, responseBody);
+            // [TEMP] Suppress unrelated logs during save-and-push debug
+            var pathStr = context.Request.Path.Value ?? "";
+            var suppressLog = !pathStr.Contains("/api/People/") && 
+                              !pathStr.Contains("/admin/devices/") &&
+                              !pathStr.Contains("/Device/") &&
+                              !pathStr.Contains("/People/") &&
+                              !pathStr.Contains("/DevicePass/");
 
-            LogHub.Instance.Request(method, path, status, detail);
+            if (!suppressLog)
+            {
+                // 요청 상세 (본문 or form 필드 요약)
+                var detail = BuildDetail(context, requestBody, responseBody);
+                LogHub.Instance.Request(method, path, status, detail);
+            }
         }
     }
 

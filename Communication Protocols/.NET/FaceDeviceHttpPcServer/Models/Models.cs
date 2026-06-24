@@ -4,10 +4,10 @@ namespace FaceDeviceHttpPcServer.Models;
 
 // 式式式 Common response formats 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 
-/// <summary>HTTP-Docking protocol response (Success 0 = OK)</summary>
+/// <summary>HTTP-Docking protocol response (Success 1 = OK, others = error code)</summary>
 public record ApiResponse(int Success, string? Message = null)
 {
-    public static ApiResponse Ok(string? message = null) => new(0, message);
+    public static ApiResponse Ok(string? message = null) => new(1, message);
 }
 
 /// <summary>HTTP-Docking protocol response with Content field</summary>
@@ -17,7 +17,7 @@ public sealed class ApiResponseWithContent
     public object? Content { get; set; }
 
     public static ApiResponseWithContent Ok(object? content = null) => 
-        new() { Success = 0, Content = content };
+        new() { Success = 1, Content = content };
 
     public static ApiResponseWithContent Error(int code, string? message = null) => 
         new() { Success = code, Content = message };
@@ -137,13 +137,11 @@ public sealed class KeepaliveRequest
     public string AlarmStatus { get; set; } = string.Empty;
 }
 
-public sealed record KeepaliveResponse : ApiResponse
+public sealed class KeepaliveResponse
 {
-    // HTTPv2 protocol requires Success: 1 for keepalive responses (different from other APIs)
-    public KeepaliveResponse() : base(1)
-    {
-    }
-
+    // Protocol: Success = 1 indicates success, other values are error codes
+    public int Success { get; set; } = 1;
+    public string? Message { get; set; }
     public int? AddPeople { get; set; }
     public int? DeletePeople { get; set; }
     public int? SyncParameter { get; set; }
@@ -154,6 +152,7 @@ public sealed record KeepaliveResponse : ApiResponse
 public sealed class PersonInfo
 {
     public string UserID { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;  // Device requires this field (usually same as UserID)
     public string Name { get; set; } = string.Empty;
     public string Job { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
@@ -163,13 +162,13 @@ public sealed class PersonInfo
     public string PhotoMD5 { get; set; } = string.Empty;
     public int PhotoLen { get; set; }
     public string Password { get; set; } = string.Empty;
-    public string CardNum { get; set; } = string.Empty;
+    public string CardNum { get; set; } = "0";  // Default "0" for no card, not empty string
     public string QRCode { get; set; } = string.Empty;
     public int AccessType { get; set; }
     public uint ExpirationDate { get; set; }
     public int OpenTimes { get; set; } = 65535;
     public int KeepOpen { get; set; }
-    public int Timegroup { get; set; }
+    public int Timegroup { get; set; } = 1;  // Default to time zone 1 (0 means no access)
     public string Holidays { get; set; } = string.Empty;
     public string Elevators { get; set; } = string.Empty;
     public string FaceFeature { get; set; } = string.Empty;
@@ -198,12 +197,11 @@ public sealed class DownloadPeopleListRequest
     public int Limit { get; set; }
 }
 
-public sealed record DownloadPeopleListResponse : ApiResponse
+public sealed class DownloadPeopleListResponse
 {
-    public DownloadPeopleListResponse() : base(0)
-    {
-    }
-
+    // Device expects Success=1 for successful response
+    public int Success { get; set; } = 1;
+    public string? Message { get; set; }
     public int PeopleCount { get; set; }
     public List<PersonInfo> PeopleList { get; set; } = new();
 }
@@ -213,12 +211,11 @@ public sealed class SelectDeleteInfoRequest
     public string SN { get; set; } = string.Empty;
 }
 
-public sealed record SelectDeleteInfoResponse : ApiResponse
+public sealed class SelectDeleteInfoResponse
 {
-    public SelectDeleteInfoResponse() : base(0)
-    {
-    }
-
+    // Device expects Success=1 for successful response
+    public int Success { get; set; } = 1;
+    public string? Message { get; set; }
     public List<string> DeleteList { get; set; } = new();
 }
 
@@ -242,6 +239,7 @@ public sealed class DeviceSnapshot
     public bool PendingUploadWorkParameter { get; set; }
     public int PendingAddPeopleCount { get; set; }
     public List<string> PendingDeleteUserIds { get; set; } = new();
+    public List<string> DownloadedUserIds { get; set; } = new(); // Track users already sent to device in current batch
     public List<RecordSnapshot> Records { get; set; } = new();
     public PendingRemoteCommand? PendingRemote { get; set; }
 }
@@ -290,9 +288,11 @@ public sealed class RemoteCommandRequest
     public string SN { get; set; } = string.Empty;
 }
 
-public sealed record RemoteCommandResponse : ApiResponse
+public sealed class RemoteCommandResponse
 {
-    public RemoteCommandResponse() : base(0) { }
+    // Device expects Success=1 for successful response
+    public int Success { get; set; } = 1;
+    public string? Message { get; set; }
     public int? Restart { get; set; }
     public int? Recover { get; set; }
     public int? Opendoor { get; set; }
@@ -337,9 +337,11 @@ public sealed class DeletePeopleListRequest
     public int Limit { get; set; }
 }
 
-public sealed record DeletePeopleListResponse : ApiResponse
+public sealed class DeletePeopleListResponse
 {
-    public DeletePeopleListResponse() : base(0) { }
+    // Device expects Success=1 for successful response
+    public int Success { get; set; } = 1;
+    public string? Message { get; set; }
     public List<string> DeleteList { get; set; } = new();
 }
 

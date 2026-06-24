@@ -142,7 +142,8 @@ public partial class MainForm : Form
             Name = "사용자번호",
             HeaderText = "사용자번호",
             DataPropertyName = "UserID",
-            Width = 120
+            Width = 120,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         });
 
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
@@ -150,15 +151,17 @@ public partial class MainForm : Form
             Name = "사용자명",
             HeaderText = "사용자명",
             DataPropertyName = "Name",
-            Width = 150
+            Width = 150,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         });
 
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "사진등록",
             HeaderText = "사진등록",
-            DataPropertyName = "PhotoUrl",
-            Width = 100
+            DataPropertyName = "Photo",
+            Width = 100,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         });
 
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
@@ -166,7 +169,8 @@ public partial class MainForm : Form
             Name = "패스워드",
             HeaderText = "패스워드",
             DataPropertyName = "Password",
-            Width = 100
+            Width = 100,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         });
 
         // Add a calculated column for "할당된 단말기수"
@@ -174,7 +178,8 @@ public partial class MainForm : Form
         {
             Name = "할당된단말기수",
             HeaderText = "할당된 단말기수",
-            Width = 120
+            Width = 120,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         });
 
         // Add cell formatting for photo and password columns
@@ -183,14 +188,15 @@ public partial class MainForm : Form
             if (e.ColumnIndex == dgvPersonnel.Columns["사진등록"].Index && e.Value != null)
             {
                 var photoValue = e.Value.ToString();
-                if (!string.IsNullOrWhiteSpace(photoValue) && photoValue.Length > 50)
+                if (!string.IsNullOrWhiteSpace(photoValue))
                 {
-                    e.Value = "사진 있음";
+                    // Show 'O' for any non-empty photo value (Base64 or device path)
+                    e.Value = "O";
                     e.FormattingApplied = true;
                 }
-                else if (string.IsNullOrWhiteSpace(photoValue))
+                else
                 {
-                    e.Value = "사진 없음";
+                    e.Value = "X";
                     e.FormattingApplied = true;
                 }
             }
@@ -555,13 +561,36 @@ public partial class MainForm : Form
             dgvPersonnel.DataSource = null;
             dgvPersonnel.DataSource = personnel;
 
-            // Update "할당된 단말기수" column for each row (placeholder - would need API support)
-            foreach (DataGridViewRow row in dgvPersonnel.Rows)
+            // Get device assignments for each user
+            try
             {
-                row.Cells["할당된단말기수"].Value = "0"; // Placeholder
+                var assignments = await _httpClient.GetFromJsonAsync<Dictionary<string, int>>("/admin/people/device-assignments");
+                if (assignments != null)
+                {
+                    foreach (DataGridViewRow row in dgvPersonnel.Rows)
+                    {
+                        var person = row.DataBoundItem as PersonInfo;
+                        if (person != null && assignments.TryGetValue(person.UserID, out var count))
+                        {
+                            row.Cells["할당된단말기수"].Value = count.ToString();
+                        }
+                        else
+                        {
+                            row.Cells["할당된단말기수"].Value = "0";
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If assignment API fails, just show 0
+                foreach (DataGridViewRow row in dgvPersonnel.Rows)
+                {
+                    row.Cells["할당된단말기수"].Value = "0";
+                }
             }
 
-            dgvPersonnel.AutoResizeColumns();
+            // Do NOT call AutoResizeColumns() to preserve initial column widths
         }
         catch (Exception ex)
         {
@@ -1224,38 +1253,48 @@ public partial class MainForm : Form
         using var form = new PersonForm(_httpClient);
         if (form.ShowDialog() == DialogResult.OK)
         {
-            try
+            if (form.AlreadySaved)
             {
-                // Prepare PersonInfo with Base64 photo
-                var person = form.Person;
-
-                // Convert PhotoData to Base64 and store in Photo field for JSON transmission
-                if (person.PhotoData != null && person.PhotoData.Length > 0)
-                {
-                    person.Photo = Convert.ToBase64String(person.PhotoData);
-                }
-                else
-                {
-                    person.Photo = null; // Clear Photo if no photo
-                }
-
-                var response = await _httpClient.PostAsJsonAsync("/api/People/New", person);
-                var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
-
-                if (result?.Code == 0)
-                {
-                    lblStatus.Text = "Personnel added successfully";
-                    await RefreshPersonnel();
-                    await RefreshSystemInfo();
-                }
-                else
-                {
-                    ShowError($"Failed to add personnel: {result?.Msg}");
-                }
+                // Person was already saved via "저장 및 선택한 단말기로 전송"
+                lblStatus.Text = "Personnel added and device transfer requested";
+                // Refresh to update UI - assignment counts will update after device keepalive
+                await RefreshPersonnel();
+                await RefreshSystemInfo();
             }
-            catch (Exception ex)
+            else
             {
-                ShowError($"Failed to add personnel: {ex.Message}");
+                // User clicked "저장" button - need to save now
+                try
+                {
+                    var person = form.Person;
+
+                    if (person.PhotoData != null && person.PhotoData.Length > 0)
+                    {
+                        person.Photo = Convert.ToBase64String(person.PhotoData);
+                    }
+                    else
+                    {
+                        person.Photo = null;
+                    }
+
+                    var response = await _httpClient.PostAsJsonAsync("/api/People/New", person);
+                    var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+
+                    if (result?.Code == 0)
+                    {
+                        lblStatus.Text = "Personnel added successfully";
+                        await RefreshPersonnel();
+                        await RefreshSystemInfo();
+                    }
+                    else
+                    {
+                        ShowError($"Failed to add personnel: {result?.Msg}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ShowError($"Failed to add personnel: {ex.Message}");
+                }
             }
         }
     }
@@ -1297,40 +1336,46 @@ public partial class MainForm : Form
 
             if (form.ShowDialog() == DialogResult.OK)
             {
-                try
+                if (form.AlreadySaved)
                 {
-                    // Convert PhotoData to Base64 for transmission
-                    if (form.Person.PhotoData != null && form.Person.PhotoData.Length > 0)
+                    // Person was already saved via "저장 및 선택한 단말기로 전송"
+                    lblStatus.Text = "Personnel updated and device transfer requested";
+                    // Refresh to update UI - assignment counts will update after device keepalive
+                    await RefreshPersonnel();
+                    await RefreshSystemInfo();
+                }
+                else
+                {
+                    // User clicked "저장" button - need to save now
+                    try
                     {
-                        form.Person.Photo = Convert.ToBase64String(form.Person.PhotoData);
-                    }
-                    else
-                    {
-                        // Keep existing photo if not changed, or set to null if explicitly removed
-                        if (string.IsNullOrWhiteSpace(form.Person.Photo))
+                        if (form.Person.PhotoData != null && form.Person.PhotoData.Length > 0)
+                        {
+                            form.Person.Photo = Convert.ToBase64String(form.Person.PhotoData);
+                        }
+                        else if (string.IsNullOrWhiteSpace(form.Person.Photo))
                         {
                             form.Person.Photo = null;
                         }
-                    }
 
-                    // 서버에 수정된 정보 저장
-                    var response = await _httpClient.PostAsJsonAsync("/api/People/Update", form.Person);
-                    var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+                        var response = await _httpClient.PostAsJsonAsync("/api/People/Update", form.Person);
+                        var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
 
-                    if (result?.Code == 0)
-                    {
-                        lblStatus.Text = "사용자 정보가 수정되었습니다";
-                        await RefreshPersonnel();
-                        await RefreshSystemInfo();
+                        if (result?.Code == 0)
+                        {
+                            lblStatus.Text = "사용자 정보가 수정되었습니다";
+                            await RefreshPersonnel();
+                            await RefreshSystemInfo();
+                        }
+                        else
+                        {
+                            ShowError($"사용자 수정 실패: {result?.Msg}");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        ShowError($"사용자 수정 실패: {result?.Msg}");
+                        ShowError($"사용자 수정 중 오류 발생: {ex.Message}");
                     }
-                }
-                catch (Exception ex)
-                {
-                    ShowError($"사용자 수정 중 오류 발생: {ex.Message}");
                 }
             }
         }
@@ -1651,5 +1696,10 @@ public partial class MainForm : Form
         {
             settingsMenu.Show(btn, new Point(0, btn.Height));
         }
+    }
+
+    private async void btnRefreshPersonnel_Click(object sender, EventArgs e)
+    {
+        await RefreshPersonnel();
     }
 }
