@@ -572,6 +572,14 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
                 people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(detailJson);
             }
         }
+
+        // If Detail is not provided but UserID is (common for Delete operations)
+        if ((people == null || people.Count == 0) && !string.IsNullOrWhiteSpace(form["UserID"].ToString()))
+        {
+            var userId = form["UserID"].ToString();
+            people = new List<PersonInfo> { new PersonInfo { UserID = userId } };
+            LogHub.Instance.Info($"[PushPeople] Detail 없음, UserID 필드 사용: {userId}");
+        }
     }
     else
     {
@@ -581,6 +589,17 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
         var listNode = payload?["PeopleList"];
         if (listNode is not null)
             people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(listNode.ToJsonString());
+
+        // If PeopleList is not provided but UserID is (common for Delete operations)
+        if ((people == null || people.Count == 0) && payload?["UserID"] != null)
+        {
+            var userId = payload["UserID"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                people = new List<PersonInfo> { new PersonInfo { UserID = userId } };
+                LogHub.Instance.Info($"[PushPeople] PeopleList 없음, UserID 필드 사용: {userId}");
+            }
+        }
     }
 
     if (string.IsNullOrWhiteSpace(sn))
@@ -588,10 +607,22 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
         return Results.BadRequest(new ApiResponse(400, "SN is required."));
     }
 
+    // Handle different PushType operations
+    // PushType: 1=Add New, 2=Update, 3=Delete, 4=Query
+    int success = 0, fail = 0;
+    string operation = pushType switch
+    {
+        1 => "Add New",
+        2 => "Update",
+        3 => "Delete",
+        4 => "Query",
+        _ => "Unknown"
+    };
+
     // Only log if device is pushing non-zero people (suppress routine empty keepalive-driven pushes)
     if (people != null && people.Count > 0)
     {
-        LogHub.Instance.Info($"[PushPeople] 단말기 {sn}에서 {people.Count}명 업로드 (PushType={pushType})");
+        LogHub.Instance.Info($"[PushPeople] 단말기 {sn}에서 {people.Count}명 업로드 (PushType={pushType} - {operation})");
         foreach (var person in people.Take(3))
         {
             LogHub.Instance.Info($"  - UserID={person.UserID}, Name={person.Name}, AccessType={person.AccessType}");
@@ -604,15 +635,38 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
         }
     }
 
-    var (success, fail) = store.SavePushedPeople(sn, people ?? new());
+    switch (pushType)
+    {
+        case 1: // Add New
+            (success, fail) = store.SavePushedPeople(sn, people ?? new(), addOnly: true);
+            break;
+
+        case 2: // Update
+            (success, fail) = store.SavePushedPeople(sn, people ?? new(), addOnly: false);
+            break;
+
+        case 3: // Delete
+            (success, fail) = store.DeletePushedPeople(sn, people ?? new());
+            LogHub.Instance.Info($"[PushPeople-Delete] 단말기 {sn}에서 {success}명 삭제 처리 완료");
+            break;
+
+        case 4: // Query - just return success, no state change
+            success = people?.Count ?? 0;
+            LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회");
+            break;
+
+        default: // Unknown or 0 - treat as Update for backward compatibility
+            (success, fail) = store.SavePushedPeople(sn, people ?? new(), addOnly: false);
+            break;
+    }
 
     // Notify UI to refresh the personnel list
-    if (success > 0)
+    if (success > 0 && pushType != 4)
     {
         LogHub.Instance.NotifyPeopleListChanged();
     }
 
-    return Results.Ok(ApiResponse.Ok($"Received {success} people, {fail} failed."));
+    return Results.Ok(ApiResponse.Ok($"PushType={operation}: {success} succeeded, {fail} failed."));
 });
 
 // ── /Record/UploadSystemRecord ────────────────────────────────────────────────

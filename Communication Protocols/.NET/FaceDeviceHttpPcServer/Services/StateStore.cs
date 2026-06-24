@@ -185,13 +185,28 @@ public sealed class StateStore
                 _state.DeletedUserIds.Add(userId);
             }
 
+            // Queue deletion only on devices that have this user assigned
+            int devicesAffected = 0;
             foreach (var device in _state.Devices.Values)
             {
-                if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                // Check if this device has the user in its downloaded list
+                bool hasUser = device.DownloadedUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase);
+
+                if (hasUser)
                 {
-                    device.PendingDeleteUserIds.Add(userId);
+                    // Remove from device's downloaded list
+                    device.DownloadedUserIds.RemoveAll(id => string.Equals(id, userId, StringComparison.OrdinalIgnoreCase));
+
+                    // Add to pending delete queue for this device
+                    if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                    {
+                        device.PendingDeleteUserIds.Add(userId);
+                        devicesAffected++;
+                    }
                 }
             }
+
+            LogHub.Instance.Info($"[DeletePerson] 사용자 {userId} 삭제: {devicesAffected}개 단말기에 삭제 명령 전송 예정");
 
             SaveState();
             return true;
@@ -624,7 +639,7 @@ public sealed class StateStore
 
     // ── People push from device ─────────────────────────────────────────────
 
-    public (int success, int fail) SavePushedPeople(string deviceSn, List<PersonInfo> people)
+    public (int success, int fail) SavePushedPeople(string deviceSn, List<PersonInfo> people, bool addOnly = false)
     {
         lock (_sync)
         {
@@ -634,6 +649,13 @@ public sealed class StateStore
             foreach (var p in people)
             {
                 if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
+
+                // If addOnly=true (PushType=1), only add if not exists
+                if (addOnly && _state.People.ContainsKey(p.UserID))
+                {
+                    fail++;
+                    continue;
+                }
 
                 // If Photo field contains a device file path (e.g., /data/attend_data/photo/frame...),
                 // keep it as-is for now - it indicates the person has a photo on the device
@@ -647,6 +669,61 @@ public sealed class StateStore
                 if (!device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
                 {
                     device.DownloadedUserIds.Add(p.UserID);
+                }
+
+                success++;
+            }
+
+            SaveState();
+            return (success, fail);
+        }
+    }
+
+    public (int success, int fail) DeletePushedPeople(string deviceSn, List<PersonInfo> people)
+    {
+        lock (_sync)
+        {
+            int success = 0, fail = 0;
+            var device = GetOrCreateDevice(deviceSn);
+
+            foreach (var p in people)
+            {
+                if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
+
+                // Remove user from this device's assignment list
+                device.DownloadedUserIds.RemoveAll(id => string.Equals(id, p.UserID, StringComparison.OrdinalIgnoreCase));
+
+                // Count how many devices still have this user assigned
+                int assignedDeviceCount = 0;
+                foreach (var d in _state.Devices.Values)
+                {
+                    if (d.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
+                    {
+                        assignedDeviceCount++;
+                    }
+                }
+
+                // If no devices have this user anymore, delete from server
+                if (assignedDeviceCount == 0)
+                {
+                    if (_state.People.Remove(p.UserID))
+                    {
+                        // Add to deleted list so other devices will also remove it
+                        if (!_state.DeletedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
+                        {
+                            _state.DeletedUserIds.Add(p.UserID);
+                        }
+
+                        // Mark as pending delete for all other devices
+                        foreach (var otherDevice in _state.Devices.Values)
+                        {
+                            if (otherDevice.SN != deviceSn && 
+                                !otherDevice.PendingDeleteUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
+                            {
+                                otherDevice.PendingDeleteUserIds.Add(p.UserID);
+                            }
+                        }
+                    }
                 }
 
                 success++;
