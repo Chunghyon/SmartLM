@@ -64,8 +64,14 @@ namespace FaceDeviceDesktopClient
 
             // Attendance controls
             this.grpAttendanceSearch = new System.Windows.Forms.GroupBox();
-            this.txtAttendanceUserID = new System.Windows.Forms.TextBox();
+            this.txtAttDong    = new System.Windows.Forms.TextBox();
+            this.lblAttHo      = new System.Windows.Forms.Label();
+            this.txtAttHo      = new System.Windows.Forms.TextBox();
+            this.lblAttMember  = new System.Windows.Forms.Label();
+            this.txtAttMember  = new System.Windows.Forms.TextBox();
             this.txtAttendanceUserName = new System.Windows.Forms.TextBox();
+            this.lblAttDevice  = new System.Windows.Forms.Label();
+            this.cmbAttDevice  = new System.Windows.Forms.ComboBox();
             this.dtpAttendanceStart = new System.Windows.Forms.DateTimePicker();
             this.dtpAttendanceEnd = new System.Windows.Forms.DateTimePicker();
             this.btnSearchAttendance = new System.Windows.Forms.Button();
@@ -117,7 +123,7 @@ namespace FaceDeviceDesktopClient
             this.tabDashboard.Padding = new System.Windows.Forms.Padding(10);
             this.tabDashboard.Size = new System.Drawing.Size(1192, 572);
             this.tabDashboard.TabIndex = 0;
-            this.tabDashboard.Text = "환경설정";
+            this.tabDashboard.Text = "시스템요약";
             this.tabDashboard.UseVisualStyleBackColor = true;
 
             // 
@@ -134,14 +140,14 @@ namespace FaceDeviceDesktopClient
             this.grpSystemInfo.Size = new System.Drawing.Size(500, 200);
             this.grpSystemInfo.TabIndex = 0;
             this.grpSystemInfo.TabStop = false;
-            this.grpSystemInfo.Text = "시스템현황";
+            this.grpSystemInfo.Text = "";
 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(20, 40);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(100, 15);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Total Devices:";
+            this.label1.Text = "단말기 수:";
 
             this.lblTotalDevices.AutoSize = true;
             this.lblTotalDevices.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -430,16 +436,22 @@ namespace FaceDeviceDesktopClient
             this.tabAttendance.Padding = new System.Windows.Forms.Padding(10);
             this.tabAttendance.Size = new System.Drawing.Size(1192, 572);
             this.tabAttendance.TabIndex = 4;
-            this.tabAttendance.Text = "출입조회";
+            this.tabAttendance.Text = "이벤트조회";
             this.tabAttendance.UseVisualStyleBackColor = true;
 
             // 
             // grpAttendanceSearch
             // 
             this.grpAttendanceSearch.Controls.Add(this.label5);
-            this.grpAttendanceSearch.Controls.Add(this.txtAttendanceUserID);
+            this.grpAttendanceSearch.Controls.Add(this.txtAttDong);
+            this.grpAttendanceSearch.Controls.Add(this.lblAttHo);
+            this.grpAttendanceSearch.Controls.Add(this.txtAttHo);
+            this.grpAttendanceSearch.Controls.Add(this.lblAttMember);
+            this.grpAttendanceSearch.Controls.Add(this.txtAttMember);
             this.grpAttendanceSearch.Controls.Add(this.label6);
             this.grpAttendanceSearch.Controls.Add(this.txtAttendanceUserName);
+            this.grpAttendanceSearch.Controls.Add(this.lblAttDevice);
+            this.grpAttendanceSearch.Controls.Add(this.cmbAttDevice);
             this.grpAttendanceSearch.Controls.Add(this.label8);
             this.grpAttendanceSearch.Controls.Add(this.dtpAttendanceStart);
             this.grpAttendanceSearch.Controls.Add(this.label9);
@@ -452,31 +464,66 @@ namespace FaceDeviceDesktopClient
             this.grpAttendanceSearch.Size = new System.Drawing.Size(1172, 120);
             this.grpAttendanceSearch.TabIndex = 0;
             this.grpAttendanceSearch.TabStop = false;
-            this.grpAttendanceSearch.Text = "출입조회";
+            this.grpAttendanceSearch.Text = "이벤트조회";
 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(10, 25);
+            this.label5.Location = new System.Drawing.Point(10, 27);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(70, 15);
             this.label5.TabIndex = 0;
-            this.label5.Text = "사용자번호:";
+            this.label5.Text = "동:";
 
-            this.txtAttendanceUserID.Location = new System.Drawing.Point(100, 22);
-            this.txtAttendanceUserID.Name = "txtAttendanceUserID";
-            this.txtAttendanceUserID.Size = new System.Drawing.Size(150, 23);
-            this.txtAttendanceUserID.TabIndex = 1;
+            this.txtAttDong.Location = new System.Drawing.Point(45, 23);
+            this.txtAttDong.Name = "txtAttDong";
+            this.txtAttDong.Size = new System.Drawing.Size(55, 23);
+            this.txtAttDong.TabIndex = 1;
+            this.txtAttDong.TextChanged += new System.EventHandler(this.txtAttDong_TextChanged);
+
+            this.lblAttHo.AutoSize = true;
+            this.lblAttHo.Location = new System.Drawing.Point(108, 27);
+            this.lblAttHo.Name = "lblAttHo";
+            this.lblAttHo.Text = "호:";
+
+            this.txtAttHo.Location = new System.Drawing.Point(133, 23);
+            this.txtAttHo.Name = "txtAttHo";
+            this.txtAttHo.Size = new System.Drawing.Size(55, 23);
+            this.txtAttHo.TabIndex = 2;
+            this.txtAttHo.Enabled = false;
+            this.txtAttHo.TextChanged += new System.EventHandler(this.txtAttHo_TextChanged);
+
+            this.lblAttMember.AutoSize = true;
+            this.lblAttMember.Location = new System.Drawing.Point(196, 27);
+            this.lblAttMember.Name = "lblAttMember";
+            this.lblAttMember.Text = "멤버:";
+
+            this.txtAttMember.Location = new System.Drawing.Point(230, 23);
+            this.txtAttMember.Name = "txtAttMember";
+            this.txtAttMember.Size = new System.Drawing.Size(50, 23);
+            this.txtAttMember.TabIndex = 3;
+            this.txtAttMember.Enabled = false;
 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(270, 25);
+            this.label6.Location = new System.Drawing.Point(295, 27);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(55, 15);
             this.label6.TabIndex = 2;
             this.label6.Text = "사용자명:";
 
-            this.txtAttendanceUserName.Location = new System.Drawing.Point(340, 22);
+            this.txtAttendanceUserName.Location = new System.Drawing.Point(360, 23);
             this.txtAttendanceUserName.Name = "txtAttendanceUserName";
             this.txtAttendanceUserName.Size = new System.Drawing.Size(150, 23);
-            this.txtAttendanceUserName.TabIndex = 3;
+            this.txtAttendanceUserName.TabIndex = 5;
+
+            this.lblAttDevice.AutoSize = true;
+            this.lblAttDevice.Location = new System.Drawing.Point(525, 27);
+            this.lblAttDevice.Name = "lblAttDevice";
+            this.lblAttDevice.TabIndex = 6;
+            this.lblAttDevice.Text = "단말기:";
+
+            this.cmbAttDevice.Location = new System.Drawing.Point(580, 23);
+            this.cmbAttDevice.Name = "cmbAttDevice";
+            this.cmbAttDevice.Size = new System.Drawing.Size(160, 23);
+            this.cmbAttDevice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbAttDevice.TabIndex = 7;
 
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(10, 60);
@@ -487,14 +534,16 @@ namespace FaceDeviceDesktopClient
 
             this.dtpAttendanceStart.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpAttendanceStart.CustomFormat = "yyyy-MM-dd HH:mm";
-            this.dtpAttendanceStart.Location = new System.Drawing.Point(100, 57);
+            this.dtpAttendanceStart.Location = new System.Drawing.Point(72, 57);
             this.dtpAttendanceStart.Name = "dtpAttendanceStart";
             this.dtpAttendanceStart.ShowCheckBox = true;
-            this.dtpAttendanceStart.Size = new System.Drawing.Size(200, 23);
+            this.dtpAttendanceStart.ShowUpDown = true;
+            this.dtpAttendanceStart.Checked = false;
+            this.dtpAttendanceStart.Size = new System.Drawing.Size(185, 23);
             this.dtpAttendanceStart.TabIndex = 7;
 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(320, 60);
+            this.label9.Location = new System.Drawing.Point(270, 60);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(55, 15);
             this.label9.TabIndex = 8;
@@ -502,9 +551,11 @@ namespace FaceDeviceDesktopClient
 
             this.dtpAttendanceEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpAttendanceEnd.CustomFormat = "yyyy-MM-dd HH:mm";
-            this.dtpAttendanceEnd.Location = new System.Drawing.Point(540, 57);
+            this.dtpAttendanceEnd.Location = new System.Drawing.Point(332, 57);
             this.dtpAttendanceEnd.Name = "dtpAttendanceEnd";
             this.dtpAttendanceEnd.ShowCheckBox = true;
+            this.dtpAttendanceEnd.ShowUpDown = true;
+            this.dtpAttendanceEnd.Checked = false;
             this.dtpAttendanceEnd.Size = new System.Drawing.Size(200, 23);
             this.dtpAttendanceEnd.TabIndex = 9;
 
@@ -635,8 +686,14 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.DataGridView dgvPersonnel;
         private System.Windows.Forms.ComboBox cmbDepartment;
         private System.Windows.Forms.GroupBox grpAttendanceSearch;
-        private System.Windows.Forms.TextBox txtAttendanceUserID;
+        private System.Windows.Forms.Label lblAttHo;
+        private System.Windows.Forms.Label lblAttMember;
+        private System.Windows.Forms.Label lblAttDevice;
+        private System.Windows.Forms.TextBox txtAttDong;
+        private System.Windows.Forms.TextBox txtAttHo;
+        private System.Windows.Forms.TextBox txtAttMember;
         private System.Windows.Forms.TextBox txtAttendanceUserName;
+        private System.Windows.Forms.ComboBox cmbAttDevice;
         private System.Windows.Forms.DateTimePicker dtpAttendanceStart;
         private System.Windows.Forms.DateTimePicker dtpAttendanceEnd;
         private System.Windows.Forms.Button btnSearchAttendance;

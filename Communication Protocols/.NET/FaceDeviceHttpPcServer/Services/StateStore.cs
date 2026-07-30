@@ -384,6 +384,34 @@ public sealed class StateStore
                            ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             var uniqueId = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}_{recordId}";
 
+            // Enrich the record with server-side fields missing from device payload
+            if (recordNode is JsonObject obj)
+            {
+                // Inject DeviceSN so search can filter by device
+                if (obj["DeviceSN"] is null)
+                    obj["DeviceSN"] = deviceSn;
+
+                // Convert RecordDate (Unix seconds) to RecordTime (ISO string) if not present
+                if (obj["RecordTime"] is null)
+                {
+                    if (obj["RecordDate"] is JsonNode rdNode &&
+                        long.TryParse(rdNode.ToJsonString().Trim('"'), out long unixSec))
+                    {
+                        obj["RecordTime"] = DateTimeOffset.FromUnixTimeSeconds(unixSec)
+                                                .LocalDateTime
+                                                .ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                    else
+                    {
+                        obj["RecordTime"] = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                }
+
+                // Map Name -> UserName for search compatibility
+                if (obj["UserName"] is null && obj["Name"] is JsonNode nameNode)
+                    obj["UserName"] = nameNode.ToJsonString().Trim('"');
+            }
+
             var recordFile = Path.Combine(_recordsPath, $"{SanitizeForFileName(deviceSn)}_{uniqueId}.json");
             File.WriteAllText(recordFile, recordNode?.ToJsonString(_serializerOptions) ?? "{} ");
 
@@ -857,6 +885,17 @@ public sealed class StateStore
     {
         var json = JsonSerializer.Serialize(value, _serializerOptions);
         return JsonSerializer.Deserialize<T>(json, _serializerOptions)!;
+    }
+
+    public void UpdateDeviceInfo(string deviceSn, string? deviceName, string? tagName)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            if (deviceName is not null) device.DeviceName = deviceName;
+            if (tagName    is not null) device.TagName    = tagName;
+            SaveState();
+        }
     }
 
     public bool RemoveDevice(string deviceSn)

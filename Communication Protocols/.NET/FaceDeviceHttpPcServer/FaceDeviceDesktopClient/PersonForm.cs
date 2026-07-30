@@ -16,7 +16,9 @@ public partial class PersonForm : Form
     // Flag to indicate if person was already saved (via "저장 및 선택한 단말기로 전송")
     public bool AlreadySaved { get; private set; }
 
-    private TextBox txtUserID = null!;
+    private TextBox txtDong = null!;
+    private TextBox txtHo = null!;
+    private TextBox txtMember = null!;
     private TextBox txtName = null!;
     private TextBox txtPhotoUrl = null!;
     private Button btnBrowsePhoto = null!;
@@ -48,9 +50,23 @@ public partial class PersonForm : Form
 
         if (!string.IsNullOrEmpty(userId))
         {
-            txtUserID.Text = userId;
-            txtUserID.ReadOnly = true;
-            txtUserID.BackColor = SystemColors.Control;
+            if (long.TryParse(userId, out long idNum))
+            {
+                txtDong.Text = (idNum / 1_000_000).ToString();
+                txtHo.Text = ((idNum / 100) % 10_000).ToString();
+                txtMember.Text = (idNum % 100).ToString();
+            }
+            else
+            {
+                // 숫자가 아닌 경우 동 필드에 원본값 표시
+                txtDong.Text = userId;
+            }
+            txtDong.ReadOnly = true;
+            txtHo.ReadOnly = true;
+            txtMember.ReadOnly = true;
+            txtDong.BackColor = SystemColors.Control;
+            txtHo.BackColor = SystemColors.Control;
+            txtMember.BackColor = SystemColors.Control;
         }
         if (!string.IsNullOrEmpty(name))
             txtName.Text = name;
@@ -123,20 +139,48 @@ public partial class PersonForm : Form
         mainPanel.Controls.Add(txtName);
         y += 40;
 
-        // 2. 사용자번호 (Worker No.)
+        // 2. 동 / 호 / 멤버
         mainPanel.Controls.Add(new Label
         {
-            Text = "사용자번호:",
+            Text = "동:",
             Location = new Point(10, y),
-            Width = labelWidth
+            Width = 40
         });
-        txtUserID = new TextBox
+        txtDong = new TextBox
         {
-            Location = new Point(140, y - 3),
-            Width = controlWidth,
-            MaxLength = 32
+            Location = new Point(55, y - 3),
+            Width = 80,
+            MaxLength = 10
         };
-        mainPanel.Controls.Add(txtUserID);
+        mainPanel.Controls.Add(txtDong);
+
+        mainPanel.Controls.Add(new Label
+        {
+            Text = "호:",
+            Location = new Point(145, y),
+            Width = 30
+        });
+        txtHo = new TextBox
+        {
+            Location = new Point(180, y - 3),
+            Width = 80,
+            MaxLength = 10
+        };
+        mainPanel.Controls.Add(txtHo);
+
+        mainPanel.Controls.Add(new Label
+        {
+            Text = "멤버:",
+            Location = new Point(270, y),
+            Width = 45
+        });
+        txtMember = new TextBox
+        {
+            Location = new Point(320, y - 3),
+            Width = 60,
+            MaxLength = 5
+        };
+        mainPanel.Controls.Add(txtMember);
         y += 40;
 
         // 3. 사진등록 (경로 표시)
@@ -330,9 +374,15 @@ public partial class PersonForm : Form
         }
 
         // 사용자 정보 검증
-        if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtUserID.Text))
+        if (string.IsNullOrWhiteSpace(txtName.Text))
         {
             MessageBox.Show("사용자명과 사용자번호를 입력해주세요", "입력 오류",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (!TryBuildUserID(out string builtUserID))
+        {
+            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)", "입력 오류",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
@@ -345,7 +395,7 @@ public partial class PersonForm : Form
             // 1단계: 서버에 사용자 추가 (또는 업데이트)
             var personInfo = new PersonInfo
             {
-                UserID = txtUserID.Text.Trim(),
+                UserID = builtUserID,
                 Name = txtName.Text.Trim(),
                 Password = txtPassword.Text.Trim()
             };
@@ -475,35 +525,38 @@ public partial class PersonForm : Form
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(txtUserID.Text))
+        if (!IsEditMode && !TryBuildUserID(out _))
         {
-            MessageBox.Show("사용자번호를 입력해주세요", "입력 오류",
+            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)", "입력 오류",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            txtUserID.Focus();
+            txtDong.Focus();
             return;
         }
 
-        // Validate user ID only for new users (just check it's not empty)
-        if (!IsEditMode)
-        {
-            if (string.IsNullOrWhiteSpace(txtUserID.Text))
-            {
-                MessageBox.Show("사용자번호를 입력해주세요", "입력 오류",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtUserID.Focus();
-                return;
-            }
-        }
+        TryBuildUserID(out string builtUserID);
 
         // Save data - use original UserID for updates
-        Person.UserID = IsEditMode && !string.IsNullOrEmpty(_originalUserID) 
-            ? _originalUserID 
-            : txtUserID.Text.Trim();
+        Person.UserID = IsEditMode && !string.IsNullOrEmpty(_originalUserID)
+            ? _originalUserID
+            : builtUserID;
         Person.Name = txtName.Text.Trim();
         Person.PhotoUrl = txtPhotoUrl.Text.Trim();
         Person.Password = txtPassword.Text.Trim();
 
         this.DialogResult = DialogResult.OK;
         this.Close();
+    }
+
+    /// <summary>동/호/멤버 입력값을 UserID 문자열로 변환합니다.</summary>
+    private bool TryBuildUserID(out string userID)
+    {
+        userID = string.Empty;
+        if (!long.TryParse(txtDong.Text.Trim(), out long dong) ||
+            !long.TryParse(txtHo.Text.Trim(), out long ho) ||
+            !long.TryParse(txtMember.Text.Trim(), out long member))
+            return false;
+        long id = dong * 1_000_000L + ho * 100L + member;
+        userID = id.ToString();
+        return true;
     }
 }

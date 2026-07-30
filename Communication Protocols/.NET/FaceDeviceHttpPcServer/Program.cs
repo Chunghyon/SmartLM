@@ -369,6 +369,17 @@ app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, St
     }
 });
 
+app.MapPost("/admin/devices/{sn}/update-info", (string sn, JsonNode? body, StateStore store) =>
+{
+    var deviceName = body?["DeviceName"]?.GetValue<string>();
+    var tagName    = body?["TagName"]?.GetValue<string>();
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, $"Device {sn} not found"));
+    store.UpdateDeviceInfo(sn, deviceName, tagName);
+    return Results.Ok(new ApiResponse(200, "OK"));
+});
+
 app.MapDelete("/admin/devices/{sn}", (string sn, StateStore store) =>
 {
     try
@@ -1281,18 +1292,46 @@ app.MapPost("/api/Department/Delete", (JsonNode? body, StateStore store) =>
 // 式式 /api/Attendance/* 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
 app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, StateStore store) =>
 {
+    try
+    {
     var records = store.GetDeviceSummaries()
         .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
         .Where(r => r.RecordDetail?["RecordType"] is not null)
         .AsEnumerable();
 
     if (!string.IsNullOrWhiteSpace(req.UserID))
-        records = records.Where(r => 
-            string.Equals(r.RecordDetail?["UserID"]?.GetValue<string>(), req.UserID, StringComparison.OrdinalIgnoreCase));
+        records = records.Where(r =>
+        {
+            var uid = r.RecordDetail?["UserID"]?.GetValue<string>() ?? "";
+            // Support prefix match: dong-only search (e.g. "101000000" prefix)
+            return uid == req.UserID || uid.StartsWith(req.UserID);
+        });
+
+    // Range-based UserID filter (dong-only or dong+ho partial search)
+    if (req.UserIDMin.HasValue)
+        records = records.Where(r =>
+            long.TryParse(r.RecordDetail?["UserID"]?.GetValue<string>() ?? "", out long v) && v >= req.UserIDMin.Value);
+    if (req.UserIDMax.HasValue)
+        records = records.Where(r =>
+            long.TryParse(r.RecordDetail?["UserID"]?.GetValue<string>() ?? "", out long v) && v < req.UserIDMax.Value);
+
+    if (!string.IsNullOrWhiteSpace(req.DeviceSN))
+        records = records.Where(r =>
+        {
+            var sn = r.RecordDetail?["DeviceSN"]?.GetValue<string>() ?? "";
+            if (string.IsNullOrWhiteSpace(sn) && !string.IsNullOrWhiteSpace(r.RecordJsonPath))
+            {
+                var fn = Path.GetFileNameWithoutExtension(r.RecordJsonPath);
+                var m = System.Text.RegularExpressions.Regex.Match(fn, @"^(.+?)_(\d{17}_)");
+                if (m.Success) sn = m.Groups[1].Value;
+            }
+            return string.Equals(sn, req.DeviceSN, StringComparison.OrdinalIgnoreCase);
+        });
 
     if (!string.IsNullOrWhiteSpace(req.UserName))
         records = records.Where(r => 
-            (r.RecordDetail?["UserName"]?.GetValue<string>() ?? "").Contains(req.UserName, StringComparison.OrdinalIgnoreCase));
+            (r.RecordDetail?["UserName"]?.GetValue<string>() ?? r.RecordDetail?["Name"]?.GetValue<string>() ?? "")
+                .Contains(req.UserName, StringComparison.OrdinalIgnoreCase));
 
     if (!string.IsNullOrWhiteSpace(req.DepartmentID))
         records = records.Where(r => 
@@ -1302,6 +1341,11 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, StateStore s
         records = records.Where(r =>
         {
             var timeStr = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+            if (timeStr is null && r.RecordDetail?["RecordDate"] is JsonNode rdF)
+            {
+                if (long.TryParse(rdF.ToJsonString().Trim('"'), out long us))
+                    return DateTimeOffset.FromUnixTimeSeconds(us).LocalDateTime >= req.StartTime.Value;
+            }
             return DateTime.TryParse(timeStr, out var dt) && dt >= req.StartTime.Value;
         });
 
@@ -1309,20 +1353,66 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, StateStore s
         records = records.Where(r =>
         {
             var timeStr = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+            if (timeStr is null && r.RecordDetail?["RecordDate"] is JsonNode rdF)
+            {
+                if (long.TryParse(rdF.ToJsonString().Trim('"'), out long us))
+                    return DateTimeOffset.FromUnixTimeSeconds(us).LocalDateTime <= req.EndTime.Value;
+            }
             return DateTime.TryParse(timeStr, out var dt) && dt <= req.EndTime.Value;
         });
 
-    var list = records.Select(r => new AttendanceRecord
+    var list = records.Select(r =>
     {
-        UserID = r.RecordDetail?["UserID"]?.GetValue<string>() ?? "",
-        UserName = r.RecordDetail?["UserName"]?.GetValue<string>() ?? "",
-        DepartmentID = r.RecordDetail?["DepartmentID"]?.GetValue<string>() ?? "",
-        DepartmentName = r.RecordDetail?["DepartmentName"]?.GetValue<string>() ?? "",
-        RecordTime = r.RecordDetail?["RecordTime"]?.GetValue<string>() ?? "",
-        DeviceSN = r.RecordDetail?["DeviceSN"]?.GetValue<string>() ?? "",
-        RecordType = r.RecordDetail?["RecordType"]?.GetValue<int>() ?? 0,
-        Temperature = r.RecordDetail?["Temperature"]?.GetValue<string>(),
-        PhotoUrl = r.RecordDetail?["PhotoUrl"]?.GetValue<string>()
+        var devSn = r.RecordDetail?["DeviceSN"]?.GetValue<string>() ?? "";
+        // Fallback: extract deviceSN from record file name if not in payload
+        if (string.IsNullOrWhiteSpace(devSn) && !string.IsNullOrWhiteSpace(r.RecordJsonPath))
+        {
+            var fileName = Path.GetFileNameWithoutExtension(r.RecordJsonPath);
+            // File name format: {deviceSn}_{yyyyMMddHHmmssfff}_{recordId}
+            // The deviceSn portion ends at the first '_' followed by a digit sequence (date)
+            var match = System.Text.RegularExpressions.Regex.Match(fileName, @"^(.+?)_(\d{17}_)");
+            if (match.Success)
+                devSn = match.Groups[1].Value;
+        }
+        var devSnapshot = store.GetDevice(devSn);
+        var devDisplay = devSnapshot?.DeviceName is string dn && !string.IsNullOrWhiteSpace(dn)
+            ? $"{dn} ({devSn})" : devSn;
+
+        // RecordDate -> RecordTime conversion
+        string? recordTime = r.RecordDetail?["RecordTime"]?.GetValue<string>();
+        if (recordTime is null && r.RecordDetail?["RecordDate"] is JsonNode rdNode)
+        {
+            var rdStr = rdNode.ToJsonString().Trim('"');
+            if (long.TryParse(rdStr, out long unixSec))
+                recordTime = DateTimeOffset.FromUnixTimeSeconds(unixSec)
+                                .LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+        recordTime ??= r.ReceivedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+        // Safe BodyTemp read (device sends int 0..99, not double)
+        string? tempStr = r.RecordDetail?["Temperature"]?.GetValue<string>();
+        if (tempStr is null && r.RecordDetail?["BodyTemp"] is JsonNode btNode)
+        {
+            var btStr = btNode.ToJsonString().Trim('"');
+            if (double.TryParse(btStr, out double btVal) && btVal > 0)
+                tempStr = btVal.ToString("F1");
+        }
+
+        return new AttendanceRecord
+        {
+            UserID         = r.RecordDetail?["UserID"]?.GetValue<string>() ?? "",
+            UserName       = r.RecordDetail?["UserName"]?.GetValue<string>()
+                          ?? r.RecordDetail?["Name"]?.GetValue<string>() ?? "",
+            DepartmentID   = r.RecordDetail?["DepartmentID"]?.GetValue<string>()
+                          ?? r.RecordDetail?["Department"]?.GetValue<string>() ?? "",
+            DepartmentName = r.RecordDetail?["DepartmentName"]?.GetValue<string>() ?? "",
+            RecordTime     = recordTime,
+            DeviceSN       = devDisplay,
+            RecordType     = r.RecordDetail?["RecordType"]?.GetValue<int>() ?? 0,
+            Temperature    = tempStr,
+            PhotoUrl       = r.RecordDetail?["PhotoUrl"]?.GetValue<string>()
+                          ?? r.RecordDetail?["Photo"]?.GetValue<string>()
+        };
     }).ToList();
 
     var page = Math.Max(1, req.PageIndex);
@@ -1331,10 +1421,15 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, StateStore s
     return Results.Ok(BrowserApiResponse.Ok(new AttendanceSearchResult
     {
         TotalCount = list.Count,
-        PageIndex = page,
-        PageSize = size,
-        DataList = list.Skip((page - 1) * size).Take(size).ToList()
+        PageIndex  = page,
+        PageSize   = size,
+        DataList   = list.Skip((page - 1) * size).Take(size).ToList()
     }));
+    }
+    catch (Exception ex)
+    {
+        return Results.Ok(BrowserApiResponse.Fail(500, $"Search error: {ex.Message} | {ex.InnerException?.Message}"));
+    }
 });
 
 app.MapPost("/api/Attendance/Statistics", (AttendanceSearchRequest req, StateStore store) =>

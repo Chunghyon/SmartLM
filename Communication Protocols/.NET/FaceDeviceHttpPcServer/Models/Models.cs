@@ -391,8 +391,11 @@ public sealed class AttendanceSearchRequest
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public string? UserID { get; set; }
+    public long? UserIDMin { get; set; }
+    public long? UserIDMax { get; set; }
     public string? UserName { get; set; }
     public string? DepartmentID { get; set; }
+    public string? DeviceSN { get; set; }
 }
 
 public sealed class AttendanceRecord

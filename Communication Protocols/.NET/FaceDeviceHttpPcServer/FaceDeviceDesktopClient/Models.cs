@@ -45,10 +45,9 @@ public class DeviceInfo
     public int RecordCount { get; set; }
 
     // Display properties for DataGridView
-    [System.ComponentModel.Browsable(false)]
     public string Status => LastKeepaliveAtUtc.HasValue 
-        ? (DateTimeOffset.UtcNow - LastKeepaliveAtUtc.Value).TotalMinutes < 5 ? "Online" : "Offline"
-        : "Unknown";
+        ? (DateTimeOffset.UtcNow - LastKeepaliveAtUtc.Value).TotalSeconds <= 45 ? "정상" : "통신불량"
+        : "통신불량";
 }
 
 public class DiscoveredDevice
@@ -109,8 +108,11 @@ public class AttendanceSearchRequest
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public string? UserID { get; set; }
+    public long? UserIDMin { get; set; }
+    public long? UserIDMax { get; set; }
     public string? UserName { get; set; }
     public string? DepartmentID { get; set; }
+    public string? DeviceSN { get; set; }
 }
 
 public class AttendanceRecord

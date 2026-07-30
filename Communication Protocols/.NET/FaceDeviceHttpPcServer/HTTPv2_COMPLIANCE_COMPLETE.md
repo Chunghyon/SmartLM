@@ -56,13 +56,13 @@ case "deleteallpeople":
 - 모든 사용자를 데이터베이스에서 삭제
 - 특정 단말기 또는 모든 단말기에 삭제 플래그 설정
 - HTTPv2 프로토콜에 따라 `PendingDeleteUserIds`에 추가
+    {
+        var allUserIds = _state.People.Keys.ToList();
 
 ```csharp
 public int DeleteAllPeople(string? deviceSn = null)
 {
     lock (_sync)
-    {
-        var allUserIds = _state.People.Keys.ToList();
         var deletedCount = allUserIds.Count;
 
         foreach (var userId in allUserIds)

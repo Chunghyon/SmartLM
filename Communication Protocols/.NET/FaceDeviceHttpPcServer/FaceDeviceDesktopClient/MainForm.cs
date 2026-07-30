@@ -10,6 +10,12 @@ public partial class MainForm : Form
     private readonly HttpClient _httpClient;
     private readonly string _serverUrl = "http://localhost:8100";
 
+    // Personnel grid sorting
+    private List<PersonInfo> _personnelList = new();
+    private List<PersonInfo> _sortedPersonnelList = new();
+    private string _personnelSortColumn = string.Empty;
+    private ListSortDirection _personnelSortDirection = ListSortDirection.Ascending;
+
     public MainForm()
     {
         InitializeComponent();
@@ -59,71 +65,108 @@ public partial class MainForm : Form
 
     private void SetupDeviceGrid()
     {
-        // Ensure AutoGenerateColumns is disabled for custom columns
         dgvDevices.AutoGenerateColumns = false;
         dgvDevices.AllowUserToAddRows = false;
-        dgvDevices.ReadOnly = true;
+        dgvDevices.ReadOnly = false;
         dgvDevices.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
-        // Add ACS-style columns
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
-            Name = "No", 
-            HeaderText = "순번", 
-            DataPropertyName = "", 
+        dgvDevices.Columns.Add(new DataGridViewCheckBoxColumn
+        {
+            Name = "Selected",
+            HeaderText = "선택",
+            Width = 55,
+            ReadOnly = false
+        });
+
+        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "No",
+            HeaderText = "순번",
+            DataPropertyName = "",
             Width = 50,
-            ReadOnly = true 
+            ReadOnly = true
         });
 
-        dgvDevices.Columns.Add(new DataGridViewCheckBoxColumn 
-        { 
-            Name = "Selected", 
-            HeaderText = "선택", 
-            Width = 70,
-            ReadOnly = false 
-        });
-
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
-            Name = "DeviceName", 
-            HeaderText = "단말기명", 
+        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "DeviceName",
+            HeaderText = "단말기명",
             DataPropertyName = "DeviceName",
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
         });
 
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
-            Name = "TagName", 
-            HeaderText = "위치", 
+        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "TagName",
+            HeaderText = "위치",
             DataPropertyName = "TagName",
-            Width = 120 
+            Width = 120
         });
 
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
-            Name = "SN", 
-            HeaderText = "시리얼넘버", 
+        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "SN",
+            HeaderText = "시리얼넘버",
             DataPropertyName = "SN",
-            Width = 150 
+            Width = 150
         });
 
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
-            Name = "IpAddress", 
-            HeaderText = "IP", 
+        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "IpAddress",
+            HeaderText = "IP",
             DataPropertyName = "IpAddress",
-            Width = 120 
+            Width = 120
         });
 
-        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn 
-        { 
-            Name = "Status", 
-            HeaderText = "상태", 
+        dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Status",
+            HeaderText = "상태",
             DataPropertyName = "Status",
-            Width = 80 
+            Width = 80,
+            ReadOnly = true
         });
 
-        // Add double-click event handler
+        // 체크박스 클릭 처리: MouseDown으로 싱글클릭 즉시 토글 (더블클릭과 충돌 방지)
+        dgvDevices.MouseDown += (s, e) =>
+        {
+            var hit = dgvDevices.HitTest(e.X, e.Y);
+            if (hit.RowIndex < 0) return;
+            if (hit.ColumnIndex != dgvDevices.Columns["Selected"].Index) return;
+            // 싱글클릭만 처리 (더블클릭 두 번째 Click은 무시)
+            if (e.Clicks == 1)
+            {
+                var cell = dgvDevices.Rows[hit.RowIndex].Cells["Selected"];
+                cell.Value = !(cell.Value is true);
+                dgvDevices.InvalidateRow(hit.RowIndex);
+            }
+        };
+
+        // 상태 컬럼 색상 표시 + 최신 상태 재계산
+        dgvDevices.CellFormatting += (s, e) =>
+        {
+            if (e.RowIndex < 0) return;
+            if (e.ColumnIndex == dgvDevices.Columns["Status"].Index)
+            {
+                // 바인딩된 DeviceInfo에서 실시간 재계산
+                if (dgvDevices.Rows[e.RowIndex].DataBoundItem is DeviceInfo di)
+                    e.Value = di.Status;
+                var val = e.Value?.ToString();
+                if (val == "정상")
+                {
+                    e.CellStyle.ForeColor = System.Drawing.Color.Green;
+                    e.CellStyle.Font = new System.Drawing.Font(dgvDevices.Font, System.Drawing.FontStyle.Bold);
+                }
+                else
+                {
+                    e.CellStyle.ForeColor = System.Drawing.Color.Red;
+                    e.CellStyle.Font = new System.Drawing.Font(dgvDevices.Font, System.Drawing.FontStyle.Bold);
+                }
+                e.FormattingApplied = true;
+            }
+        };
+
         dgvDevices.CellDoubleClick += DgvDevices_CellDoubleClick;
         dgvDevices.RowPostPaint += DgvDevices_RowPostPaint;
     }
@@ -134,90 +177,41 @@ public partial class MainForm : Form
         dgvPersonnel.AllowUserToAddRows = false;
         dgvPersonnel.ReadOnly = true;
         dgvPersonnel.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        dgvPersonnel.ColumnHeaderMouseClick += DgvPersonnel_ColumnHeaderMouseClick;
 
         dgvPersonnel.Columns.Clear();
 
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "사용자번호",
-            HeaderText = "사용자번호",
-            DataPropertyName = "UserID",
-            Width = 120,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",     HeaderText = "동",     Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",       HeaderText = "호",       Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",   HeaderText = "멤버",   Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",     HeaderText = "사용자명", Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",    HeaderText = "사진등록",    Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword", HeaderText = "비밀번호", Width = 100, SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColAssigned", HeaderText = "할당된 단말기수",Width = 120, SortMode = DataGridViewColumnSortMode.Programmatic });
 
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "사용자명",
-            HeaderText = "사용자명",
-            DataPropertyName = "Name",
-            Width = 150,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        });
-
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "사진등록",
-            HeaderText = "사진등록",
-            DataPropertyName = "Photo",
-            Width = 100,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        });
-
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "패스워드",
-            HeaderText = "패스워드",
-            DataPropertyName = "Password",
-            Width = 100,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        });
-
-        // Add a calculated column for "할당된 단말기수"
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "할당된단말기수",
-            HeaderText = "할당된 단말기수",
-            Width = 120,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        });
-
-        // Add cell formatting for photo and password columns
         dgvPersonnel.CellFormatting += (sender, e) =>
         {
-            if (e.ColumnIndex == dgvPersonnel.Columns["사진등록"].Index && e.Value != null)
+            if (e.ColumnIndex == dgvPersonnel.Columns["ColPhoto"].Index && e.Value != null)
             {
-                var photoValue = e.Value.ToString();
-                if (!string.IsNullOrWhiteSpace(photoValue))
-                {
-                    // Show 'O' for any non-empty photo value (Base64 or device path)
-                    e.Value = "O";
-                    e.FormattingApplied = true;
-                }
-                else
-                {
-                    e.Value = "X";
-                    e.FormattingApplied = true;
-                }
+                var pv = e.Value.ToString();
+                e.Value = string.IsNullOrWhiteSpace(pv) ? "X" : "O";
+                e.FormattingApplied = true;
             }
-            else if (e.ColumnIndex == dgvPersonnel.Columns["패스워드"].Index && e.Value != null)
+            else if (e.ColumnIndex == dgvPersonnel.Columns["ColPassword"].Index && e.Value != null)
             {
-                var passwordValue = e.Value.ToString();
-                if (!string.IsNullOrWhiteSpace(passwordValue))
+                var pw = e.Value.ToString();
+                if (!string.IsNullOrWhiteSpace(pw))
                 {
-                    e.Value = new string('●', Math.Min(passwordValue.Length, 8));
+                    e.Value = new string('●', Math.Min(pw.Length, 8));
                     e.FormattingApplied = true;
                 }
             }
         };
 
-        // Add double-click event to edit person
         dgvPersonnel.CellDoubleClick += (sender, e) =>
         {
             if (e.RowIndex >= 0)
-            {
                 btnEditPerson_Click(sender, EventArgs.Empty);
-            }
         };
     }
 
@@ -230,92 +224,90 @@ public partial class MainForm : Form
 
         dgvAttendance.Columns.Clear();
 
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "시간",
-            HeaderText = "시간",
-            DataPropertyName = "Time",
-            Width = 150
-        });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttTime",   HeaderText = "시간",     DataPropertyName = "RecordTime",  Width = 160 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDong",   HeaderText = "동",     DataPropertyName = "UserID",      Width = 65  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttHo",     HeaderText = "호",       DataPropertyName = "UserID",      Width = 65  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttMember", HeaderText = "멤버",   DataPropertyName = "UserID",      Width = 55  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttName",   HeaderText = "사용자명", DataPropertyName = "UserName",    Width = 130 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDevice", HeaderText = "단말기",   DataPropertyName = "DeviceSN",    Width = 130 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttEvent",  HeaderText = "이벤트",    DataPropertyName = "RecordType",  Width = 100 });
 
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "사용자번호",
-            HeaderText = "사용자번호",
-            DataPropertyName = "UserID",
-            Width = 120
-        });
+        dgvAttendance.CellFormatting += DgvAttendance_CellFormatting;
 
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "사용자명",
-            HeaderText = "사용자명",
-            DataPropertyName = "UserName",
-            Width = 150
-        });
+        // Mutual exclusion: only one date range endpoint active at a time
+        dtpAttendanceStart.ValueChanged += (s, e) => { if (dtpAttendanceStart.Checked) dtpAttendanceEnd.Checked = false; };
+        dtpAttendanceEnd.ValueChanged   += (s, e) => { if (dtpAttendanceEnd.Checked)   dtpAttendanceStart.Checked = false; };
+    }
 
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+    private void DgvAttendance_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.Value == null) return;
+        int dongIdx   = dgvAttendance.Columns["AttDong"].Index;
+        int hoIdx     = dgvAttendance.Columns["AttHo"].Index;
+        int memberIdx = dgvAttendance.Columns["AttMember"].Index;
+        int eventIdx  = dgvAttendance.Columns["AttEvent"].Index;
+        if ((e.ColumnIndex == dongIdx || e.ColumnIndex == hoIdx || e.ColumnIndex == memberIdx)
+            && long.TryParse(e.Value.ToString(), out long id))
         {
-            Name = "단말기명",
-            HeaderText = "단말기명",
-            DataPropertyName = "DeviceName",
-            Width = 150
-        });
-
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn
+            e.Value = e.ColumnIndex == dongIdx   ? (id / 1_000_000L).ToString()
+                    : e.ColumnIndex == hoIdx     ? ((id / 100L) % 10_000L).ToString()
+                    :                              (id % 100L).ToString();
+            e.FormattingApplied = true;
+        }
+        else if (e.ColumnIndex == eventIdx)
         {
-            Name = "이벤트",
-            HeaderText = "이벤트",
-            DataPropertyName = "EventType",
-            Width = 100
-        });
+            if (int.TryParse(e.Value.ToString(), out int recType))
+            {
+                e.Value = RecordTypeToLabel(recType);
+                e.FormattingApplied = true;
+            }
+        }
     }
 
     private void DgvDevices_RowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
     {
         // Display row number in "No." column
         var grid = sender as DataGridView;
-        if (grid != null)
-        {
-            var rowIdx = (e.RowIndex + 1).ToString();
-            var centerFormat = new StringFormat()
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
+        if (grid == null) return;
 
-            var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.Columns["No"].Width, e.RowBounds.Height);
-            e.Graphics.DrawString(rowIdx, grid.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
-        }
+        // Calculate the X offset of the "No" column (sum of widths of preceding columns)
+        int xOffset = grid.RowHeadersWidth;
+        int noColIndex = grid.Columns["No"].Index;
+        for (int i = 0; i < noColIndex; i++)
+            if (grid.Columns[i].Visible)
+                xOffset += grid.Columns[i].Width;
+
+        var rowIdx = (e.RowIndex + 1).ToString();
+        var centerFormat = new StringFormat()
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center
+        };
+        var noBounds = new Rectangle(xOffset, e.RowBounds.Top, grid.Columns["No"].Width, e.RowBounds.Height);
+        e.Graphics.DrawString(rowIdx, grid.Font, SystemBrushes.ControlText, noBounds, centerFormat);
     }
 
     private void DgvDevices_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0) return;
+        // 선택 체크박스 열 더블클릭은 무시
+        if (e.ColumnIndex == dgvDevices.Columns["Selected"].Index) return;
 
         try
         {
-            var row = dgvDevices.Rows[e.RowIndex];
-            var device = row.DataBoundItem as DeviceInfo;
+            var device = dgvDevices.Rows[e.RowIndex].DataBoundItem as DeviceInfo;
+            if (device == null) { ShowError("Invalid device data"); return; }
 
-            if (device == null)
+            using var form = new DeviceSettingsForm(device, _httpClient);
+            if (form.ShowDialog() == DialogResult.OK)
             {
-                ShowError("Invalid device data");
-                return;
-            }
-
-            // Open device detail form
-            using var detailForm = new DeviceDetailForm(device, _httpClient);
-            if (detailForm.ShowDialog() == DialogResult.OK)
-            {
-                // Refresh device list after editing
                 _ = RefreshDevices();
                 _ = RefreshSystemInfo();
             }
         }
         catch (Exception ex)
         {
-            ShowError($"Failed to open device details: {ex.Message}");
+            ShowError($"단말기 설정 열기 실패: {ex.Message}");
         }
     }
 
@@ -370,36 +362,16 @@ public partial class MainForm : Form
 
     private void MenuRemoteControl_Click(object? sender, EventArgs e)
     {
-        if (dgvDevices.SelectedRows.Count == 0)
-        {
-            MessageBox.Show("Please select a device", "Information",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
+        var row = dgvDevices.SelectedRows.Count > 0 ? dgvDevices.SelectedRows[0] : null;
+        if (row == null) { MessageBox.Show("단말기를 선택하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
         try
         {
-            var row = dgvDevices.SelectedRows[0];
-            var sn = row.Cells["SN"].Value?.ToString();
-            var name = row.Cells["DeviceName"].Value?.ToString() ?? "Unknown";
-
-            if (string.IsNullOrWhiteSpace(sn))
-            {
-                ShowError("Invalid device selection");
-                return;
-            }
-
-            using var remoteControlForm = new DeviceRemoteControlForm
-            {
-                DeviceSN = sn,
-                DeviceName = name
-            };
-            remoteControlForm.ShowDialog();
+            var device = row.DataBoundItem as DeviceInfo;
+            if (device == null) { ShowError("Invalid device selection"); return; }
+            using var form = new DeviceSettingsForm(device, _httpClient);
+            if (form.ShowDialog() == DialogResult.OK) { _ = RefreshDevices(); _ = RefreshSystemInfo(); }
         }
-        catch (Exception ex)
-        {
-            ShowError($"Failed to open remote control: {ex.Message}");
-        }
+        catch (Exception ex) { ShowError($"단말기 설정 열기 실패: {ex.Message}"); }
     }
 
     private async void MenuDeleteDevice_Click(object? sender, EventArgs e)
@@ -513,6 +485,8 @@ public partial class MainForm : Form
         }
     }
 
+    private System.Windows.Forms.Timer? _deviceStatusTimer;
+
     private void UpdateDeviceGrid(List<DeviceInfo> devices)
     {
         // Clear existing data (but keep columns)
@@ -520,15 +494,33 @@ public partial class MainForm : Form
 
         if (devices.Count > 0)
         {
-            // Create a BindingList for better data binding
             var bindingList = new System.ComponentModel.BindingList<DeviceInfo>(devices);
             dgvDevices.DataSource = bindingList;
             lblStatus.Text = $"Loaded {devices.Count} device(s)";
+
+            // 상태 컬럼 주기 갱신 타이머 (10초마다 Refresh)
+            _deviceStatusTimer?.Stop();
+            _deviceStatusTimer?.Dispose();
+            _deviceStatusTimer = new System.Windows.Forms.Timer { Interval = 20_000 };
+            _deviceStatusTimer.Tick += async (s, e) => await RefreshDevices();
+            _deviceStatusTimer.Start();
         }
         else
         {
+            _deviceStatusTimer?.Stop();
             lblStatus.Text = "No devices installed yet";
         }
+
+        // Refresh device filter combo in event search
+        var prevSel = cmbAttDevice.SelectedItem?.ToString();
+        cmbAttDevice.Items.Clear();
+        cmbAttDevice.Items.Add("전체 단말기");
+        foreach (var d in devices)
+        {
+            var label = string.IsNullOrWhiteSpace(d.DeviceName) ? d.SN : d.DeviceName;
+            cmbAttDevice.Items.Add(label);
+        }
+        cmbAttDevice.SelectedIndex = Math.Max(0, cmbAttDevice.Items.IndexOf(prevSel ?? "전체 단말기"));
     }
 
     private async Task RefreshDepartments()
@@ -557,40 +549,14 @@ public partial class MainForm : Form
         try
         {
             var personnel = await _httpClient.GetFromJsonAsync<List<PersonInfo>>("/admin/people");
+            _personnelList = personnel ?? new List<PersonInfo>();
+            ApplyPersonnelSort();
 
-            dgvPersonnel.DataSource = null;
-            dgvPersonnel.DataSource = personnel;
+            Dictionary<string, int>? assignments = null;
+            try { assignments = await _httpClient.GetFromJsonAsync<Dictionary<string, int>>("/admin/people/device-assignments"); }
+            catch { }
 
-            // Get device assignments for each user
-            try
-            {
-                var assignments = await _httpClient.GetFromJsonAsync<Dictionary<string, int>>("/admin/people/device-assignments");
-                if (assignments != null)
-                {
-                    foreach (DataGridViewRow row in dgvPersonnel.Rows)
-                    {
-                        var person = row.DataBoundItem as PersonInfo;
-                        if (person != null && assignments.TryGetValue(person.UserID, out var count))
-                        {
-                            row.Cells["할당된단말기수"].Value = count.ToString();
-                        }
-                        else
-                        {
-                            row.Cells["할당된단말기수"].Value = "0";
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // If assignment API fails, just show 0
-                foreach (DataGridViewRow row in dgvPersonnel.Rows)
-                {
-                    row.Cells["할당된단말기수"].Value = "0";
-                }
-            }
-
-            // Do NOT call AutoResizeColumns() to preserve initial column widths
+            PopulatePersonnelComputedCells(assignments);
         }
         catch (Exception ex)
         {
@@ -598,18 +564,108 @@ public partial class MainForm : Form
         }
     }
 
+    private void PopulatePersonnelComputedCells(Dictionary<string, int>? assignments)
+    {
+        dgvPersonnel.Rows.Clear();
+        foreach (var person in _sortedPersonnelList)
+        {
+            long idNum = 0;
+            bool parsed = long.TryParse(person.UserID, out idNum);
+            string dong   = parsed ? (idNum / 1_000_000L).ToString() : person.UserID;
+            string ho     = parsed ? ((idNum / 100L) % 10_000L).ToString() : "";
+            string member = parsed ? (idNum % 100L).ToString() : "";
+            string assigned = "0";
+            if (assignments != null && assignments.TryGetValue(person.UserID, out var cnt))
+                assigned = cnt.ToString();
+            int rowIdx = dgvPersonnel.Rows.Add(
+                dong, ho, member,
+                person.Name ?? "",
+                person.Photo ?? "",
+                person.Password ?? "",
+                assigned);
+            dgvPersonnel.Rows[rowIdx].Tag = person;
+        }
+    }
+
+    private void ApplyPersonnelSort()
+    {
+        IEnumerable<PersonInfo> sorted = _personnelList;
+        if (!string.IsNullOrEmpty(_personnelSortColumn))
+        {
+            bool asc = _personnelSortDirection == System.ComponentModel.ListSortDirection.Ascending;
+            sorted = _personnelSortColumn switch
+            {
+                "ColDong" => asc
+                    ? _personnelList.OrderBy(p => long.TryParse(p.UserID, out long v) ? v / 1_000_000L : long.MaxValue)
+                    : _personnelList.OrderByDescending(p => long.TryParse(p.UserID, out long v) ? v / 1_000_000L : long.MinValue),
+                "ColHo" => asc
+                    ? _personnelList.OrderBy(p => long.TryParse(p.UserID, out long v) ? (v / 100L) % 10_000L : long.MaxValue)
+                    : _personnelList.OrderByDescending(p => long.TryParse(p.UserID, out long v) ? (v / 100L) % 10_000L : long.MinValue),
+                "ColMember" => asc
+                    ? _personnelList.OrderBy(p => long.TryParse(p.UserID, out long v) ? v % 100L : long.MaxValue)
+                    : _personnelList.OrderByDescending(p => long.TryParse(p.UserID, out long v) ? v % 100L : long.MinValue),
+                "ColName" => asc
+                    ? _personnelList.OrderBy(p => p.Name)
+                    : _personnelList.OrderByDescending(p => p.Name),
+                _ => sorted
+            };
+        }
+        _sortedPersonnelList = sorted.ToList();
+    }
+
+    private void DgvPersonnel_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
+    {
+        var col = dgvPersonnel.Columns[e.ColumnIndex];
+        if (col.Name == _personnelSortColumn)
+            _personnelSortDirection = _personnelSortDirection == System.ComponentModel.ListSortDirection.Ascending
+                ? System.ComponentModel.ListSortDirection.Descending
+                : System.ComponentModel.ListSortDirection.Ascending;
+        else
+        {
+            _personnelSortColumn = col.Name;
+            _personnelSortDirection = System.ComponentModel.ListSortDirection.Ascending;
+        }
+        foreach (DataGridViewColumn c in dgvPersonnel.Columns)
+            c.HeaderCell.SortGlyphDirection = SortOrder.None;
+        col.HeaderCell.SortGlyphDirection = _personnelSortDirection == System.ComponentModel.ListSortDirection.Ascending
+            ? SortOrder.Ascending : SortOrder.Descending;
+        ApplyPersonnelSort();
+        PopulatePersonnelComputedCells(null);
+    }
+
     private async Task RefreshAttendance()
     {
         try
         {
+            // Build UserID search from dong/ho/member using range logic
+            var (userIDExact, userIDMin, userIDMax) = BuildAttUserIDFilter(
+                txtAttDong.Text.Trim(), txtAttHo.Text.Trim(), txtAttMember.Text.Trim());
+
+            // Resolve selected device SN
+            string? deviceSnFilter = null;
+            if (cmbAttDevice.SelectedIndex > 0)
+            {
+                var selectedLabel = cmbAttDevice.SelectedItem?.ToString() ?? "";
+                foreach (DataGridViewRow row in dgvDevices.Rows)
+                {
+                    var dname = row.Cells["DeviceName"].Value?.ToString() ?? "";
+                    var sn    = row.Cells["SN"].Value?.ToString() ?? "";
+                    var label = string.IsNullOrWhiteSpace(dname) ? sn : dname;
+                    if (label == selectedLabel) { deviceSnFilter = sn; break; }
+                }
+            }
+
             var request = new AttendanceSearchRequest
             {
-                UserID = txtAttendanceUserID.Text,
-                UserName = txtAttendanceUserName.Text,
+                UserID    = userIDExact,
+                UserIDMin = userIDMin,
+                UserIDMax = userIDMax,
+                UserName  = txtAttendanceUserName.Text,
+                DeviceSN  = deviceSnFilter,
                 StartTime = dtpAttendanceStart.Checked ? dtpAttendanceStart.Value : null,
-                EndTime = dtpAttendanceEnd.Checked ? dtpAttendanceEnd.Value : null,
+                EndTime   = dtpAttendanceEnd.Checked ? dtpAttendanceEnd.Value : null,
                 PageIndex = 1,
-                PageSize = 1000
+                PageSize  = 1000
             };
 
             var response = await _httpClient.PostAsJsonAsync("/api/Attendance/Search", request);
@@ -1316,7 +1372,7 @@ public partial class MainForm : Form
         try
         {
             var row = dgvPersonnel.SelectedRows[0];
-            var userID = row.Cells["사용자번호"].Value?.ToString();
+            var userID = (row.Tag as PersonInfo)?.UserID;
 
             // Fetch full person data from backend
             var getResponse = await _httpClient.PostAsJsonAsync("/api/People/GetDetail", new { UserID = userID });
@@ -1397,11 +1453,12 @@ public partial class MainForm : Form
         try
         {
             var row = dgvPersonnel.SelectedRows[0];
-            var userID = row.Cells["사용자번호"].Value?.ToString();
-            var userName = row.Cells["사용자명"].Value?.ToString();
+            var boundPerson = row.Tag as PersonInfo;
+            var userID = boundPerson?.UserID;
+            var userName = boundPerson?.Name;
 
             var result = MessageBox.Show(
-                $"{userName} (사용자번호: {userID})를 삭제하시겠습니까?",
+                $"{userName} ({GetLocationLabel(userID)})를 삭제하시겠습니까?",
                 "사용자 삭제 확인",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
@@ -1436,16 +1493,28 @@ public partial class MainForm : Form
         {
             var form = new Form
             {
-                Text = "실시간 출입 보기",
-                Size = new System.Drawing.Size(900, 600),
+                Text = "실시간 이벤트 보기",
+                Size = new System.Drawing.Size(1000, 650),
                 StartPosition = FormStartPosition.CenterParent
             };
 
-            var checkedListBox = new CheckedListBox
+            var filterPanel = new Panel { Dock = DockStyle.Top, Height = 40, Padding = new Padding(5) };
+            var lblFilter = new Label { Text = "단말기:", AutoSize = true, Location = new Point(5, 12) };
+            var cmbDevice = new ComboBox
             {
-                Dock = DockStyle.Top,
-                Height = 150
+                Location = new Point(60, 8), Width = 200,
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
+            cmbDevice.Items.Add("전체 단말기");
+            foreach (var item in cmbAttDevice.Items)
+                if (item.ToString() != "전체 단말기")
+                    cmbDevice.Items.Add(item);
+            cmbDevice.SelectedIndex = 0;
+
+            var lblCount = new Label { AutoSize = true, Location = new Point(275, 12) };
+            filterPanel.Controls.Add(lblFilter);
+            filterPanel.Controls.Add(cmbDevice);
+            filterPanel.Controls.Add(lblCount);
 
             var dgv = new DataGridView
             {
@@ -1453,29 +1522,72 @@ public partial class MainForm : Form
                 ReadOnly = true,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoGenerateColumns = false
             };
 
-            dgv.Columns.Add("시간", "시간");
-            dgv.Columns.Add("사용자번호", "사용자번호");
-            dgv.Columns.Add("사용자명", "사용자명");
-            dgv.Columns.Add("단말기명", "단말기명");
-            dgv.Columns.Add("이벤트", "이벤트");
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Time",   HeaderText = "시간",     Width = 160 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Dong",   HeaderText = "동",       Width = 65  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Ho",     HeaderText = "호",       Width = 65  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Member", HeaderText = "멤버",     Width = 55  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Name",   HeaderText = "사용자명", Width = 130 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Device", HeaderText = "단말기",   Width = 130 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Event",  HeaderText = "이벤트",   Width = 100 });
 
-            foreach (DataGridViewRow row in dgvDevices.Rows)
+            async Task LoadRecords()
             {
-                var deviceName = row.Cells["DeviceName"].Value?.ToString();
-                if (!string.IsNullOrEmpty(deviceName))
+                try
                 {
-                    checkedListBox.Items.Add(deviceName);
+                    var devSnFilter = (string?)null;
+                    if (cmbDevice.SelectedIndex > 0)
+                    {
+                        var selLabel = cmbDevice.SelectedItem?.ToString() ?? "";
+                        foreach (DataGridViewRow row in dgvDevices.Rows)
+                        {
+                            var dname = row.Cells["DeviceName"].Value?.ToString() ?? "";
+                            var sn    = row.Cells["SN"].Value?.ToString() ?? "";
+                            var label = string.IsNullOrWhiteSpace(dname) ? sn : dname;
+                            if (label == selLabel) { devSnFilter = sn; break; }
+                        }
+                    }
+                    var req = new AttendanceSearchRequest { PageIndex = 1, PageSize = 500, DeviceSN = devSnFilter };
+                    var resp = await _httpClient.PostAsJsonAsync("/api/Attendance/Search", req);
+                    var result = await resp.Content.ReadFromJsonAsync<BrowserApiResponse<AttendanceSearchResult>>();
+                    if (result?.Code == 0 && result.Data != null && !form.IsDisposed)
+                    {
+                        form.Invoke(() =>
+                        {
+                            dgv.Rows.Clear();
+                            foreach (var rec in result.Data.DataList.OrderByDescending(r => r.RecordTime))
+                            {
+                                long.TryParse(rec.UserID, out long uid);
+                                int rt = rec.RecordType;
+                                string evtLabel = RecordTypeToLabel(rt);
+                                dgv.Rows.Add(
+                                    rec.RecordTime,
+                                    uid == 0 ? rec.UserID : (uid / 1_000_000L).ToString(),
+                                    uid == 0 ? "" : ((uid / 100L) % 10_000L).ToString(),
+                                    uid == 0 ? "" : (uid % 100L).ToString(),
+                                    rec.UserName,
+                                    rec.DeviceSN,
+                                    evtLabel
+                                );
+                            }
+                            lblCount.Text = $"총 {result.Data.TotalCount}건";
+                        });
+                    }
                 }
+                catch { /* 무시 - 타이머 반복 호출 */ }
             }
 
-            var panel = new Panel { Dock = DockStyle.Fill };
-            panel.Controls.Add(dgv);
-            panel.Controls.Add(checkedListBox);
+            var timer = new System.Windows.Forms.Timer { Interval = 3000 };
+            timer.Tick += async (s2, ev) => await LoadRecords();
+            cmbDevice.SelectedIndexChanged += async (s2, ev) => await LoadRecords();
+            form.Shown += async (s2, ev) => { await LoadRecords(); timer.Start(); };
+            form.FormClosed += (s2, ev) => timer.Dispose();
 
-            form.Controls.Add(panel);
+            form.Controls.Add(dgv);
+            form.Controls.Add(filterPanel);
             form.ShowDialog();
         }
         catch (Exception ex)
@@ -1484,86 +1596,95 @@ public partial class MainForm : Form
         }
     }
 
+    private void PopulateRealTimeGrid(DataGridView dgv, string deviceFilter)
+    {
+        dgv.Rows.Clear();
+        // Pull directly from current attendance grid rows
+        foreach (DataGridViewRow row in dgvAttendance.Rows)
+        {
+            if (row.DataBoundItem is not AttendanceRecord rec) continue;
+            var devDisplay = rec.DeviceSN;
+            if (deviceFilter != "전체 단말기" && devDisplay != deviceFilter) continue;
+            long uid = 0;
+            long.TryParse(rec.UserID, out uid);
+            dgv.Rows.Add(
+                rec.RecordTime,
+                uid == 0 ? rec.UserID : (uid / 1_000_000L).ToString(),
+                uid == 0 ? "" : ((uid / 100L) % 10_000L).ToString(),
+                uid == 0 ? "" : (uid % 100L).ToString(),
+                rec.UserName,
+                rec.DeviceSN,
+                rec.RecordType
+            );
+        }
+    }
+
     private void btnRefreshDevices_Click(object sender, EventArgs e) => _ = RefreshDevices();
     private void btnRefreshDepartments_Click(object sender, EventArgs e) => _ = RefreshDepartments();
 
     private void btnRemoteControl_Click(object sender, EventArgs e)
     {
-        if (dgvDevices.SelectedRows.Count == 0)
+        var row = dgvDevices.SelectedRows.Count > 0 ? dgvDevices.SelectedRows[0] : null;
+        if (row == null)
         {
-            MessageBox.Show("Please select a device from the list below", "Information",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("단말기를 선택하세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
-
         try
         {
-            var row = dgvDevices.SelectedRows[0];
-            var sn = row.Cells["SN"].Value?.ToString();
-            var name = row.Cells["DeviceName"].Value?.ToString() ?? "Unknown";
-
-            if (string.IsNullOrWhiteSpace(sn))
-            {
-                ShowError("Invalid device selection");
-                return;
-            }
-
-            using var remoteControlForm = new DeviceRemoteControlForm
-            {
-                DeviceSN = sn,
-                DeviceName = name
-            };
-            remoteControlForm.ShowDialog();
+            var device = row.DataBoundItem as DeviceInfo;
+            if (device == null) { ShowError("Invalid device selection"); return; }
+            using var form = new DeviceSettingsForm(device, _httpClient);
+            if (form.ShowDialog() == DialogResult.OK) { _ = RefreshDevices(); _ = RefreshSystemInfo(); }
         }
-        catch (Exception ex)
-        {
-            ShowError($"Failed to open remote control: {ex.Message}");
-        }
+        catch (Exception ex) { ShowError($"단말기 설정 열기 실패: {ex.Message}"); }
     }
 
     private async void btnRemoveDevice_Click(object sender, EventArgs e)
     {
-        if (dgvDevices.SelectedRows.Count == 0)
+        // 체크박스로 선택된 행 수집
+        var checkedRows = dgvDevices.Rows.Cast<DataGridViewRow>()
+            .Where(r => r.Cells["Selected"].Value is true)
+            .ToList();
+
+        // 체크된 항목이 없으면 그리드 선택 행 사용
+        if (checkedRows.Count == 0)
         {
-            MessageBox.Show("Please select a device to remove", "Information",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
+            if (dgvDevices.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("제거할 단말기를 선택(체크)하거나 행을 클릭하세요.", "알림",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            checkedRows = dgvDevices.SelectedRows.Cast<DataGridViewRow>().ToList();
         }
+
+        var names = checkedRows
+            .Select(r => r.Cells["DeviceName"].Value?.ToString() ?? r.Cells["SN"].Value?.ToString() ?? "")
+            .Where(n => !string.IsNullOrEmpty(n));
+
+        var confirm = MessageBox.Show(
+            $"다음 단말기 {checkedRows.Count}개를 제거하시겠습니까?\n\n{string.Join("\n", names)}",
+            "단말기 제거 확인", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        if (confirm != DialogResult.Yes) return;
 
         try
         {
-            var row = dgvDevices.SelectedRows[0];
-            var sn = row.Cells["SN"].Value?.ToString();
-            var name = row.Cells["DeviceName"].Value?.ToString() ?? sn;
-
-            if (string.IsNullOrWhiteSpace(sn))
-                return;
-
-            var result = MessageBox.Show(
-                $"Are you sure you want to remove device '{name}' ({sn})?\n\nThis will disconnect the device from the server.",
-                "Confirm Removal",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
-
-            if (result != DialogResult.Yes)
-                return;
-
-            var response = await _httpClient.DeleteAsync($"/admin/devices/{sn}");
-
-            if (response.IsSuccessStatusCode)
+            int ok = 0, fail = 0;
+            foreach (var row in checkedRows)
             {
-                lblStatus.Text = $"Device {sn} removed successfully";
-                await RefreshDevices();
-                await RefreshSystemInfo();
+                var sn = row.Cells["SN"].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(sn)) continue;
+                var resp = await _httpClient.DeleteAsync($"/admin/devices/{sn}");
+                if (resp.IsSuccessStatusCode) ok++; else fail++;
             }
-            else
-            {
-                ShowError($"Failed to remove device: HTTP {response.StatusCode}");
-            }
+            lblStatus.Text = $"제거 완료: {ok}개 성공, {fail}개 실패";
+            await RefreshDevices();
+            await RefreshSystemInfo();
         }
         catch (Exception ex)
         {
-            ShowError($"Failed to remove device: {ex.Message}");
+            ShowError($"단말기 제거 실패: {ex.Message}");
         }
     }
 
@@ -1702,4 +1823,110 @@ public partial class MainForm : Form
     {
         await RefreshPersonnel();
     }
+
+    private static (string? exact, long? min, long? max) BuildAttUserIDFilter(string dong, string ho, string member)
+    {
+        long dv = 0, hv = 0, mv = 0;
+        bool hasDong   = !string.IsNullOrEmpty(dong)   && long.TryParse(dong,   out dv);
+        bool hasHo     = !string.IsNullOrEmpty(ho)     && long.TryParse(ho,     out hv);
+        bool hasMember = !string.IsNullOrEmpty(member) && long.TryParse(member, out mv);
+
+        if (!hasDong && !hasHo && !hasMember)
+            return (null, null, null);
+
+        if (hasDong && hasHo && hasMember)
+        {
+            // Exact match
+            long uid = dv * 1_000_000L + hv * 100L + mv;
+            return (uid.ToString(), null, null);
+        }
+        if (hasDong && hasHo)
+        {
+            // All members of this 호
+            long min = dv * 1_000_000L + hv * 100L;
+            long max = min + 100L;
+            return (null, min, max);
+        }
+        // dong only
+        {
+            long min = dv * 1_000_000L;
+            long max = (dv + 1) * 1_000_000L;
+            return (null, min, max);
+        }
+    }
+    private void txtAttDong_TextChanged(object sender, EventArgs e)
+    {
+        bool hasDong = !string.IsNullOrWhiteSpace(txtAttDong.Text);
+        txtAttHo.Enabled = hasDong;
+        if (!hasDong) { txtAttHo.Text = ""; txtAttMember.Text = ""; txtAttMember.Enabled = false; }
+    }
+
+    private void txtAttHo_TextChanged(object sender, EventArgs e)
+    {
+        bool hasHo = !string.IsNullOrWhiteSpace(txtAttHo.Text);
+        txtAttMember.Enabled = hasHo;
+        if (!hasHo) { txtAttMember.Text = ""; }
+    }
+
+    private static string RecordTypeToLabel(int rt) => rt switch
+    {
+        1  => "카드",
+        2  => "지문",
+        3  => "얼굴인식",
+        4  => "카드+지문",
+        5  => "얼굴+지문",
+        6  => "카드+얼굴",
+        7  => "카드+비밀번호",
+        8  => "얼굴+비밀번호",
+        9  => "지문+비밀번호",
+        10 => "비밀번호",
+        11 => "카드+지문+비밀번호",
+        12 => "카드+얼굴+비밀번호",
+        13 => "지문+얼굴+비밀번호",
+        14 => "카드+지문+얼굴",
+        15 => "중복인증",
+        16 => "유효기간만료",
+        17 => "시간대만료",
+        18 => "휴일출입불가",
+        19 => "미등록사용자",
+        20 => "잠금감지",
+        21 => "인증횟수초과",
+        22 => "잠금중인증거부",
+        23 => "분실신고카드",
+        24 => "블랙리스트카드",
+        25 => "무인증개방",
+        26 => "카드인증금지",
+        27 => "지문인증금지",
+        28 => "컨트롤러만료",
+        29 => "유효기간임박",
+        30 => "체온이상거부",
+        31 => "방문자비밀번호",
+        32 => "QR코드개방",
+        33 => "메뉴사용자추가",
+        34 => "메뉴사용자수정",
+        35 => "메뉴사용자삭제",
+        36 => "손바닥정맥",
+        37 => "카드+손바닥정맥+얼굴",
+        38 => "손바닥정맥+비밀번호",
+        39 => "카드+손바닥정맥",
+        40 => "얼굴+손바닥정맥",
+        41 => "카드+손바닥정맥+비밀번호",
+        42 => "손바닥정맥+얼굴+비밀번호",
+        43 => "지문+손바닥정맥+얼굴",
+        44 => "복합인증대기",
+        45 => "복합인증실패",
+        46 => "복합인증성공",
+        47 => "신분증비교",
+        48 => "미등록카드",
+        49 => "미등록QR",
+        _  => $"(유형{rt})"
+    };
+
+    private static string GetLocationLabel(string? userID)
+    {
+        if (long.TryParse(userID, out long id))
+            return $"{id / 1_000_000L}동 {(id / 100L) % 10_000L}호 멤버{id % 100L}";
+        return userID ?? "";
+    }
+
 }
