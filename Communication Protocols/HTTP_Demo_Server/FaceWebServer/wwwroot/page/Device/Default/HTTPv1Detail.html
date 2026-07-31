@@ -1,0 +1,956 @@
+﻿
+<style>
+    #device_Update_div label {
+        width: 250px;
+        background-color: #dddddd;
+    }
+
+    .layui-form-pane .layui-input-block {
+        margin-left: 250px;
+        left: -1px;
+    }
+
+    #device_Update_div div.layui-form-item {
+        margin-bottom: 5px;
+    }
+
+    #device_Update_div fieldset {
+        padding-bottom: 2px;
+    }
+
+    #device_Update_div div.layui-tab-content {
+        height: 450px;
+    }
+
+    .selectUp .layui-form-select dl {
+        top: auto;
+        bottom: 36px;
+    }
+</style>
+<div class="layui-form layuimini-form  layui-form-pane" id="device_Update_div" lay-filter="device_Update_div_filter">
+    <div class="layui-panel" style="height:560px;">
+        <div class="layui-tab">
+            <ul class="layui-tab-title">
+                <li language='device.d197' class="layui-this"> 系统设置</li>
+                <li language='device.d198' > 门禁设置</li>
+                <li language='device.d199'> 人脸识别</li>
+                <li language='device.d200'> 网络参数</li>
+                <li language='device.NetFunction'> 网络功能</li>
+                <li language='device.d201'> 其他</li>
+            </ul>
+
+            <div class="layui-tab-content">
+                <!-- 系统设置 -->
+                <div class="layui-tab-item layui-show" id="device_Update_Page1">
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d64'> 设备身份</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d65'> 设备SN</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" maxlength="16" lay-verify="required" placeholder=""
+                                               name="DeviceID" autocomplete="off" class="layui-input" tipShow="1"
+                                               id="device.d66" data-lang="tipMsg" tipMsg="设备SN由16个字符组成,必填">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d67'> 制造商</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" maxlength="50" name="ParameterManufacturer"
+                                               autocomplete="off" class="layui-input" tipShow="1" id="device.d68"
+                                               data-lang="tipMsg" tipMsg="制造商信息 最长50个字符,可为空">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d69'> 网址</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" maxlength="50" name="ParameterWebsite" autocomplete="off"
+                                               id="device.d70" data-lang="tipMsg" class="layui-input" tipShow="1"
+                                               tipMsg="制造商网址信息 最长50个字符,可为空">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d71'> 生产日期</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" maxlength="20" name="ParameterProductionDate"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d72,device.d73" data-lang='placeholder,tipMsg'
+                                               placeholder="请输入生产日期" tipShow="1" tipMsg="设备生产日期 必填">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d74'> 公司名称</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" maxlength="20" name="ParameterCompanyName" autocomplete="off"
+                                               id="device.d75" data-lang="tipMsg" class="layui-input" tipShow="1"
+                                               tipMsg="公司名称 最长20个字符,可为空">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d76'> 菜单密码</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" maxlength="8" name="ParameterLoginPassword"
+                                               autocomplete="off" class="layui-input" tipShow="1" id="device.d77"
+                                               data-lang="tipMsg" tipMsg="菜单密码 由4-8位数字组成<br/>仅支持数字，可为空">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.ui_TimeZone'>时区</label>
+                                    <div class="layui-input-inline">
+                                        <select name="TimeZone" required lay-verify="">
+                                            <option value="-12">UTC -12</option>
+                                            <option value="-11">UTC -11</option>
+                                            <option value="-10">UTC -10</option>
+                                            <option value="-9">UTC -9</option>
+                                            <option value="-8">UTC -8</option>
+                                            <option value="-7">UTC -7</option>
+                                            <option value="-6">UTC -6</option>
+                                            <option value="-5">UTC -5</option>
+                                            <option value="-4">UTC -4</option>
+                                            <option value="-3">UTC -3</option>
+                                            <option value="-2">UTC -2</option>
+                                            <option value="-1">UTC -1</option>
+                                            <option value="0">UTC +0</option>
+                                            <option value="1">UTC +1 </option>
+                                            <option value="2">UTC +2 </option>
+                                            <option value="3">UTC +3 </option>
+                                            <option value="4">UTC +4 </option>
+                                            <option value="5">UTC +5 </option>
+                                            <option value="6">UTC +6 </option>
+                                            <option value="7">UTC +7 </option>
+                                            <option value="8" selected>UTC +8 </option>
+                                            <option value="9">UTC +9 </option>
+                                            <option value="10">UTC +10</option>
+                                            <option value="11">UTC +11</option>
+                                            <option value="12">UTC +12</option>
+                                            <option value="13">UTC +13</option>
+                                            <option value="14">UTC +14</option>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </fieldset>
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d78'>外设</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d79'>补光灯</label>
+                                    <div class="layui-input-inline selectUp">
+                                        <select name="ParameterLightSwitch" required lay-verify="">
+                                            <option value="0" selected language='device.d80'>常闭</option>
+                                            <option value="1" language='device.d81'>常开</option>
+                                            <option value="2" language='device.d82'>自动</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d83'> 曝光设置</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="3" min="-3" name="ParameterExposure"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d84,device.d85" data-lang="placeholder,tipMsg"
+                                               placeholder="请输入曝光设置" tipShow="1" tipMsg="曝光设置 取值范围 -3 -- 3,整数，必填">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d86'> 红外图像</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterIR" id="device.d87" data-lang='lay-text'
+                                               lay-skin="switch" lay-text="开启|关闭" unchecked value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d88'> 声音及文字</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d89'> 音量</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="10" min="1" maxlength="2" name="ParameterVolume"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               placeholder="请输入音量" lay-reqText="请输入音量" tipShow="1"
+                                               id="device.d90,device.d91,device.d92"
+                                               data-lang='placeholder,lay-reqText,tipMsg' tipMsg="音量大小 取值范围 0 -- 10，必填">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d93'> 屏幕亮度</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="10" min="1" required maxlength="2"
+                                               name="ParameterBrightness" autocomplete="off" class="layui-input"
+                                               id="device.d94,device.d95,device.d96"
+                                               data-lang='placeholder,lay-reqText,tipMsg' lay-verify="required"
+                                               placeholder="请输入屏幕亮度" lay-reqText="请输入屏幕亮度" tipShow="1"
+                                               tipMsg="屏幕亮度 取值范围 1 -- 10，必填">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d97'> 语言</label>
+                                    <div class="layui-input-inline selectUp">
+                                        <select name="ParameterLanguageChoose" required lay-verify="">
+                                            <option value="0" selected>中文</option>
+                                            <option value="1" language='device.d98'>英文</option>
+                                            <option value="2">繁体</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d99'> 语音播报</label>
+                                    <div class="layui-input-inline selectUp">
+                                        <select name="ParameterVoiceMode" required lay-verify="">
+                                            <option value="0" language='device.d100'>不播报</option>
+                                            <option value="1" language='device.d101'>播放名字</option>
+                                            <option value="2" language='device.d102'>播放问候语</option>
+                                            <option value="3" language='device.d103' selected>播放名字和问候语</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d104'> 问候语</label>
+                                    <div class="layui-input-inline selectUp">
+                                        <select name="ParameterGrettings" lay-verify="">
+                                            <option value="0" language='device.d105'>请通行</option>
+                                            <option value="1" language='device.d106'>欢迎光临</option>
+                                            <option value="2" language='device.d107'>时间问候语</option>
+                                            <option value="3" selected language='device.d108'>消费登记成功</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d109'> 陌生人语音</label>
+                                    <div class="layui-input-inline selectUp">
+                                        <select name="ParameterStrangerVoice" required lay-verify="">
+                                            <option value="0" language='device.d110'>不播报</option>
+                                            <option value="1" language='device.d111'>播报假体</option>
+                                            <option value="2" language='device.d112' selected>播报陌生人</option>
+                                            <option value="3" language='device.d113'>播报假体和陌生人</option>
+                                        </select>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+                </div>
+                <!-- 门禁设置 -->
+                <div class="layui-tab-item" id="device_Update_Page2">
+
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d114'> 鉴权参数</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d115'> 出入类型</label>
+                                    <div class="layui-input-inline">
+                                        <input type="radio" name="ParameterAccessType" value="0" id="device.d116"
+                                               data-lang='title' title="入门" checked>
+                                        <input type="radio" name="ParameterAccessType" value="1" id="device.d117"
+                                               data-lang='title' title="出门">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d118'> 免验证开门</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterLaissezSwitch" lay-skin="switch"
+                                               id="device.d119" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d120'> 识别间隔（秒）</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="65535" min="0" name="ParameterRecgInterval"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d121,device.d122,device.d123"
+                                               data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入识别间隔"
+                                               lay-reqText="请输入识别间隔时间" tipShow="1"
+                                               tipMsg="识别间隔时间，必填<br/> 取值范围 0 -- 65535(s)，单位：秒">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d124'>保存重复记录</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterIntervalRecoSwitch" lay-skin="switch"
+                                               id="device.d125" data-lang='lay-text' lay-text="保存|丢弃" unchecked value="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </fieldset>
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d126'> 输入输出</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d127'> WG格式</label>
+                                    <div id="divParameterWgFormat" class="layui-input-inline"
+                                         style="padding-right: 1px; margin-right: 1px;">
+                                        <input type="radio" name="ParameterWgFormat" value="26" title="26">
+                                        <input type="radio" name="ParameterWgFormat" value="34" title="34" checked>
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d128'> 开门保持(秒)</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="65535" min="0" name="ParameterKeepOpenDoor"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d129,device.d130,device.d131"
+                                               data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入开门保持"
+                                               lay-reqText="请输入开门保持时间" tipShow="1"
+                                               tipMsg="开门保持时间，必填<br/>识别后继电器输出的时间<br/> 取值范围 0 -- 65535(s)，单位:秒">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d132'> 报警</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d268'>消防报警</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterFireAlarm" lay-skin="switch"
+                                               id="device.d119" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d133'> 门磁报警</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterDoorAlarmSwitch" lay-skin="switch"
+                                               id="device.d134" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d135'> 超时报警</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterDoorLongOpenAlarmSwitch" lay-skin="switch"
+                                               id="device.d136" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d137'> 开门超时(秒)</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="255" min="5" name="ParameterDoorSensorDelay"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d138,device.d139,device.d140"
+                                               data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入开门超时"
+                                               lay-reqText="请输入开门超时时间" tipShow="1"
+                                               tipMsg="开门超时时间，必填<br/>启用【超时报警】功能后，门打开超过此时间后就会报警<br/>取值范围 5 -- 255(s)，单位：秒">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                </div>
+
+                <!-- 人脸识别 -->
+                <div class="layui-tab-item" id="device_Update_Page3">
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d141'> 人脸检测</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+
+
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d142'> 识别距离</label>
+                                    <div class="layui-input-inline">
+                                        <select name="ParameterDistance" required lay-verify="">
+                                            <option language='device.d143' value="1" selected>远</option>
+                                            <option language='device.d144' value="2">中</option>
+                                            <option language='device.d145' value="3">近</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d146'> 识别阈值 </label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="99" min="1" name="ParameterFaceThreshold"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d147,device.d148,device.d149"
+                                               data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入人脸识别阈值"
+                                               lay-reqText="请输入人脸识别阈值" tipShow="1" tipMsg="人脸识别阈值，必填<br/> 取值范围 1 -- 99">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d150'> 活体检测</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterPreview" lay-skin="switch"
+                                               id="device.d151" data-lang="lay-text" lay-text="启用|禁用" checked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d152'> 活体阈值 </label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="10" min="1" name="ParameterFaceIRThreshold"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d153,device.d154,device.d155"
+                                               data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入人脸活体检测阈值"
+                                               lay-reqText="请输入人脸活体检测阈值" tipShow="1"
+                                               tipMsg="人脸活体检测阈值，必填<br/> 取值范围 1 -- 10">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d156'> 口罩检测</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d157'>口罩检测</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterMask" lay-skin="switch" id="device.d158"
+                                               data-lang="lay-text" lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d159'> 口罩阈值</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="99" min="1" name="ParameterMaskThreshold"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d160,device.d161,device.d162" data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入口罩检测阈值"
+                                               lay-reqText="请输入口罩检测阈值" tipShow="1" tipMsg="口罩检测阈值， 取值范围 1 -- 99，必填">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d163'> 体温检测</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d164'>体温检测</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterTempSwitch" lay-skin="switch"
+                                               id="device.d165" data-lang="lay-text" lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d166'>温度补偿</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" min="-1.0" max="1.0" step="0.1" name="ParameterCompensate"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d167,device.d168,device.d169" data-lang='placeholder,lay-reqText,tipMsg'
+                                               placeholder="请输入温度补偿值" lay-reqText="请输入温度补偿值" tipShow="1"
+                                               tipMsg="温度补偿值，必填<br/>取值范围 -1 -- 1,可输入小数<br/>示例：0.52">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d170'>报警阈值</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" min="37.0" max="50.0" step="0.1"
+                                               name="ParameterTempThresholdMax" autocomplete="off" class="layui-input"
+                                               id="device.d171,device.d172,device.d173" data-lang='placeholder,lay-reqText,tipMsg'
+                                               lay-verify="required" placeholder="请输入高温报警阈值" lay-reqText="请输入高温报警阈值"
+                                               tipShow="1"
+                                               tipMsg="高温报警阈值，必填<br/>取值范围 37 -- 50,可输入小数<br/>单位:摄氏度<br/>示例：37.6">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d174'>华氏度</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterFahrenheitSwitch" lay-skin="switch"
+                                               id="device.d175" data-lang="lay-text"
+                                               lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </fieldset>
+                </div>
+
+                <!-- 网络参数 -->
+                <div class="layui-tab-item" id="device_Update_Page4">
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d176'> 服务器参数</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.ParameterServerProtocol'>服务器协议</label>
+                                    <div class="layui-input-inline" style="width: 300px">
+                                        <select name="ParameterServerProtocol" required lay-verify="">
+                                            <option value="0" selected language='device.ParameterServerProtocol_0'>HTTP</option>
+                                            <option value="1" language='device.ParameterServerProtocol_1'>云筑网</option>
+                                            <option value="2" language='device.ParameterServerProtocol_2'>Websocket</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d177'> 服务器地址</label>
+                                    <div class="layui-input-inline" style="width: 300px">
+                                        <input type="text" maxlength="100" name="ParameterCloudserverAddress"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d178,device.d179,device.d180" data-lang='placeholder,lay-reqText,tipMsg'
+                                               placeholder="请输入服务器地址" lay-reqText="请输入服务器地址" tipShow="1"
+                                               tipMsg="服务器地址，最长100个字符，必填<br/>示例：http://192.168.1.86:4610/FaceAPI">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d181'> 保活包间隔(秒)</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="7200" min="5" disabled name="ParameterPolling"
+                                               autocomplete="off" class="layui-input" lay-verify="required"
+                                               id="device.d182,device.d183,device.d184" data-lang='placeholder,lay-reqText,tipMsg'
+                                               placeholder="请输入保活包发包间隔" lay-reqText="请输入保活包发包间隔" tipShow="1"
+                                               tipMsg="保活包发包间隔，必填<br/>取值范围： 5 -- 7200，单位：秒">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d267'> GZIP压缩传输</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterHttpPostUseGZIP" lay-skin="switch"
+                                               id="device.d119" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                   
+
+                </div>
+
+                <!-- 网络功能 -->
+                <div class="layui-tab-item" id="device_Update_Page4">
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.NetFunction'> 网络功能</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.ParameterEnableWeb'>Web管理页面</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterEnableWeb" lay-skin="switch"
+                                               id="device.d119" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+
+                                </div>
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.TelnetTitle'>Telnet 协议</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterEnableTelnet" lay-skin="switch"
+                                               id="device.d119" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.ParameterEnableUDP'>UDP 搜索</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterEnableUDP" lay-skin="switch"
+                                               id="device.d119" data-lang='lay-text' lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+
+                                </div>
+
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d259'>UDP端口号</label>
+                                    <div class="layui-input-inline">
+                                        <input type="number" max="65534" min="1" name="ParameterUDPPort"
+                                               autocomplete="off" class="layui-input" lay-verify="required" maxlength="5"
+                                               id="device.d260,device.d261,device.d262"
+                                               data-lang='placeholder,lay-reqText,tipMsg' placeholder="请输入设备监听的UDP端口号"
+                                               lay-reqText="请输入设备监听的UDP端口号" tipShow="1"
+                                               tipMsg="设备监听的UDP端口号，必填<br/>取值范围： 1 -- 65534">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </fieldset>
+                </div>
+
+
+                <!-- 其他 -->
+                <div class="layui-tab-item" id="device_Update_Page5">
+                    <fieldset class="table-search-fieldset">
+                        <legend language='device.d185'> 记录存储</legend>
+                        <div style="margin: 3px 3px 3px 3px">
+                            <div class="layui-form-item">
+
+                                <div class="layui-inline ">
+                                    <label class="layui-form-label" language='device.d186'> 存储陌生人记录</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterSaveExternalvisitors" lay-skin="switch"
+                                               id="device.d187" data-lang="lay-text"
+                                               lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label" language='device.d188'> 保存现场图片</label>
+                                    <div class="layui-input-inline">
+                                        <input type="checkbox" name="ParameterSavePicture" lay-skin="switch"
+                                               id="device.d189" data-lang="lay-text"
+                                               lay-text="启用|禁用" unchecked value="1">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </fieldset>
+                    
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+    <div class="layui-panel" style="text-align: center;" id="device_update_button_div">
+        <style>
+            #device_update_button_div button {
+                width: 150px;
+            }
+        </style>
+        <div style="margin: 5px 5px 5px 5px">
+            <!-- 按钮 -->
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-normal"
+                            lay-submit lay-filter="data-save-btn" language='device.d224'>
+                        <i class="layui-icon"></i> 保存
+                    </button>
+                </div>
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-danger"
+                            id="data-cancel-btn" language='device.d225'>
+                        <i class="layui-icon"></i> 取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    setLanguage();
+    setAllAttrVal()
+    //注意：选项卡 依赖 element 模块，否则无法进行功能性操作
+    layui.use(['form', 'laydate', 'element', 'faceAPI'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        var laydate = layui.laydate, $ = layui.$;;
+        form.render();
+
+        var serverDeviceDetail = {}; //服务器中的设备信息
+        var currentDevice = {};//当前设备信息
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+
+        var faceAPI = layui.faceAPI;
+
+        if (faceAPI.hasOwnProperty['DeviceDefaultPageType'] == false) {
+            layer.close(parentIndex);
+            return;
+        }
+
+        if (faceAPI.DeviceDefaultPageType == null) {
+            layer.close(parentIndex);
+            return;
+        }
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="ParameterProductionDate"]', //指定元素
+            type: 'date',
+            format: 'yyyy-MM-dd'
+        });
+
+        
+
+        //获取设备详情
+        var iWaitIndex = layer.load(2);
+        function GetDeviceDetail() {
+            var sType = faceAPI.DeviceDefaultPageType;
+            faceAPI.AjaxPOSTJson({
+                url: '/api/Device/GetDefaultValue/' + sType,
+                success: function (result) {
+                    layer.close(iWaitIndex)
+                    if (result.Result == false) {
+                        layer.alert(result.error, { icon: 2 });
+                        layer.close(parentIndex)
+                    }
+                    else {
+                        //console.log(result.Content);
+                        serverDeviceDetail = result.Content;
+                        currentDevice = JSON.parse(serverDeviceDetail);
+                        //console.log(device);
+                        DeviceDetailBindFrom(currentDevice);
+                    }
+                }
+            });
+        }
+        GetDeviceDetail();
+
+        function DeviceDetailBindFrom(device) {
+
+            if (device.ParameterProductionDate == "") {
+                device.ParameterProductionDate = dayjs().format("YYYY-MM-DD");
+            }
+            
+            //开始绑定字段值
+            form.val("device_Update_div_filter", device);
+
+            //绑定网络参数字段
+            var _page4 = $('#device_Update_Page4');
+            _page4.find('div[autoset]').each((ind, em) => {
+                var _em = $(em);
+                var name = _em.attr("name");
+                if (device.hasOwnProperty(name))
+                    _em.html(device[name]);
+            });
+
+            var SwitchTitle = [];
+            SwitchTitle[0] = `${getLanguage('device.d226')}`;
+            SwitchTitle[1] = `${getLanguage('device.d227')}`;
+
+            _page4.find('div[name=ParameterNetworkSwitch]').html(SwitchTitle[device.ParameterNetworkSwitch]);
+            _page4.find('div[name=ParameterNetworkIpActive]').html(SwitchTitle[device.ParameterNetworkIpActive]);
+            _page4.find('div[name=ParameterWifiSwitch]').html(SwitchTitle[device.ParameterWifiSwitch]);
+
+
+
+            //绑定状态字段
+            var _page6 = $('#device_Update_Page6');
+            _page6.find('div[name=CreateTime]').html(device.CreateTime);
+            _page6.find('div[name=LastUpdatetime]').html(device.LastUpdatetime);
+
+            var UploadStatusTitle = [];
+            UploadStatusTitle[0] = `<span class="status-magenta">${getLanguage('device.d228')}</span>`;
+            UploadStatusTitle[1] = `<span class="status-blue">${getLanguage('device.d229')}</span>`;
+
+            var DoorStatusTitle = [];//门状态  0--无门磁；1--门开；2--门关
+            DoorStatusTitle[0] = `<span>${getLanguage('device.d230')}</span>`;
+            DoorStatusTitle[1] = `<span class="status-blue">${getLanguage('device.d231')}</span>`;
+            DoorStatusTitle[2] = `<span class="status-MediumSeaGreen">${getLanguage('device.d232')}</span>`;
+
+            var alarmStatusTitle = [];//设备报警状态  0--无报警；1--消防报警；2--门磁报警；3--开门超时报警；4--黑名单报警
+            alarmStatusTitle[0] = `<span>${getLanguage('device.d233')}</span>`;
+            alarmStatusTitle[1] = `<span class="status-red">${getLanguage('device.d234')}</span>`;
+            alarmStatusTitle[2] = `<span class="status-red">${getLanguage('device.d235')}</span>`;
+            alarmStatusTitle[3] = `<span class="status-Tomato">${getLanguage('device.d236')}</span>`;
+            alarmStatusTitle[4] = `<span class="status-darkred">${getLanguage('device.d237')}</span>`;
+
+            ShowOnlineStatus(device);
+
+            //显示在线状态
+            function ShowOnlineStatus(status) {
+                _page6.find('div[isStaus]').each((ind, em) => $(em).html(status[$(em).attr("name")]));
+
+
+                var onlineTime = dayjs(status.onlineTime, "YYYY-MM-DD HH:mm:ss");
+                second = dayjs().diff(onlineTime, 'second');
+                if (second < 30) {
+                    _page6.find('div[name=onlineStatus]').html(`<span class="label label_online">${getLanguage('device.d238')}</span>`);
+
+                    _page6.find('div[name=DoorStatus]').html(DoorStatusTitle[status.DoorStatus]);
+                    _page6.find('div[name=alarmStatus]').html(alarmStatusTitle[status.alarmStatus]);
+
+                }
+                else {
+                    _page6.find('div[name=onlineStatus]').html(`<span class="label label_offline">${getLanguage('device.d239')}</span>`);
+                    _page6.find('div[name=DoorStatus]').html("");
+                    _page6.find('div[name=alarmStatus]').html("");
+                }
+
+
+
+                _page6.find('div[name=UploadStatus]').html(UploadStatusTitle[status.UploadStatus]);
+                if (status.UploadStatus == 0)
+                    _page6.find('div[name=UploadStatusTime]').html("");
+
+            }
+
+            setLanguage();
+            setAllAttrVal();
+        }
+
+
+
+
+        //监听测试
+        $('#data-cancel-btn').on('click', function () {
+            layer.close(parentIndex);
+        });
+
+
+
+
+        //监听提交
+        form.on('submit(data-save-btn)', function (data) {
+
+            var postdata = data.field;
+
+            postdata.ParameterSystemTime = currentDevice.ParameterSystemTime;
+            postdata.Timegroups = currentDevice.Timegroups;
+
+            postdata.ParameterNetworkSwitch = currentDevice.ParameterNetworkSwitch;
+            postdata.ParameterNetworkIpActive = currentDevice.ParameterNetworkIpActive;
+            postdata.ParameterNetworkIpUrl = currentDevice.ParameterNetworkIpUrl;
+            postdata.ParameterNetworkSubnetMask = currentDevice.ParameterNetworkSubnetMask;
+            postdata.ParameterNetworkGteway = currentDevice.ParameterNetworkGteway;
+            postdata.ParameterNetworkDns = currentDevice.ParameterNetworkDns;
+            postdata.ParameterWifiSwitch = currentDevice.ParameterWifiSwitch;
+            postdata.ParameterWifiName = currentDevice.ParameterWifiName;
+            postdata.ParameterWifiPassWord = currentDevice.ParameterWifiPassWord;
+            
+
+
+
+            postdata.ParameterVolume = Number(postdata.ParameterVolume);
+            postdata.ParameterVoiceMode = Number(postdata.ParameterVoiceMode);
+            postdata.ParameterGrettings = Number(postdata.ParameterGrettings);
+            postdata.ParameterStrangerVoice = Number(postdata.ParameterStrangerVoice);
+            postdata.ParameterLightSwitch = Number(postdata.ParameterLightSwitch);
+            postdata.ParameterBrightness = Number(postdata.ParameterBrightness);
+            postdata.ParameterExposure = Number(postdata.ParameterExposure);
+            postdata.ParameterLanguageChoose = Number(postdata.ParameterLanguageChoose);
+            postdata.ParameterPreview = Number(postdata.ParameterPreview);
+            postdata.ParameterFaceIRThreshold = Number(postdata.ParameterFaceIRThreshold);
+            postdata.ParameterDistance = Number(postdata.ParameterDistance);
+            postdata.ParameterFaceThreshold = Number(postdata.ParameterFaceThreshold);
+            postdata.ParameterMaskThreshold = Number(postdata.ParameterMaskThreshold);
+            postdata.ParameterCompensate = Number(postdata.ParameterCompensate);
+            postdata.ParameterTempThresholdMax = Number(postdata.ParameterTempThresholdMax);
+            postdata.ParameterPolling = Number(postdata.ParameterPolling);
+            postdata.ParameterAccessType = Number(postdata.ParameterAccessType);
+            postdata.ParameterWgFormat = Number(postdata.ParameterWgFormat);
+            postdata.ParameterKeepOpenDoor = Number(postdata.ParameterKeepOpenDoor);
+            postdata.ParameterRecgInterval = Number(postdata.ParameterRecgInterval);
+            postdata.ParameterDoorSensorDelay = Number(postdata.ParameterDoorSensorDelay);
+            postdata.ParameterSaveExternalvisitors = Number(postdata.ParameterSaveExternalvisitors);
+            postdata.ParameterSavePicture = Number(postdata.ParameterSavePicture);
+            postdata.ParameterTempSwitch = Number(postdata.ParameterTempSwitch);
+            postdata.ParameterFahrenheitSwitch = Number(postdata.ParameterFahrenheitSwitch);
+            postdata.ParameterServerProtocol = Number(postdata.ParameterServerProtocol);
+            postdata.ParameterUDPPort = Number(postdata.ParameterUDPPort);
+            postdata.TimeZone = Number(postdata.TimeZone);
+            
+            postdata.ParameterIR = postdata.ParameterIR == "1" ? 1 : 0;
+            postdata.ParameterMask = postdata.ParameterMask == "1" ? 1 : 0;
+            postdata.ParameterLaissezSwitch = postdata.ParameterLaissezSwitch == "1" ? 1 : 0;
+            postdata.ParameterIntervalRecoSwitch = postdata.ParameterIntervalRecoSwitch == "1" ? 1 : 0;
+            postdata.ParameterDoorLongOpenAlarmSwitch = postdata.ParameterDoorLongOpenAlarmSwitch == "1" ? 1 : 0;
+            postdata.ParameterDoorAlarmSwitch = postdata.ParameterDoorAlarmSwitch == "1" ? 1 : 0;
+            postdata.ParameterEnableWeb = postdata.ParameterEnableWeb == "1" ? 1 : 0;
+            postdata.ParameterEnableTelnet = postdata.ParameterEnableTelnet == "1" ? 1 : 0;
+            postdata.ParameterEnableUDP = postdata.ParameterEnableUDP == "1" ? 1 : 0;
+            postdata.ParameterHttpPostUseGZIP = postdata.ParameterHttpPostUseGZIP == "1" ? 1 : 0;
+            postdata.ParameterFireAlarm = postdata.ParameterFireAlarm == "1" ? 1 : 0;
+
+            
+            
+            //console.log(postdata);
+            if (currentDevice.DeviceID != postdata.DeviceID) {
+                postdata.ParameterSerialNum = postdata.DeviceID;
+            }
+            else {
+                postdata.ParameterSerialNum = currentDevice.ParameterSerialNum;
+            }
+            delete postdata.softUpload;
+            
+
+
+            var sDetail = JSON.stringify(postdata, null, "\t");//序列化为字符串
+
+
+            layer.confirm(getLanguage('DeviceInfo.d22'), { icon: 3 }, function (index, layero, that) {//'确定保存设备信息吗?'
+                layer.close(index)
+
+
+                var post = {
+                    Protocol: faceAPI.DeviceDefaultPageType,
+                    DefaultJson: sDetail
+                };
+
+                faceAPI.AjaxPOSTJson({
+                    data: post,
+                    url: '/api/Device/SetDefaultValue',
+                    success: function (result) {
+
+                        if (result.Result == false) {
+                            layer.alert(result.Error, { icon: 2 });
+                        }
+                        else {
+                            layer.close(parentIndex);
+                        }
+                    }
+                });
+
+            });
+            return false;
+        });
+
+
+        faceAPI.ShowMouseTipMessageBox("device_Update_div_filter", layer);
+        faceAPI.CheckInputBox();
+
+    });
+</script>

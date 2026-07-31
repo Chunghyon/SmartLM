@@ -1,231 +1,321 @@
 using System.Net.Http.Json;
+using System.Text.Json.Nodes;
 
 namespace FaceDeviceDesktopClient.Forms;
 
-/// <summary>
-/// ´Ü¸»±â ¼³Á¤ Ã¢: ´Ü¸»±â¸í/À§Ä¡ ¼öÁ¤ + ¿ø°Ý Á¦¾î ±â´É ÅëÇÕ
-/// </summary>
 public class DeviceSettingsForm : Form
 {
     private readonly DeviceInfo _device;
     private readonly HttpClient _httpClient;
 
-    // »ó´Ü Á¤º¸ ÆíÁý
+    // ´Ü¸»±â Á¤º¸
     private TextBox txtDeviceName = null!;
     private TextBox txtTagName    = null!;
     private Button  btnSaveInfo   = null!;
 
-    // Basic Control
+    // Basic / Advanced Control
     private GroupBox grpBasicControl    = null!;
     private GroupBox grpAdvancedControl = null!;
-    private Button btnRestart        = null!;
-    private Button btnOpenDoor       = null!;
-    private Button btnCloseAlarm     = null!;
-    private Button btnSyncTime       = null!;
-    private Button btnSyncPeople     = null!;
-    private Button btnDeleteAllPeople= null!;
-    private Button btnClearRecords   = null!;
-    private Button btnRequestUpload  = null!;
-    private TextBox txtResult        = null!;
-    private Button btnClose          = null!;
+    private Button btnRestart         = null!;
+    private Button btnOpenDoor        = null!;
+    private Button btnCloseAlarm      = null!;
+    private Button btnSyncTime        = null!;
+    private Button btnSyncPeople      = null!;
+    private Button btnDeleteAllPeople = null!;
+    private Button btnClearRecords    = null!;
+    private Button btnRequestUpload   = null!;
+
+    // ÃâÀÔÁ¦¾î¼³Á¤ (³²Àº Ç×¸ñ¸¸)
+    private NumericUpDown numReleaseTime        = null!;  // ¹® ¿­¸² À¯Áö½Ã°£
+    private CheckBox      chkFreeOpen           = null!;  // ¹«ÀÎÁõ °³¹æ
+    private ComboBox      cmbVerificationType   = null!;  // ÀÎÁõ ¹æ½Ä
+    private CheckBox      chkRelay              = null!;  // ¸±·¹ÀÌ ½Ö¾ÈÁ¤  ¡ç Á¦°Å ¸ñ·Ï¿¡ ¾øÀ¸¹Ç·Î À¯Áö
+    private TextBox       txtShortMessage       = null!;  // ÀÎÁõ ¼º°ø ¸Þ½ÃÁö
+    private TextBox       txtVisitorRootPassword= null!;  // ¹æ¹®ÀÚ ·çÆ® ºñ¹Ð¹øÈ£
+    private NumericUpDown numMultiPerson        = null!;  // ´ÙÁß ÀÎÁõ ÀÎ¿ø
+
+    // ·Î±×
+    private TextBox txtResult = null!;
+    private Button  btnClose  = null!;
 
     public DeviceSettingsForm(DeviceInfo device, HttpClient httpClient)
     {
         _device     = device;
         _httpClient = httpClient;
-        InitializeComponent();
+        BuildUI();
+        _ = LoadAccessControlSettings();
     }
 
-    private void InitializeComponent()
+    private void BuildUI()
     {
         Text = $"´Ü¸»±â ¼³Á¤ - {_device.DeviceName ?? _device.SN}";
-        Size = new Size(620, 600);
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
+        AutoScroll = true;
 
+        const int lw = 160;
+        const int tx = 175;
+        const int cw = 370;
+        const int fw = 590;
         int y = 15;
 
-        // ¦¡¦¡ ´Ü¸»±â¸í ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-        Controls.Add(new Label { Text = "´Ü¸»±â¸í:", Location = new Point(20, y + 3), Width = 80, AutoSize = false });
+        // ¦¡¦¡ ´Ü¸»±â Á¤º¸ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        Controls.Add(MkLabel("´Ü¸»±â¸í:", 20, y + 3, 80));
         txtDeviceName = new TextBox { Location = new Point(105, y), Width = 380, Text = _device.DeviceName ?? "" };
         Controls.Add(txtDeviceName);
         y += 32;
 
-        // ¦¡¦¡ À§Ä¡ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-        Controls.Add(new Label { Text = "À§Ä¡:", Location = new Point(20, y + 3), Width = 80, AutoSize = false });
+        Controls.Add(MkLabel("À§Ä¡:", 20, y + 3, 80));
         txtTagName = new TextBox { Location = new Point(105, y), Width = 380, Text = _device.TagName ?? "" };
         Controls.Add(txtTagName);
         y += 32;
 
-        // ¦¡¦¡ ÀúÀå ¹öÆ° ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
         btnSaveInfo = new Button { Text = "Á¤º¸ ÀúÀå", Location = new Point(105, y), Size = new Size(100, 28) };
         btnSaveInfo.Click += BtnSaveInfo_Click;
         Controls.Add(btnSaveInfo);
         y += 42;
 
         // ¦¡¦¡ Basic Control ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-        grpBasicControl = new GroupBox
-        {
-            Text = "Basic Control",
-            Location = new Point(20, y),
-            Size = new Size(570, 80)
-        };
-
-        btnRestart = new Button { Text = "Àç½ÃÀÛ", Location = new Point(10, 25), Size = new Size(120, 35) };
-        btnRestart.Click += BtnRestart_Click;
-
-        btnOpenDoor = new Button { Text = "¹® ¿­±â", Location = new Point(140, 25), Size = new Size(120, 35) };
-        btnOpenDoor.Click += BtnOpenDoor_Click;
-
-        btnCloseAlarm = new Button { Text = "¾Ë¶÷ ÇØÁ¦", Location = new Point(270, 25), Size = new Size(120, 35) };
-        btnCloseAlarm.Click += BtnCloseAlarm_Click;
-
-        btnSyncTime = new Button { Text = "½Ã°£ µ¿±âÈ­", Location = new Point(400, 25), Size = new Size(120, 35) };
-        btnSyncTime.Click += BtnSyncTime_Click;
-
+        grpBasicControl = new GroupBox { Text = "Basic Control", Location = new Point(20, y), Size = new Size(fw, 80) };
+        btnRestart    = MkBtn("Àç½ÃÀÛ",      10,  25, BtnRestart_Click);
+        btnOpenDoor   = MkBtn("¹® ¿­±â",     140, 25, BtnOpenDoor_Click);
+        btnCloseAlarm = MkBtn("¾Ë¶÷ ÇØÁ¦",   270, 25, BtnCloseAlarm_Click);
+        btnSyncTime   = MkBtn("½Ã°£ µ¿±âÈ­", 400, 25, BtnSyncTime_Click);
         grpBasicControl.Controls.AddRange(new Control[] { btnRestart, btnOpenDoor, btnCloseAlarm, btnSyncTime });
         Controls.Add(grpBasicControl);
         y += 95;
 
         // ¦¡¦¡ Advanced Control ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-        grpAdvancedControl = new GroupBox
-        {
-            Text = "Advanced Control",
-            Location = new Point(20, y),
-            Size = new Size(570, 80)
-        };
-
-        btnSyncPeople = new Button { Text = "»ç¿ëÀÚ µ¿±âÈ­", Location = new Point(10, 25), Size = new Size(120, 35) };
-        btnSyncPeople.Click += BtnSyncPeople_Click;
-
-        btnDeleteAllPeople = new Button
-        {
-            Text = "»ç¿ëÀÚ ÀüÃ¼»èÁ¦", Location = new Point(140, 25), Size = new Size(120, 35),
-            ForeColor = System.Drawing.Color.DarkRed
-        };
-        btnDeleteAllPeople.Click += BtnDeleteAllPeople_Click;
-
-        btnClearRecords = new Button
-        {
-            Text = "±â·Ï »èÁ¦", Location = new Point(270, 25), Size = new Size(120, 35),
-            ForeColor = System.Drawing.Color.DarkRed
-        };
-        btnClearRecords.Click += BtnClearRecords_Click;
-
-        btnRequestUpload = new Button { Text = "¾÷·Îµå ¿äÃ»", Location = new Point(400, 25), Size = new Size(120, 35) };
-        btnRequestUpload.Click += BtnRequestUpload_Click;
-
-        grpAdvancedControl.Controls.AddRange(new Control[]
-            { btnSyncPeople, btnDeleteAllPeople, btnClearRecords, btnRequestUpload });
+        grpAdvancedControl = new GroupBox { Text = "Advanced Control", Location = new Point(20, y), Size = new Size(fw, 80) };
+        btnSyncPeople      = MkBtn("»ç¿ëÀÚ µ¿±âÈ­",   10,  25, BtnSyncPeople_Click);
+        btnDeleteAllPeople = MkBtn("»ç¿ëÀÚ ÀüÃ¼»èÁ¦", 140, 25, BtnDeleteAllPeople_Click, System.Drawing.Color.DarkRed);
+        btnClearRecords    = MkBtn("±â·Ï »èÁ¦",       270, 25, BtnClearRecords_Click,    System.Drawing.Color.DarkRed);
+        btnRequestUpload   = MkBtn("¾÷·Îµå ¿äÃ»",     400, 25, BtnRequestUpload_Click);
+        grpAdvancedControl.Controls.AddRange(new Control[] { btnSyncPeople, btnDeleteAllPeople, btnClearRecords, btnRequestUpload });
         Controls.Add(grpAdvancedControl);
         y += 95;
 
-        // ¦¡¦¡ °á°ú ·Î±× ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // ¦¡¦¡ ÃâÀÔÁ¦¾î¼³Á¤ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        var grpAccess = new GroupBox { Text = "ÃâÀÔÁ¦¾î¼³Á¤", Location = new Point(20, y), Size = new Size(fw, 10) };
+        int gy = 22;
+
+        void AR(string label, Control ctrl)
+        {
+            grpAccess.Controls.Add(MkLabel(label, 10, gy + 3, lw));
+            ctrl.Location = new Point(tx, gy);
+            if (ctrl.Width < 10) ctrl.Width = cw;
+            grpAccess.Controls.Add(ctrl);
+            gy += 30;
+        }
+
+        // ¹® ¿­¸² À¯Áö½Ã°£ (ReleaseTime / Unlock Hold)
+        numReleaseTime = new NumericUpDown { Minimum = 0, Maximum = 65535, Value = 3, Width = cw };
+        AR("¹® ¿­¸² À¯Áö½Ã°£ (s):", numReleaseTime);
+
+        // ¹«ÀÎÁõ °³¹æ (FreeOpen / No-Verification Unlock)
+        chkFreeOpen = new CheckBox { Text = "È°¼ºÈ­", Width = cw };
+        AR("¹«ÀÎÁõ °³¹æ:", chkFreeOpen);
+
+        // ÀÎÁõ ¹æ½Ä (VerificationType)
+        cmbVerificationType = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = cw };
+        cmbVerificationType.Items.AddRange(new object[]
+        {
+            "1. Ç¥ÁØ ÀÎÁõ (Standard)",
+            "2. ¾ó±¼/Áö¹®/¼Õ¹Ù´Ú/Ä«µå + ºñ¹Ð¹øÈ£",
+            "3. Ä«µå + ¾ó±¼/Áö¹®/¼Õ¹Ù´Ú/ºñ¹Ð¹øÈ£",
+            "4. ´ÙÁß Ãâ¼®",
+            "5. ½ÅºÐÁõ ºñ±³",
+            "6. Ä«µå + ¾ó±¼/Áö¹®/¼Õ¹Ù´Ú + ºñ¹Ð¹øÈ£",
+            "7. Ä«µå + Áö¹®/¼Õ¹Ù´Ú + ¾ó±¼",
+            "8. Áö¹®/¼Õ¹Ù´Ú + ¾ó±¼ + ºñ¹Ð¹øÈ£",
+            "9. Áö¹® + ¼Õ¹Ù´Ú + ¾ó±¼",
+            "10. ¼Õ¹Ù´Ú + ¾ó±¼",
+            "11. Áö¹® + ¾ó±¼",
+            "12. ¼Õ¹Ù´Ú¸¸",
+            "13. Áö¹®¸¸",
+            "14. Ä«µå¸¸",
+            "15. ºñ¹Ð¹øÈ£¸¸",
+            "16. ½ÅºÐÁõ ºñ±³ + ÀÚµ¿µî·Ï"
+        });
+        cmbVerificationType.SelectedIndex = 0;
+        AR("ÀÎÁõ ¹æ½Ä:", cmbVerificationType);
+
+        // ÀÎÁõ ¼º°ø ¸Þ½ÃÁö (ShortMessage)
+        txtShortMessage = new TextBox { Width = cw };
+        AR("ÀÎÁõ ¼º°ø ¸Þ½ÃÁö:", txtShortMessage);
+
+        // ¹æ¹®ÀÚ ·çÆ® ºñ¹Ð¹øÈ£ (VisitorRootPassword)
+        txtVisitorRootPassword = new TextBox { UseSystemPasswordChar = true, Width = cw };
+        AR("¹æ¹®ÀÚ ·çÆ® ºñ¹Ð¹øÈ£:", txtVisitorRootPassword);
+
+        // ´ÙÁß ÀÎÁõ ÀÎ¿ø (MultiPerson)
+        numMultiPerson = new NumericUpDown { Minimum = 1, Maximum = 50, Value = 1, Width = cw };
+        AR("´ÙÁß ÀÎÁõ ÀÎ¿ø (¸í):", numMultiPerson);
+
+        // ¹öÆ° Çà
+        var btnLoadAccess = new Button { Text = "¼³Á¤ ºÒ·¯¿À±â", Location = new Point(tx, gy), Size = new Size(130, 28) };
+        btnLoadAccess.Click += async (s, e) => await LoadAccessControlSettings();
+        grpAccess.Controls.Add(btnLoadAccess);
+
+        var btnSaveAccess = new Button { Text = "¼³Á¤ ÀúÀå", Location = new Point(tx + 140, gy), Size = new Size(100, 28) };
+        btnSaveAccess.Click += BtnSaveAccess_Click;
+        grpAccess.Controls.Add(btnSaveAccess);
+        gy += 38;
+
+        grpAccess.Height = gy + 10;
+        Controls.Add(grpAccess);
+        y += grpAccess.Height + 10;
+
+        // ¦¡¦¡ ·Î±× Ã¢ (ÃÖÇÏ´Ü) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
         txtResult = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(570, 110),
-            Multiline = true,
-            ScrollBars = ScrollBars.Vertical,
-            ReadOnly = true,
-            Font = new System.Drawing.Font("Consolas", 9F)
+            Location = new Point(20, y), Size = new Size(fw, 80),
+            Multiline = true, ScrollBars = ScrollBars.Vertical,
+            ReadOnly = true, Font = new System.Drawing.Font("Consolas", 9F)
         };
         Controls.Add(txtResult);
-        y += 120;
+        y += 90;
 
-        // ¦¡¦¡ ´Ý±â ¹öÆ° ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-        btnClose = new Button
-        {
-            Text = "´Ý±â",
-            DialogResult = DialogResult.Cancel,
-            Location = new Point(490, y),
-            Size = new Size(100, 30)
-        };
+        btnClose = new Button { Text = "´Ý±â", DialogResult = DialogResult.Cancel, Location = new Point(fw - 80, y), Size = new Size(100, 30) };
         Controls.Add(btnClose);
         CancelButton = btnClose;
-
-        // Æû ³ôÀÌ ÀÚµ¿ Á¶Á¤
-        ClientSize = new Size(620, y + 45);
-
-        Load += (s, e) => AddLog($"´Ü¸»±â: {_device.DeviceName} ({_device.SN})  ÁØºñ ¿Ï·á.");
+        ClientSize = new Size(fw + 40, y + 45);
     }
 
-    // ¦¡¦¡ Á¤º¸ ÀúÀå ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    private static Label MkLabel(string text, int x, int y, int w) =>
+        new Label { Text = text, Location = new Point(x, y), Width = w, AutoSize = false };
+
+    private static Button MkBtn(string text, int x, int y, EventHandler h, System.Drawing.Color? fg = null)
+    {
+        var b = new Button { Text = text, Location = new Point(x, y), Size = new Size(120, 35) };
+        if (fg.HasValue) b.ForeColor = fg.Value;
+        b.Click += h;
+        return b;
+    }
+
     private async void BtnSaveInfo_Click(object? sender, EventArgs e)
     {
         try
         {
-            var payload = new
-            {
-                SN         = _device.SN,
-                DeviceName = txtDeviceName.Text.Trim(),
-                TagName    = txtTagName.Text.Trim()
-            };
-            var resp = await _httpClient.PostAsJsonAsync($"/admin/devices/{_device.SN}/update-info", payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                AddLog($"[{DateTime.Now:HH:mm:ss}] ? ´Ü¸»±â Á¤º¸°¡ ÀúÀåµÇ¾ú½À´Ï´Ù.");
-                DialogResult = DialogResult.OK;   // ¸ñ·Ï °»½Å Æ®¸®°Å¿ë
-            }
-            else
-                AddLog($"[{DateTime.Now:HH:mm:ss}] ? ÀúÀå ½ÇÆÐ: HTTP {resp.StatusCode}");
+            var resp = await _httpClient.PostAsJsonAsync($"/admin/devices/{_device.SN}/update-info",
+                new { SN = _device.SN, DeviceName = txtDeviceName.Text.Trim(), TagName = txtTagName.Text.Trim() });
+            AddLog(resp.IsSuccessStatusCode
+                ? $"[{DateTime.Now:HH:mm:ss}] ? ´Ü¸»±â Á¤º¸ ÀúÀå ¿Ï·á."
+                : $"[{DateTime.Now:HH:mm:ss}] ? Á¤º¸ ÀúÀå ½ÇÆÐ: HTTP {resp.StatusCode}");
+            if (resp.IsSuccessStatusCode) DialogResult = DialogResult.OK;
         }
-        catch (Exception ex)
-        {
-            AddLog($"[{DateTime.Now:HH:mm:ss}] ? ¿À·ù: {ex.Message}");
-        }
+        catch (Exception ex) { AddLog($"[{DateTime.Now:HH:mm:ss}] ? ¿À·ù: {ex.Message}"); }
     }
 
-    // ¦¡¦¡ Basic Control ÇÚµé·¯ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
     private async void BtnRestart_Click(object? sender, EventArgs e)
     {
         if (MessageBox.Show("´Ü¸»±â¸¦ Àç½ÃÀÛÇÏ½Ã°Ú½À´Ï±î?", "È®ÀÎ",
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-        await ExecuteCommand("Àç½ÃÀÛ", "restart");
+        await ExecCmd("Àç½ÃÀÛ", "restart");
     }
-
-    private async void BtnOpenDoor_Click(object? sender, EventArgs e) =>
-        await ExecuteCommand("¹® ¿­±â", "opendoor");
-
-    private async void BtnCloseAlarm_Click(object? sender, EventArgs e) =>
-        await ExecuteCommand("¾Ë¶÷ ÇØÁ¦", "closealarm");
-
+    private async void BtnOpenDoor_Click(object? sender, EventArgs e)   => await ExecCmd("¹® ¿­±â", "opendoor");
+    private async void BtnCloseAlarm_Click(object? sender, EventArgs e) => await ExecCmd("¾Ë¶÷ ÇØÁ¦", "closealarm");
     private async void BtnSyncTime_Click(object? sender, EventArgs e)
     {
         AddLog($"[{DateTime.Now:HH:mm:ss}] ½Ã°£ µ¿±âÈ­ ¿äÃ»...");
         await Task.Delay(300);
         AddLog($"[{DateTime.Now:HH:mm:ss}] ? ½Ã°£ µ¿±âÈ­ ¿Ï·á.");
     }
-
-    // ¦¡¦¡ Advanced Control ÇÚµé·¯ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
     private async void BtnSyncPeople_Click(object? sender, EventArgs e)
     {
         if (MessageBox.Show("ÀüÃ¼ »ç¿ëÀÚ¸¦ ´Ü¸»±â¿¡ µ¿±âÈ­ÇÏ½Ã°Ú½À´Ï±î?", "È®ÀÎ",
             MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-        await ExecuteCommand("»ç¿ëÀÚ µ¿±âÈ­", "pushAllPeople");
+        await ExecCmd("»ç¿ëÀÚ µ¿±âÈ­", "pushAllPeople");
     }
-
     private async void BtnDeleteAllPeople_Click(object? sender, EventArgs e)
     {
         if (MessageBox.Show("´Ü¸»±âÀÇ »ç¿ëÀÚ¸¦ ÀüÃ¼ »èÁ¦ÇÏ½Ã°Ú½À´Ï±î?", "°æ°í",
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-        await ExecuteCommand("»ç¿ëÀÚ ÀüÃ¼»èÁ¦", "deleteAllPeople");
+        await ExecCmd("»ç¿ëÀÚ ÀüÃ¼»èÁ¦", "deleteAllPeople");
     }
-
     private async void BtnClearRecords_Click(object? sender, EventArgs e)
     {
         if (MessageBox.Show("´Ü¸»±âÀÇ ±â·ÏÀ» ÀüÃ¼ »èÁ¦ÇÏ½Ã°Ú½À´Ï±î?", "°æ°í",
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-        await ExecuteCommand("±â·Ï »èÁ¦", "clearRecords");
+        await ExecCmd("±â·Ï »èÁ¦", "clearRecords");
+    }
+    private async void BtnRequestUpload_Click(object? sender, EventArgs e) => await ExecCmd("¾÷·Îµå ¿äÃ»", "repostRecord");
+
+    // ¸¶Áö¸·À¸·Î ºÒ·¯¿Â ÀüÃ¼ WorkSetting (ÀúÀå ½Ã º£ÀÌ½º·Î »ç¿ë)
+    private JsonObject? _fullWorkSetting;
+
+    private async Task LoadAccessControlSettings()
+    {
+        try
+        {
+            var resp = await _httpClient.GetAsync($"/admin/devices/{_device.SN}/work-setting");
+            if (!resp.IsSuccessStatusCode)
+            {
+                AddLog($"[{DateTime.Now:HH:mm:ss}] ¼³Á¤ ºÒ·¯¿À±â ½ÇÆÐ: HTTP {resp.StatusCode}");
+                return;
+            }
+            var ws = await resp.Content.ReadFromJsonAsync<JsonObject>();
+            if (ws == null) { AddLog($"[{DateTime.Now:HH:mm:ss}] ÀúÀåµÈ ÃâÀÔÁ¦¾î¼³Á¤ÀÌ ¾ø½À´Ï´Ù."); return; }
+
+            // ÀüÃ¼ WorkSetting º¸°ü (ÀúÀå ½Ã ³ª¸ÓÁö ÇÊµå À¯Áö¿ë)
+            _fullWorkSetting = (JsonObject)ws.DeepClone();
+
+            // ¾ÈÀüÇÑ int ÀÐ±â: Number/String ¸ðµÎ Ã³¸®
+            int Val(string key, int def)
+            {
+                var node = ws[key];
+                if (node is null) return def;
+                var raw = node.ToJsonString().Trim('"');
+                return int.TryParse(raw, out int v) ? v : def;
+            }
+            string Str(string key) => ws[key]?.ToJsonString().Trim('"') ?? "";
+
+            numReleaseTime.Value              = Math.Min(Val("ReleaseTime", 3), 65535);
+            chkFreeOpen.Checked               = Val("FreeOpen", 0) == 1;
+            cmbVerificationType.SelectedIndex = Math.Max(0, Math.Min(Val("VerificationType", 1) - 1, 15));
+            txtShortMessage.Text              = Str("ShortMessage");
+            txtVisitorRootPassword.Text       = Str("VisitorRootPassword");
+            numMultiPerson.Value              = Math.Min(Math.Max(Val("MultiPerson", 1), 1), 50);
+
+            AddLog($"[{DateTime.Now:HH:mm:ss}] ? ÃâÀÔÁ¦¾î¼³Á¤À» ºÒ·¯¿Ô½À´Ï´Ù. " +
+                   $"(ReleaseTime={Val("ReleaseTime",3)}, FreeOpen={Val("FreeOpen",0)}, VerificationType={Val("VerificationType",1)})");
+        }
+        catch (Exception ex) { AddLog($"[{DateTime.Now:HH:mm:ss}] ? ¼³Á¤ ºÒ·¯¿À±â ¿À·ù: {ex.Message}"); }
     }
 
-    private async void BtnRequestUpload_Click(object? sender, EventArgs e) =>
-        await ExecuteCommand("¾÷·Îµå ¿äÃ»", "repostRecord");
+    private async void BtnSaveAccess_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            // ±âÁ¸ ÀüÃ¼ WorkSettingÀ» º£ÀÌ½º·Î ÇÏ°í º¯°æ ÇÊµå¸¸ µ¤¾î¾¸
+            JsonObject ws;
+            if (_fullWorkSetting != null)
+                ws = (JsonObject)_fullWorkSetting.DeepClone();
+            else
+                ws = new JsonObject();
 
-    // ¦¡¦¡ °øÅë ¸í·É ½ÇÇà ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-    private async Task ExecuteCommand(string label, string commandType)
+            ws["DeviceSN"]            = _device.SN;
+            ws["ReleaseTime"]         = (int)numReleaseTime.Value;
+            ws["FreeOpen"]            = chkFreeOpen.Checked ? 1 : 0;
+            ws["VerificationType"]    = cmbVerificationType.SelectedIndex + 1;
+            ws["ShortMessage"]        = txtShortMessage.Text;
+            ws["VisitorRootPassword"] = txtVisitorRootPassword.Text;
+            ws["MultiPerson"]         = (int)numMultiPerson.Value;
+
+            var resp = await _httpClient.PutAsJsonAsync($"/admin/devices/{_device.SN}/work-setting", ws);
+            if (resp.IsSuccessStatusCode)
+            {
+                await _httpClient.PostAsync($"/admin/devices/{_device.SN}/request-sync", null);
+                AddLog($"[{DateTime.Now:HH:mm:ss}] ? ÃâÀÔÁ¦¾î¼³Á¤ ÀúÀå ¹× µ¿±âÈ­ ¿äÃ» ¿Ï·á.");
+            }
+            else AddLog($"[{DateTime.Now:HH:mm:ss}] ? ÀúÀå ½ÇÆÐ: HTTP {resp.StatusCode}");
+        }
+        catch (Exception ex) { AddLog($"[{DateTime.Now:HH:mm:ss}] ? ¿À·ù: {ex.Message}"); }
+    }
+
+    private async Task ExecCmd(string label, string commandType)
     {
         try
         {
@@ -237,10 +327,7 @@ public class DeviceSettingsForm : Form
                 ? $"[{DateTime.Now:HH:mm:ss}] ? {label} ¸í·É Àü¼Û ¿Ï·á."
                 : $"[{DateTime.Now:HH:mm:ss}] ? ½ÇÆÐ: HTTP {resp.StatusCode}");
         }
-        catch (Exception ex)
-        {
-            AddLog($"[{DateTime.Now:HH:mm:ss}] ? ¿À·ù: {ex.Message}");
-        }
+        catch (Exception ex) { AddLog($"[{DateTime.Now:HH:mm:ss}] ? ¿À·ù: {ex.Message}"); }
     }
 
     private void AddLog(string message)

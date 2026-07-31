@@ -1,0 +1,1032 @@
+<div class="layuimini-container layuimini-page-anim" divname="device">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>
+                <span language="device.d1">搜索信息</span>
+            </legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="" lay-filter="Device_search_div_filter">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label" language="device.d2">设备SN</label>
+                            <div class="layui-input-inline">
+                                <input type="text" maxlength="16" name="SN" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label" language="device.d3">设备名称</label>
+                            <div class="layui-input-inline">
+                                <input type="text" maxlength="30" name="DeviceName" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label" language="device.Protocol">协议类型</label>
+                            <div class="layui-input-inline">
+                                <select name="Protocol" lay-verify="">
+                                    <option value="NONE" selected language="device.NoSearch">不查询</option>
+                                    <option value="HTTPv1">HTTPv1</option>
+                                    <option value="HTTPv2">HTTPv2</option>
+                                    <option value="MQTT">MQTT</option>
+                                    <option value="Websocket">Websocket</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">
+                                <span language="device.d15">出入类型</span>
+                            </label>
+                            <div class="layui-input-inline selectUp">
+                                <select name="IsEntry" required lay-verify="">
+                                    <option value="NONE" selected language="device.NoSearch">不查询</option>
+                                    <option value="1" language="device.d116">入门</option>
+                                    <option value="0" language="device.d117">出门</option>
+                                </select>
+
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn">
+                                <i class="layui-icon">&#xe615;</i>
+                                <span language="device.d4">搜索</span>
+                            </button>
+                            <!-- <button id="btntest" type="submit" class="layui-btn layui-btn-primary" lay-filter="data-test-btn">
+                                <i class="layui-icon"></i> 测试
+                            </button>
+                            -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm" lay-event="reload" language="device.d5" tt="刷新">  </button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete" language="device.d6" tt="删除">  </button>
+                <button class="layui-btn layui-btn-sm demolist" id="butRemoteMenu" data-id="111" language="device.d7" tt="远程操作"></button>
+                <button class="layui-btn layui-btn-sm demolist" id="butElevatorRemoteMenu" data-id="111" language="device.ElevatorRemoteButton" tt="电梯远程操作"></button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" id="butDefaultMenu" language="device.d8" tt="出厂默认值">  </button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="uploadsoftfile" language="device.d9" tt="上传固件"> </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="DevicePageTable" lay-filter="DevicePageTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit" language="device.d10" tt="编辑"></a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete" language="device.d11" tt="删除"></a>
+        </script>
+
+    </div>
+</div>
+<style>
+    .label_online {
+        color: #0034FF;
+    }
+
+    .label_offline {
+        color: #DC143C;
+    }
+
+    .label_alarm {
+        margin-left: 5px;
+        color: red;
+    }
+
+
+    .status-black {
+        margin-left: 10px;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+        color: black;
+    }
+
+    .status-red {
+        color: red;
+    }
+
+    .status-blue {
+        color: blue;
+    }
+
+    .status-MediumSeaGreen {
+        color: mediumSeaGreen;
+    }
+
+    .status-magenta {
+        color: magenta;
+    }
+
+    .status-Tomato {
+        color: tomato;
+    }
+
+    .status-darkred {
+        color: darkred;
+    }
+</style>
+<script src="/lib/HashTable.js"></script>
+<script>
+
+    layui.use(['form', 'table', 'miniPage', 'element', 'faceAPI', 'dropdown'], function () {
+        // layui.use(['form', 'table', 'miniPage', 'element', 'faceAPI'], function () {
+        // debugger
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+        var faceAPI = layui.faceAPI;
+        var tabDatas = [];
+        var dropdown = layui.dropdown;
+        var deviceKeepaliveCheckTime = 1000 * 1; //设备保活包检测时间间隔 单位 秒
+
+
+        form.render();
+
+        //$('#btntest').on('click', function () {
+        //    var that = this;
+        //    layer.tips('只想提示地精准些', that); //在元素的事件回调体中，follow直接赋予this即可
+        //});
+        // debugger
+        table.render({
+            elem: '#DevicePageTable',
+            //**************************异步请求开始***********************
+            url: 'api/Device/Query',
+            method: 'post',
+            contentType: "application/json",
+            headers: {
+                //token: 'sasasas',
+                Authorization: "Bearer " + faceAPI.GetJWTToken()
+            },//增加Token验证头
+            request: {
+                pageName: 'PageIndex', //页码的参数名称，默认：page
+                limitName: 'PageSize' //每页数据量的参数名，默认：limit
+            },
+            parseData: function (res) { //res 即为原始返回的数据
+                if (res.ErrCode == 0) {
+                    var data = res.Content;
+                    var ret = {
+                        "code": res.ErrCode, //解析接口状态
+                        "msg": res.Error, //解析提示文本
+                        "count": data.TotalCount, //解析数据长度
+                        "data": data.DataList //解析数据列表
+                    };
+                    return ret;
+
+                } else {
+                    /*layer.open({
+                        title: '请求错误',
+                        content: '(' + res.ErrCode + ')' + res.Error
+                    });  */
+
+                    return {
+                        "code": 0, //解析接口状态
+                        "msg": '', //解析提示文本
+                        "count": 0, //解析数据长度
+                        "data": [] //解析数据列表
+                    };
+                }
+
+            },
+            //**************************异步请求结束***********************
+
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: getLanguage('device.d12'),
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                { type: "checkbox", width: 50 },
+                { field: 'SN', width: 170, title: 'SN', sort: true },
+                { field: 'DeviceName', width: 200, title: getLanguage('device.d13'), sort: true },//名称
+                { field: 'Protocol', width: 200, title: getLanguage('device.Protocol'), sort: true },//协议类型
+                { field: 'DeviceVer', width: 200, title: getLanguage('device.d14') },
+                {//出入类型 0,入门；1，出门
+                    field: 'IsEntry', width: 110, title: getLanguage('device.d15'),
+                    templet: function (d) {
+                        if (d.IsEntry == 1) return getLanguage('device.d16');//入门
+                        return getLanguage('device.d17');//出门
+                    }
+                },
+                {//最近保活时间
+                    field: 'LastKeepaliveTime', width: 180, title: getLanguage('device.d23'), sort: true,
+                    templet: function (d) {
+                        var stip;
+                        stip = '<div LAY_TABLE_INDEX="' + d.LAY_TABLE_INDEX + '" sn="' + d.SN + '" name="Onlinestatus">';
+
+                        stip = stip + getDeviceStatus(d);
+
+
+                        stip = stip + '</div>';
+                        return stip;
+                    }
+                },
+                //操作
+                { title: getLanguage('device.d24'), width: 140, toolbar: '#currentTableBar', align: "center" }
+            ]],
+            limits: [100, 200, 300, 400, 500, 600],
+            limit: 100,
+            page: true,
+            skin: 'line',
+            done: function (res, curr, count) {
+                //如果是异步请求数据方式，res即为你接口返回的信息。
+                //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                IniDefaultMenu();
+                IniRemoteButtonMenu();
+
+                if (count == 0)
+                    tabDatas = [];
+                else
+                    tabDatas = res.data;
+                tipRegEvent();
+                setLanguage();
+                setAllAttrVal();
+
+            }
+        });
+
+
+        var doorStatusTitle = [];//门状态  0--无门磁；1--门开；2--门关
+        doorStatusTitle[0] = `<span class="status-magenta">${getLanguage('device.d25')}</span>`;
+        doorStatusTitle[1] = `<span class="status-Tomato">${getLanguage('device.d26')}</span>`;
+        doorStatusTitle[2] = `<span class="status-MediumSeaGreen">${getLanguage('device.d27')}</span>`;
+
+        var doorStatusHTTPv2Title = [];// 门磁状态  0--表示关  1--表示开
+        doorStatusHTTPv2Title[0] = `<span class="status-MediumSeaGreen">${getLanguage('device.d27')}</span>`;
+        doorStatusHTTPv2Title[1] = doorStatusTitle[1];
+
+        //设备报警状态  0--无报警；1--消防报警；2--门磁报警；3--开门超时报警；4--黑名单报警
+        //5--防拆报警;6--非法验证;7--胁迫报警密码
+        var alarmStatusTitle = [];
+        alarmStatusTitle[0] = `<span class="status-MediumSeaGreen" style="margin-left: 1px">${getLanguage('device.NoAlarm')}</span>`;//无报警
+        alarmStatusTitle[1] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.FireAlarm')}</span>`;//消防报警
+        alarmStatusTitle[2] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.DoorSensorAlarm')}</span>`;//门磁报警
+        alarmStatusTitle[3] = `<span class="status-Tomato" style="margin-left: 1px">${getLanguage('device.OpenTimeoutAlarm')}</span>`;//开门超时报警
+        alarmStatusTitle[4] = `<span class="status-darkred" style="margin-left: 1px">${getLanguage('device.BlacklistAlarm')}</span>`;//黑名单报警
+        alarmStatusTitle[5] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.AntiAlarm')}</span>`;//防拆报警
+        alarmStatusTitle[6] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.IllegalAlarm')}</span>`;//非法验证
+        alarmStatusTitle[7] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.PasswordAlarm')}</span>`;//胁迫报警密码
+
+        /// 门报警状态  空字符串为无报警，否则会有具体报警名称
+        /// <para>fire--消防报警      blacklist--黑名单报警    anti--防拆报警</para>
+        /// <para>Illegal--非法验证   password--胁迫报警密码   openTimeout--开门超时报警</para>
+        /// <para>doorSensor--门磁报警</para>
+        /// <para>有多个报警时，使用逗号分隔 fire,blacklist</para>
+        var alarmHTTPv2Map = [];
+        alarmHTTPv2Map["NOALARM"] = `<span class="status-MediumSeaGreen" style="margin-left: 1px">${getLanguage('device.NoAlarm')}</span>`;//无报警
+        alarmHTTPv2Map["fire"] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.FireAlarm')}</span>`;//消防报警
+        alarmHTTPv2Map["doorSensor"] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.DoorSensorAlarm')}</span>`;//门磁报警
+        alarmHTTPv2Map["openTimeout"] = `<span class="status-Tomato" style="margin-left: 1px">${getLanguage('device.OpenTimeoutAlarm')}</span>`;//开门超时报警
+        alarmHTTPv2Map["blacklist"] = `<span class="status-darkred" style="margin-left: 1px">${getLanguage('device.BlacklistAlarm')}</span>`;//黑名单报警
+        alarmHTTPv2Map["anti"] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.AntiAlarm')}</span>`;//防拆报警
+        alarmHTTPv2Map["illegal"] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.IllegalAlarm')}</span>`;//非法验证
+        alarmHTTPv2Map["password"] = `<span class="status-red" style="margin-left: 1px">${getLanguage('device.PasswordAlarm')}</span>`;//胁迫报警密码
+
+
+        //继电器物状态  0--表示COM和NC常闭  1--表示COM和NO常闭
+        var httpv2RelayStatusMap = [];
+        httpv2RelayStatusMap[0] = `<span class="status-MediumSeaGreen" >${getLanguage('device.RelayClose')}</span>`;//表示COM和NC常闭
+        httpv2RelayStatusMap[1] = `<span class="status-red" >${getLanguage('device.RelayOpen')}</span>`;//表示COM和NO常闭
+
+        //常开状态  0--表示常闭   1--表示常开
+        var httpv2KeepOpenStatusMap = [];
+        httpv2KeepOpenStatusMap[0] = `<span class="status-MediumSeaGreen">${getLanguage('device.KeepOpen_Invalid')}</span>`;//禁用
+        httpv2KeepOpenStatusMap[1] = `<span class="status-red" >${getLanguage('device.KeepOpen_Use')}</span>`;//启用
+
+        //门锁定状态  0--表示未锁定  1--表示已锁定
+        var httpv2LockDoorStatusMap = [];
+        httpv2LockDoorStatusMap[0] = `<span class="status-MediumSeaGreen">${getLanguage('device.LockDoor_Invalid')}</span>`;//禁用
+        httpv2LockDoorStatusMap[1] = `<span class="status-red" >${getLanguage('device.LockDoor_Use')}</span>`;//启用
+
+
+        ///检查是否在线
+        function getDeviceStatus(item) {
+            //var lastTime = dayjs(item.lastKeepaliveTime, "YYYY-MM-DD HH:mm:ss");
+            var onlineTime = dayjs(item.LastKeepaliveTime, "YYYY-MM-DD HH:mm:ss");
+            var second = dayjs().diff(onlineTime, 'second');
+            var isOnline = (second < 120);
+            var stip = "";
+            if (isOnline) {
+                stip = `<span class="label label_online">${getLanguage('device.d33')}</span>`;//在线
+                if (item.Protocol == "HTTPv1") {
+                    stip = getDeviceHTTPv1Status(item.KeepaliveStatus)
+                }
+                if (item.Protocol == "HTTPv2") {
+                    stip = getDeviceHTTPv2Status(item.KeepaliveStatus)
+                }
+                if (item.Protocol == "MQTT") {
+                    stip = getDeviceHTTPv2Status(item.KeepaliveStatus)
+                }
+            }
+            else
+                stip = `<span class="label label_offline">${getLanguage('device.d34')}</span>`;//离线
+
+
+            return stip;
+        }
+        //获取HTTPv1协议的的保活包状态
+        function getDeviceHTTPv1Status(item) {
+            var stip = `<span class="label label_online">${getLanguage('device.d33')}</span>`;//在线
+            if (item == undefined) return stip;
+            if (item.Door > 0) {//门状态  0--无门磁；1--门开；2--门关
+                stip = stip + '<span style="margin-left: 1px">' + doorStatusTitle[item.Door] + '</span>';
+            }
+            if (item.Alarm > 0) {//设备报警状态  0--无报警；1--消防报警；2--门磁报警；3--开门超时报警；4--黑名单报警
+                stip = stip + '<span class="label label_alarm" >' + alarmStatusTitle[item.Alarm] + '</span>';
+            }
+            return stip;
+        }
+        function getDeviceHTTPv2Status(item) {
+            var stip = `<span class="label label_online">${getLanguage('device.d33')}</span>`;//在线
+            if (item == undefined) return stip;
+
+            //门磁状态  0--表示关  1--表示开
+            stip = stip + '<span style="margin-left: 1px">' + doorStatusHTTPv2Title[item.DoorSensorStatus] + '</span>';
+
+            if (item.hasOwnProperty("AlarmStatus") == true) {
+                /// 门报警状态  空字符串为无报警，否则会有具体报警名称
+                /// <para>fire--消防报警      blacklist--黑名单报警    anti--防拆报警</para>
+                /// <para>Illegal--非法验证   password--胁迫报警密码   openTimeout--开门超时报警</para>
+                /// <para>doorSensor--门磁报警</para>
+                /// <para>有多个报警时，使用逗号分隔 fire,blacklist</para>
+                if (item.AlarmStatus.length > 0) {
+                    var alarms = item.AlarmStatus.split(",");
+                    var ialarmCount = alarms.length
+                    stip = stip + '<span class="label label_alarm" >'
+                    for (var i = 0; i < ialarmCount; i++) {
+                        stip = stip + alarmHTTPv2Map[alarms[i]];
+                    }
+                    stip = stip + '</span>'
+                }
+
+            }
+            return stip;
+        }
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var result = data.field;
+
+            if (result.Protocol == "NONE")
+                result.Protocol = null;
+
+            if (result.IsEntry == "NONE")
+                result.IsEntry = null;
+            //执行搜索重载
+            table.reload('DevicePageTable', {
+                page: {
+                    curr: 1
+                }
+                , where: result
+            }, 'data');
+
+            return false;
+        });
+
+        //刷新页面
+        function ReloadPage() {
+            var result = {
+                DeviceName: null,
+                IsEntry: null,
+                Protocol: null,
+                SN: null,
+            };
+            form.val('Device_search_div_filter', result);
+            table.reload('DevicePageTable', {
+                page: {
+                    curr: 1
+                }
+                , where: result
+            }, 'data');
+        }
+        function deleteDevice(DeviceIDs) {
+            faceAPI.AjaxPOSTJson({
+                data: { DeviceIDs },
+                url: '/api/Device/Delete',
+                success: function (result) {
+                    if (result.Result == false) {
+                        layer.alert(result.Error, { icon: 2 });
+                    }
+                    else {
+                        //刷新页面
+                        ReloadPage();
+                    }
+
+                }
+            });
+        }
+
+
+        /**
+         * toolbar事件监听
+         */
+        table.on('toolbar(DevicePageTableFilter)', function (obj) {
+            if (obj.event === 'delete') {  // 监听删除操作
+                var checkStatus = table.checkStatus('DevicePageTable')
+                    , data = checkStatus.data;
+                var DeviceIDs = [];
+                //console.log(data);
+                data.forEach(function (item, index) { DeviceIDs.push(item.ID); });
+                if (DeviceIDs.length == 0) {
+
+                    layer.alert(getLanguage('device.d36'), { icon: 2 });
+                    return;
+                }
+                layer.confirm(getLanguage("device.d50") + '?', { icon: 3 }, function (index) {
+                    layer.close(index);
+                    deleteDevice(DeviceIDs);
+                });
+            }
+            else if (obj.event === 'reload') {
+
+                ReloadPage();
+            }
+            else if (obj.event === 'uploadsoftfile') {
+                UploadSoftFile();
+            }
+
+            setLanguage();
+            setAllAttrVal()
+            return false;
+        });
+
+        function UploadSoftFile() {
+            var openWH = miniPage.getOpenWidthHeight();
+            var content = miniPage.getHrefContent('page/Device/uploadsoft.html');
+
+            var index = layer.open({
+                title: getLanguage('device.d37'),
+                type: 1,
+                shade: 0.2,
+                maxmin: true,
+                shadeClose: true,
+                area: [openWH[0] + 'px', openWH[1] + 'px'],
+                offset: [openWH[2] + 'px', openWH[3] + 'px'],
+                content: content
+            });
+            $(window).on("resize", function () {
+                layer.full(index);
+            });
+        }
+
+        //当表格排序重新加载后，需要重新注册鼠标提示事件
+        table.on('sort(DevicePageTableFilter)', function (obj) {
+            if (tabDatas == null) return;
+
+            tipRegEvent();
+
+        });
+
+        //注册鼠标提示事件
+        function tipRegEvent() {
+            $("[lay-id=DevicePageTable] [name=Onlinestatus]").mouseenter(Onlinestatus_mouseenter);
+            $("[lay-id=DevicePageTable] [name=Onlinestatus]").mouseleave(() => {
+                if (iMouseenter_TipIndex > 0)
+                    layer.close(iMouseenter_TipIndex);
+            });
+        }
+
+        // 在线离线状态显示提示框
+        var iMouseenter_TipIndex = 0;
+        function Onlinestatus_mouseenter() {
+            var that = this;
+            if (iMouseenter_TipIndex > 0)
+                layer.close(iMouseenter_TipIndex);
+            var spn = $(that);
+            var iItemIndex = spn.attr("LAY_TABLE_INDEX");
+            var row = table.cache["DevicePageTable"][iItemIndex];
+            var sHtml = '';
+
+            var lastTime = dayjs(row.LastKeepaliveTime, "YYYY-MM-DD HH:mm:ss");
+            var onlineTime = dayjs(row.onlineTime, "YYYY-MM-DD HH:mm:ss");
+            //var second = dayjs().diff(onlineTime, 'second');
+            sHtml = '<ul><li><span>' + row.SN + '</span></li><hr/>';
+            var second = dayjs().diff(lastTime, 'second');
+            //最近保活时间
+            sHtml = sHtml + `<li><span>${getLanguage('device.d38')} : ` + row.LastKeepaliveTime + '</span></li>';
+            //距离现在时间
+            sHtml = sHtml + `<li><span>${getLanguage('device.d39')} : ` + second + `${getLanguage('device.d40')}</span></li> `;
+
+            var sTipHeight = '';
+            if (second < 120) {
+                //在线状态
+                sHtml = sHtml + `<li>${getLanguage('device.d43')} : <span class="label label_online">${getLanguage('device.d44')}</span></li> `; //在线
+
+                if (row.Protocol == "HTTPv1") {
+                    sTipHeight = '230px'
+                    sHtml = sHtml + getHTTPv1DisplayStatus(row.KeepaliveStatus)
+                }
+                if (row.Protocol == "HTTPv2") {
+                    sTipHeight = '260px'
+                    sHtml = sHtml + getHTTPv2DisplayStatus(row.KeepaliveStatus)
+                }
+            }
+            else {
+                sTipHeight = '150px'
+                //在线状态
+                sHtml = sHtml + `<li>${getLanguage('device.d47')} : <span class="label label_offline">${getLanguage('device.d48')}</span></li> `;//离线
+            }
+
+            sHtml = sHtml + '</ul>'
+            console.log(sHtml)
+            iMouseenter_TipIndex = layer.tips(sHtml, that, { area: ['330px', sTipHeight] });
+        }
+
+        function getHTTPv1DisplayStatus(item) {
+            var sHtml = "";
+            if (item == undefined) return sHtml;
+            //门磁状态
+            sHtml = `<li><span>${getLanguage('device.d45')} : ` + doorStatusTitle[item.Door] + '</span></li> ';
+            //报警状态
+            sHtml = sHtml + `<li><span>${getLanguage('device.d46')} : ` + alarmStatusTitle[item.Alarm] + '</span></li> ';
+
+            return sHtml;
+        }
+
+        function getHTTPv2DisplayStatus(item) {
+            var sHtml = "";
+            if (item == undefined) return sHtml;
+            //继电器物状态
+            sHtml = `<li><span>${getLanguage('device.RelayStatus')} : ` +//继电器
+                httpv2RelayStatusMap[item.RelayStatus] + '</span></li> ';
+            // 常开状态
+            sHtml = sHtml + `<li><span>${getLanguage('device.KeepOpenStatus')} : ` +//常开
+                httpv2KeepOpenStatusMap[item.KeepOpenStatus] + '</span></li> ';
+
+            //门磁状态
+            sHtml = sHtml + `<li><span>${getLanguage('device.d45')}：` +//门磁
+                doorStatusHTTPv2Title[item.DoorSensorStatus] + '</span></li> ';
+
+            //门锁定状态
+            sHtml = sHtml + `<li><span>${getLanguage('device.LockDoorStatus')}：` +//门锁定
+                httpv2LockDoorStatusMap[item.LockDoorStatus] + '</span></li> ';
+
+            //报警状态
+            var bNoAlarm = true;
+            if (item.hasOwnProperty("AlarmStatus") == true) {
+                /// 门报警状态  空字符串为无报警，否则会有具体报警名称
+                /// <para>fire--消防报警      blacklist--黑名单报警    anti--防拆报警</para>
+                /// <para>Illegal--非法验证   password--胁迫报警密码   openTimeout--开门超时报警</para>
+                /// <para>doorSensor--门磁报警</para>
+                /// <para>有多个报警时，使用逗号分隔 fire,blacklist</para>
+                if (item.AlarmStatus.length > 0) {
+                    var alarms = item.AlarmStatus.split(",");
+                    var ialarmCount = alarms.length
+                    sHtml = sHtml + `<li><span>${getLanguage('device.d46')}：`//报警
+                    for (var i = 0; i < ialarmCount; i++) {
+                        sHtml = sHtml + alarmHTTPv2Map[alarms[i]];
+                    }
+                    sHtml = sHtml + '</span></li> ';
+                    bNoAlarm = false;
+                }
+            }
+            if (bNoAlarm) {
+                sHtml = sHtml + `<li><span>${getLanguage('device.d46')}：`//报警
+                sHtml = sHtml + alarmHTTPv2Map["NOALARM"];//无报警
+                sHtml = sHtml + '</span></li> ';
+                bNoAlarm = false;
+            }
+            return sHtml;
+        }
+
+        //启动一个定时刷新任务
+        var iDeviceIntervalID = setInterval(() => {
+
+            if (faceAPI.DeviceIntervalID != iDeviceIntervalID) {
+
+                clearInterval(iDeviceIntervalID);
+                return;
+            }
+            if ($("[divname=device]").length == 0) {
+                clearInterval(iDeviceIntervalID);
+                faceAPI.DeviceIntervalID = 0;
+                return;
+            }
+
+            if (tabDatas == null) {
+                return;
+            };
+
+            if (tabDatas.length == 0) {
+                return;
+            }
+
+            var SNList = [];
+            var hr = new HashTable();
+            tabDatas.forEach((value, index, array) => {
+                hr.Add(value.SN, value);
+                SNList.push(value.SN);
+            });
+
+
+            faceAPI.AjaxPOSTJson({
+                data: { SNList },
+                url: '/api/Device/GetDeviceOnlineStatus',
+                success: function (result) {
+                    if (result.Result == false) {
+                        layer.alert(result.Error, { icon: 2 });
+                    }
+                    else {
+                        var resultStatus = result.Content;
+                        resultStatus.forEach((value, index, array) => {
+                            var item = hr.GetValue(value.SN);
+                            //debugger;
+                            item.LastKeepaliveTime = value.LastKeepaliveTime;
+                            item.KeepaliveStatus = value.KeepaliveStatus;
+                            var itemjq = $('[lay-id=DevicePageTable] td [sn=' + item.SN + ']');
+                            var sHtml = getDeviceStatus(item);
+                            itemjq.html(sHtml);
+
+                        });
+                        //
+                    }
+
+                }
+            });
+
+
+        }, deviceKeepaliveCheckTime);
+
+        faceAPI.DeviceIntervalID = iDeviceIntervalID;
+
+        table.on('tool(DevicePageTableFilter)', function (obj) {
+            var data = obj.data;
+
+            if (obj.event === 'edit') {
+
+                ShowDeviceDetail(obj, data);
+            }
+            else if (obj.event === 'delete') {
+                layer.confirm(
+                    `${getLanguage("device.d50")}[` + data.SN + '(' + data.DeviceName + ')]?',
+                    { icon: 3 },
+                    function (index) {
+
+                        var DeviceIDs = [];
+                        DeviceIDs.push(data.ID);
+                        deleteDevice(DeviceIDs);
+
+                        layer.close(index);
+                    });
+            }
+            return false;
+        });
+
+        function ShowDeviceDetail(colobj, device) {
+
+            var sURL = "";
+            var openWH = miniPage.getOpenWidthHeight();
+            var area = [openWH[0] + 'px', openWH[1] + 'px'];
+            var offset = [openWH[2] + 'px', openWH[3] + 'px'];
+            //协议类型  HTTPv1   HTTPv2  MQTT  Websocket
+            switch (device.Protocol) {
+                case 'HTTPv1':
+                    area = ['1450px', '750px'];
+                    offset = undefined;
+
+                    sURL = 'page/Device/HTTPv1Detail.html'
+                    break;
+                case 'HTTPv2':
+                    sURL = 'page/Device/HTTPv2Detail.html'
+                    break;
+                case 'MQTT':
+                    sURL = 'page/Device/HTTPv2Detail.html'
+                    break;
+                default:
+                    layer.alert("不支持此协议类型!", { icon: 2 });
+                    return;
+            }
+
+            var content = miniPage.getHrefContent(sURL);
+
+            faceAPI.DevicePageUpdate = device;//向layer页面传值，传值主要代码
+            faceAPI.DevicePageUpdateResult = null;
+
+            var index = layer.open({
+                title: getLanguage('device.d49'),
+                type: 1,
+                shade: 0.2,
+                maxmin: false,
+                shadeClose: false,
+                area: area,
+                offset: offset,
+                content: content,
+                end: function (layero, index) {
+
+                    var rst = faceAPI.DevicePageUpdateResult;
+                    //console.log(rst);
+                    if (rst != null && rst.Result) {
+                        ReloadPage();
+                    };
+                }
+            });
+
+            return false;
+        }
+
+
+        function IniRemoteButtonMenu() {
+            /// 任务类型 ；
+            /// 1，远程开门；2、远程关门；3、远程常开；4、锁定；5、解除锁定；6、关闭报警
+            /// 10、远程重启；11、恢复出厂设置； 12、重新上传所有记录；13、清空所有记录；
+            /// 20、上传所有人员；21、上传指定人员；
+            ///
+            /// 100、清空所有人员；101、上传工作参数;
+            var RemoteTypeTable = [];
+            RemoteTypeTable[1] = getLanguage('DeviceRemote.RemoteOpen');//1，远程开门；；；；6、读取工作参数
+            RemoteTypeTable[2] = getLanguage('DeviceRemote.RemoteClose');//2、远程关门
+            RemoteTypeTable[3] = getLanguage('DeviceRemote.RemoteKeepOpen');//3、远程常开
+            RemoteTypeTable[4] = getLanguage('DeviceRemote.RemoteLockDoor');//4、锁定
+            RemoteTypeTable[5] = getLanguage('DeviceRemote.RemoteUnlockDoor');//5、解除锁定
+            RemoteTypeTable[6] = getLanguage('DeviceRemote.CloseAlarm');//6、关闭报警
+
+
+            RemoteTypeTable[10] = getLanguage('DeviceRemote.RemoteReboot');//10、远程重启
+            RemoteTypeTable[11] = getLanguage('DeviceRemote.Restore');//11、恢复出厂设置
+            RemoteTypeTable[12] = getLanguage('DeviceRemote.RepostRecord');//12、重新上传所有记录
+            RemoteTypeTable[13] = getLanguage('DeviceRemote.ClearRecord');//13、清空所有记录
+            //RemoteTypeTable[14] = getLanguage('DeviceRemote.PushSoftware');//14、推送软件固件升级包
+            RemoteTypeTable[15] = getLanguage('DeviceRemote.PushSystemFile');//15、推送系统文件更新
+            RemoteTypeTable[16] = getLanguage('DeviceRemote.Snapshoot');//16、获取设备摄像头快照
+            RemoteTypeTable[17] = getLanguage('DeviceRemote.DeviceAuthorization');//17、发送设备授权信息
+
+            RemoteTypeTable[20] = getLanguage('DeviceRemote.PushAllPeople');// 20、上传所有人员
+            RemoteTypeTable[21] = getLanguage('DeviceRemote.QueryPeople');//21、上传指定人员;
+            //RemoteTypeTable[22] = getLanguage('DeviceRemote.RegisterIdentifyTicket');//22、在设备上注册凭证类型;
+
+            RemoteTypeTable[100] = getLanguage('DeviceRemote.EmptyUser');// 100、清空所有人员
+            RemoteTypeTable[101] = getLanguage('DeviceRemote.UploadWorkSetting');//101、上传工作参数;
+
+            var menuList = [];
+            for (let key of Object.keys(RemoteTypeTable)) {
+                let typeName = RemoteTypeTable[key];
+                var menuItem = {
+                    title: typeName,  //远程开门
+                    id: key,
+                }
+
+                menuList.push(menuItem);
+            }
+            dropdown.render({
+                elem: '#butRemoteMenu',
+                data: menuList,
+                click: function (menudata, othis) {
+                    var checkStatus = table.checkStatus('DevicePageTable')
+                        , data = checkStatus.data;
+                    var DeviceIDs = [];
+                    //获取勾选的设备列表
+                    data.forEach(function (item, index) { DeviceIDs.push(item.ID); });
+                    if (DeviceIDs.length == 0) {
+
+                        layer.alert(getLanguage('device.d56'), { icon: 2 });
+                        return;
+                    };
+                    if (menudata.id === '21') {
+                        layer.prompt({ title: getLanguage('device.d412') }, function (value, index, elem) { //'请输入用户Id号'
+                            if (value === '') return elem.focus();
+                            if (value.length > 10) {
+                                layer.alert(getLanguage('device.inputUserIDErr'), { icon: 2 });
+                                return elem.focus();
+                            }
+
+                            var userID = faceAPI.CheckNumberValue(value, 1, 4294967295, 0)
+                            if (userID == 0) {
+                                layer.alert(getLanguage('device.inputUserIDErr'), { icon: 2 });
+                                return elem.focus();
+                            }
+
+                            DeviceRemote(DeviceIDs, menudata.id, userID, '');
+                            layer.close(index);
+                        });
+
+                    } else {
+
+                        DeviceRemote(DeviceIDs, menudata.id, 0, '');
+
+                    }
+                }
+            });
+            //电梯远程操作按钮
+
+            RemoteTypeTable = [];
+            RemoteTypeTable[31] = getLanguage('DeviceRemote.RemoteOpen');//1，远程开门；；；；6、读取工作参数
+            RemoteTypeTable[32] = getLanguage('DeviceRemote.RemoteClose');//2、远程关门
+            RemoteTypeTable[33] = getLanguage('DeviceRemote.RemoteKeepOpen');//3、远程常开
+            RemoteTypeTable[34] = getLanguage('DeviceRemote.RemoteLockDoor');//4、锁定
+            RemoteTypeTable[35] = getLanguage('DeviceRemote.RemoteUnlockDoor');//5、解除锁定
+
+            menuList = [];
+            for (let key of Object.keys(RemoteTypeTable)) {
+                let typeName = RemoteTypeTable[key];
+                var menuItem = {
+                    title: typeName,  //远程开门
+                    id: key,
+                }
+
+                menuList.push(menuItem);
+            }
+            
+            dropdown.render({
+                elem: '#butElevatorRemoteMenu',
+                data: menuList,
+                click: function (menudata, othis)
+                {
+                    var checkStatus = table.checkStatus('DevicePageTable')
+                        , data = checkStatus.data;
+                    var DeviceIDs = [];
+                    //获取勾选的设备列表
+                    data.forEach(function (item, index) { DeviceIDs.push(item.ID); });
+                    if (DeviceIDs.length == 0) {
+
+                        layer.alert(getLanguage('device.d56'), { icon: 2 });
+                        return;
+                    };
+                    //选择一个电梯列表
+                    var sURL = "page/Device/SelectElevatorPorts.html";
+                    var content = miniPage.getHrefContent(sURL);
+
+                    var title = getLanguage('DeviceRemote.SelectElevatorPorts');//选择电梯端口
+
+
+                    //向layer页面传值，传值主要代码
+                    faceAPI.SelectElevatorPorts = null;
+
+                    var index = layer.open({
+                        title: title,
+                        type: 1,
+                        shade: 0.2,
+                        maxmin: false,
+                        shadeClose: false,
+                        area: ['400px', '650px'],
+                        content: content,
+                        end: function (layero, index) {
+                            console.log(faceAPI.SelectElevatorPorts);
+
+                            if (faceAPI.SelectElevatorPorts != null) {
+                                DeviceRemote(DeviceIDs, menudata.id, 0, faceAPI.SelectElevatorPorts);
+                            }
+                        }
+                    });
+                    
+                }
+            });
+        }
+        
+    
+
+
+
+        function DeviceRemote(DeviceIDs, id, UserID, taskPar) {
+            if (id == 16) {
+                DeviceRemoteSnapshoot(DeviceIDs);
+                return;
+            }
+            faceAPI.AjaxPOSTJson({
+                data: {
+                    DeviceIDs,
+                    TaskType: id,
+                    UserID: UserID,
+                    TaskExtension: taskPar
+                },
+                url: '/api/DeviceRemote/Add',
+                success: function (result) {
+                    if (result.Result == false) {
+                        layer.alert(result.Error, { icon: 2 });
+                    }
+                    else {
+                        //刷新页面
+                        layer.open({
+                            title: getLanguage('device.d58'),//远程操作
+                            content: getLanguage('device.d57'),//操作已添加至队列，等待设备拉取并执行
+                            icon: 1,
+                        });
+                    }
+
+                }
+            });
+        }
+        function DeviceRemoteSnapshoot(DeviceIDs) {
+            if (DeviceIDs.length != 1) {
+                layer.alert(getLanguage('access.selectDeviceTooMuch'), { icon: 2 });
+                return;
+            }
+            var loadIndex = layer.load(1, { shade: [0.6, "#e2e2e2"] }); //0.1透明度的白色背景
+            faceAPI.AjaxPOSTJson({
+                data: {
+                    DeviceID: DeviceIDs[0],
+                },
+                url: '/api/Device/RemoteSnapshoot',
+                success: function (result) {
+                    layer.close(loadIndex);
+                    if (result.Result == false) {
+                        layer.alert(result.Error, { icon: 2 });
+                    }
+                    else {
+                        //显示图片
+                        console.log(result.Content)
+                        const img = new Image();
+                        img.src = result.Content;
+                        img.onload = function () {
+                            console.log("图片尺寸：" + img.width + '*' + img.height)
+
+                            sHtml = '<img id="showSnapshootImg" src="' + result.Content +
+                                '" width="' + img.width / 2 + '" height = "' + img.height / 2 + '"/>';
+
+                            layer.open({
+                                type: 1,
+                                title: false,
+                                closeBtn: 1,
+                                shadeClose: true,
+                                area: [(img.width / 2) + 'px', (img.height / 2) + 'px'], //宽高
+                                content: sHtml,
+                            });
+                        }
+                    }
+
+                }
+            });
+
+        }
+
+
+        function IniDefaultMenu() {
+            var menuTitleMap = [];
+            menuTitleMap[1] = "HTTPv1";
+            menuTitleMap[2] = "HTTPv2";
+            menuTitleMap[3] = "MQTT";
+
+            var menuList = [];
+            for (let key of Object.keys(menuTitleMap)) {
+                let typeName = menuTitleMap[key];
+                var menuItem = {
+                    title: typeName,  //远程开门
+                    id: key,
+                }
+
+                menuList.push(menuItem);
+            }
+            dropdown.render({
+                elem: '#butDefaultMenu',
+                data: menuList,
+                click: function (menudata, othis) {
+                    ShowDefaultMenu(menudata.title);
+                }
+            });
+        }
+        function ShowDefaultMenu(sType) {
+
+            var sURL = "";
+            var openWH = miniPage.getOpenWidthHeight();
+            var area = [openWH[0] + 'px', openWH[1] + 'px'];
+            var offset = [openWH[2] + 'px', openWH[3] + 'px'];
+            //协议类型  HTTPv1   HTTPv2  MQTT  Websocket
+            switch (sType) {
+                case 'HTTPv1':
+                    area = ['1450px', '750px'];
+                    offset = undefined;
+
+                    sURL = 'page/Device/Default/HTTPv1Detail.html'
+                    break;
+                case 'HTTPv2':
+                    sURL = 'page/Device/Default/HTTPv2Detail.html'
+                    break;
+                case 'MQTT':
+                    sURL = 'page/Device/Default/HTTPv2Detail.html'
+                    break;
+                default:
+                    layer.alert("不支持此协议类型!", { icon: 2 });
+                    return;
+            }
+
+            var content = miniPage.getHrefContent(sURL);
+
+            faceAPI.DeviceDefaultPageType = sType;//向layer页面传值，传值主要代码
+
+            var index = layer.open({
+                title: getLanguage('device.d49'),
+                type: 1,
+                shade: 0.2,
+                maxmin: false,
+                shadeClose: false,
+                area: area,
+                offset: offset,
+                content: content
+            });
+
+            return false;
+        }
+
+    });
+
+
+    setTimeout(() => {
+        setLanguage();
+        setAllAttrVal()
+    }, 300)
+</script>

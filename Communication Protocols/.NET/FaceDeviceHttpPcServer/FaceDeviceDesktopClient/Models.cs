@@ -98,6 +98,24 @@ public class PersonInfo
     // Photo binary data (Base64 encoded for JSON transmission)
     [System.ComponentModel.Browsable(false)]
     public byte[]? PhotoData { get; set; }
+
+    // 지문 / 정맥 (서버 PersonInfo와 동일 구조)
+    public List<FingerprintItem> Fingerprints { get; set; } = new();
+    public List<PalmveinItem>    Palmveins     { get; set; } = new();
+}
+
+public class FingerprintItem
+{
+    public int    Num  { get; set; }
+    public string Data { get; set; } = string.Empty;
+    public string MD5  { get; set; } = string.Empty;
+}
+
+public class PalmveinItem
+{
+    public int    Num  { get; set; }
+    public string Data { get; set; } = string.Empty;
+    public string MD5  { get; set; } = string.Empty;
 }
 
 // Attendance models

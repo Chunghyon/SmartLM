@@ -1,0 +1,244 @@
+<style>
+
+    .aligncenter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+
+<div class="layuimini-main" id="people-input">
+
+    <div class="layui-form layuimini-form  layui-form-pane" lay-filter="people-input_div_filter">
+        <h2>
+            <span language="people.p41">导入示例</span>
+        </h2>
+        <img src="/page/People/InputDemp.jpg" />
+        <br />
+        <br />
+        <span language="people.p42">导入文件支持 Excel格式的 .xls 文件或.xlsx文件，图片需先上传到可以直链的网盘或图片服务器。</span>
+        <br />
+        <span language="people.p70">导入支持zip文件，将照片和需要导入的xls文件一起压缩上传，xls格式为从人脸机u盘备份的人员资料格式</span>
+        <br />
+        <a class="layui-btn layui-btn-normal" href="/page/People/input.xlsx">
+            <span language="people.p43">点击下载示例</span>
+        </a>
+        <br />
+        <hr />
+        <br />
+        <br />
+        <fieldset class="table-search-fieldset">
+            <legend> 导入 Excel</legend>
+            <div style="margin: 3px 3px 3px 3px">
+
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label " style=" width: 142px;">
+                            <span language="people.p44">导入文件</span>
+                        </label>
+                        <div class="layui-input-inline" style=" width: 400px;">
+                            <input type="text" disabled id="txtInputFile" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="layui-form-item">
+
+                    <button type="button" class="layui-btn layui-btn-normal" id="btnSelectXLS">
+                        <i class="layui-icon">&#xe67c;</i>
+                        <span language="people.p45">选择</span>
+                    </button>
+                    <button type="button" class="layui-btn layui-btn-normal" id="btnDeleteXLS">
+                        <i class="layui-icon">&#x1006;</i>
+                        <span language="people.p46">删除</span>
+                    </button>
+                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="btnInput">
+                        <i class="layui-icon">&#xe605;</i>
+                        <span language="people.p47">开始导入</span>
+                    </button>
+                </div>
+            </div>
+
+        </fieldset>
+        <fieldset class="table-search-fieldset">
+            <legend> 导入本地文件夹</legend>
+            <div style="margin: 3px 3px 3px 3px">
+
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label " style=" width: 142px;">
+                            <span language="people.p72">文件夹路径：</span>
+                        </label>
+                        <div class="layui-input-inline" style=" width: 400px;">
+                            <input type="text" id="txtInputPath" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="btnInputPath">
+                        <i class="layui-icon">&#xe605;</i>
+                        <span language="people.p71">导入文件夹</span>
+                    </button>
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="layui-form-item aligncenter" style="margin-top:5px">
+
+            <button class="layui-btn layui-btn-warm" id="BtnPeopleInputCancel">
+                <i class="layui-icon">&#x1006;</i>
+                <span language="people.p48">取消</span>
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form', 'upload', 'faceAPI'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        var faceAPI = layui.faceAPI;
+
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        faceAPI.PeopleInputPageResult = { result: false };
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        var loadIndex = 0;
+
+        var upload = layui.upload;
+        var xlsfile = null;
+
+        //选择文件
+        var uploadInst = upload.render({
+            elem: '#btnSelectXLS' //绑定元素
+            , url: '/upload/' //上传接口
+            , auto: false
+            , accept: 'files'
+            , exts: 'xls|xlsx|zip'
+            , choose: function (obj) {
+                //将每次选择的文件追加到文件队列
+                var files = obj.pushFile();
+
+                //预读本地文件，如果是多文件，则会遍历。(不支持ie8/9)
+                obj.preview(function (index, file, result) {
+                    //debugger;
+                    if (file.type != 'application/vnd.ms-excel' &&
+                        file.type != 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
+                        file.type != 'application/x-zip-compressed') {
+                        layer.alert(getLanguage('people.p49'), { icon: 2 });
+                        return;
+                    }
+                    $('#txtInputFile').val(file.name);
+                    xlsfile = file;
+                });
+            }
+        });
+
+
+
+
+        //删除文件
+        $('#btnDeleteImage').on('click', function () {
+            $('#txtInputFile').val('');
+            xlsfile = null;
+
+            return false;
+        });
+
+
+        //保存
+        form.on('submit(btnInput)', function (data) {
+            if (xlsfile == null) {
+                layer.alert(getLanguage('people.p50'), { icon: 2 });
+                return false;
+            }
+            var formData = new FormData();
+            formData.append("inputfile", xlsfile);
+            var loadIndex = layer.load(1, { shade: [0.6, '#e2e2e2'] }); //0.1透明度的白色背景
+            faceAPI.Ajax({
+                type: 'Post',
+                data: formData,
+                contentType: false,
+                processData: false,
+                url: '/api/People/InputPeopleByExcel',
+                success: function (result) {
+                    layer.close(loadIndex);
+                    if (result.Result == false) {
+                        layer.alert(result.Error, { icon: 2 });
+                    }
+                    else {
+
+                        faceAPI.PeopleInputPageResult = result;
+
+                        layer.close(parentIndex);
+                    }
+                }
+            });
+            return false;
+        });
+
+        //上传文件夹路径
+        form.on('submit(btnInputPath)', function (data) {
+            var sPath = $('#txtInputPath').val();
+
+            if (sPath.length == 0) {
+                layer.alert(getLanguage('people.p73'), { icon: 2 });
+                return false;
+            }
+            var formData = {
+                PhotoPath: sPath
+            };
+            var loadIndex = layer.load(1, { shade: [0.6, '#e2e2e2'] }); //0.1透明度的白色背景
+            faceAPI.AjaxPOSTJson({
+                data: formData,
+                url: '/api/People/InputPeopleByPath',
+                timeout: 60 * 1000 * 60,
+                success: function (result) {
+                    layer.close(loadIndex);
+                    if (result.Result == false) {
+                        layer.alert(result.Error, { icon: 2 });
+                    }
+                    else {
+
+                        faceAPI.PeopleInputPageResult = result;
+
+                        layer.close(parentIndex);
+                    }
+                }
+            });
+            return false;
+        });
+
+        //取消操作，关闭窗口
+        $('#BtnPeopleInputCancel').on('click', function () {
+
+            faceAPI.PeopleInputPageResult.Result = false;
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+
+
+
+
+
+    });
+
+    setTimeout(() => {
+        setLanguage();
+        setAllAttrVal()
+    }, 300)
+</script>

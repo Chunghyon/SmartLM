@@ -1,6 +1,6 @@
-using System.Net.Http.Json;
 using FaceDeviceDesktopClient.Forms;
 using System.ComponentModel;
+using System.Net.Http.Json;
 
 namespace FaceDeviceDesktopClient;
 
@@ -13,24 +13,38 @@ public partial class PersonForm : Form
     public bool IsEditMode { get; set; }
     private string? _originalUserID;
 
+    // 단말기 IP 주소 목록 (LoadPhotoAsync에서 사진 가져올 때 사용)
+    private List<string> _deviceIpAddresses = new();
+
     // Flag to indicate if person was already saved (via "저장 및 선택한 단말기로 전송")
     public bool AlreadySaved { get; private set; }
 
-    private TextBox txtDong = null!;
-    private TextBox txtHo = null!;
-    private TextBox txtMember = null!;
-    private TextBox txtName = null!;
-    private TextBox txtPhotoUrl = null!;
-    private Button btnBrowsePhoto = null!;
+    // ── UI 컨트롤 ────────────────────────────────────────────────────────────
+    private TextBox   txtDong   = null!;
+    private TextBox   txtHo     = null!;
+    private TextBox   txtMember = null!;
+    private TextBox   txtName   = null!;
+
+    private TextBox   txtCard     = null!;
+    private TextBox   txtPassword = null!;
+
+    // 지문 / 정맥 (읽기 전용 표시)
+    private Label lblFingerprintCount = null!;
+    private Label lblPalmveinCount    = null!;
+
+    // 사진
+    private TextBox    txtPhotoUrl     = null!;
+    private Button     btnBrowsePhoto  = null!;
     private PictureBox picPhotoPreview = null!;
-    private TextBox txtPassword = null!;
-    private CheckedListBox lstDevices = null!;
-    private Button btnUploadToDevices = null!;
-    private Button btnOK = null!;
-    private Button btnCancel = null!;
+
+    private CheckedListBox lstDevices         = null!;
+    private Button         btnUploadToDevices = null!;
+    private Button         btnOK              = null!;
+    private Button         btnCancel          = null!;
 
     private List<DeviceInfo> _allDevices = new();
 
+    // ── 생성자 ───────────────────────────────────────────────────────────────
     public PersonForm()
     {
         InitializeComponent();
@@ -43,244 +57,316 @@ public partial class PersonForm : Form
         _ = LoadDevices();
     }
 
-    public void SetInitialValues(string? userId, string? name, string? photoUrl = null, string? password = null)
+    // ── SetInitialValues (서버 PersonInfo 전체 전달) ─────────────────────────
+    public void SetInitialValues(PersonInfo person)
     {
-        IsEditMode = true;
-        _originalUserID = userId;
+        IsEditMode      = true;
+        _originalUserID = person.UserID;
 
-        if (!string.IsNullOrEmpty(userId))
+        // 동/호/멤버
+        if (long.TryParse(person.UserID, out long idNum))
         {
-            if (long.TryParse(userId, out long idNum))
-            {
-                txtDong.Text = (idNum / 1_000_000).ToString();
-                txtHo.Text = ((idNum / 100) % 10_000).ToString();
-                txtMember.Text = (idNum % 100).ToString();
-            }
-            else
-            {
-                // 숫자가 아닌 경우 동 필드에 원본값 표시
-                txtDong.Text = userId;
-            }
-            txtDong.ReadOnly = true;
-            txtHo.ReadOnly = true;
-            txtMember.ReadOnly = true;
-            txtDong.BackColor = SystemColors.Control;
-            txtHo.BackColor = SystemColors.Control;
-            txtMember.BackColor = SystemColors.Control;
+            txtDong.Text   = (idNum / 1_000_000L).ToString();
+            txtHo.Text     = ((idNum / 100L) % 10_000L).ToString();
+            txtMember.Text = (idNum % 100L).ToString();
         }
-        if (!string.IsNullOrEmpty(name))
-            txtName.Text = name;
-        if (!string.IsNullOrEmpty(photoUrl))
+        else
         {
-            // Check if photoUrl is a device file path (e.g., /data/attend_data/photo/frame_...)
-            if (photoUrl.StartsWith("/") || photoUrl.Contains("/") || photoUrl.Contains("\\"))
+            txtDong.Text = person.UserID;
+        }
+        txtDong.ReadOnly    = true;
+        txtHo.ReadOnly      = true;
+        txtMember.ReadOnly  = true;
+        txtDong.BackColor   = SystemColors.Control;
+        txtHo.BackColor     = SystemColors.Control;
+        txtMember.BackColor = SystemColors.Control;
+
+        // 이름
+        txtName.Text = person.Name ?? "";
+
+        // 카드
+        var card = person.CardNum ?? "";
+        txtCard.Text = (card == "0") ? "" : card;
+
+        // 비밀번호
+        txtPassword.Text = person.Password ?? "";
+
+        // 지문 / 정맥 (등록 수만 표시, 단말기에서 직접 등록하므로 PC 편집 불가)
+        int fpCount = person.Fingerprints?.Count ?? 0;
+        int pvCount = person.Palmveins?.Count    ?? 0;
+        lblFingerprintCount.Text      = fpCount > 0 ? $"등록됨 ({fpCount}개)" : "미등록";
+        lblPalmveinCount.Text         = pvCount > 0 ? $"등록됨 ({pvCount}개)" : "미등록";
+        lblFingerprintCount.ForeColor = fpCount > 0 ? Color.Green : Color.Gray;
+        lblPalmveinCount.ForeColor    = pvCount > 0 ? Color.Green : Color.Gray;
+
+        // Person 객체에 지문/정맥 데이터 보존 (저장 시 그대로 전달)
+        Person.Fingerprints = person.Fingerprints ?? new();
+        Person.Palmveins    = person.Palmveins    ?? new();
+
+        // 사진 로드 (비동기 - 단말기 경로인 경우 서버 프록시를 통해 다운로드)
+        _ = LoadPhotoAsync(person.UserID, person.Photo);
+    }
+
+    private async Task LoadPhotoAsync(string userId, string? photo)
+    {
+        if (string.IsNullOrEmpty(photo)) return;
+
+        // 단말기 내부 경로 판별: "/data/..." 형태 (슬래시로 시작하면서 확장자 포함)
+        // JPEG Base64는 "/9j/..." 로 시작하므로 확장자 포함 여부로 구분
+        bool isDevicePath = (photo.StartsWith("/") && System.IO.Path.HasExtension(photo))
+                         || photo.Contains(":\\")
+                         || photo.Contains(":/");
+
+        if (!isDevicePath)
+        {
+            // Base64 사진 → 바로 디코딩
+            try
             {
-                // This is a device file path - show indicator but don't try to display
-                txtPhotoUrl.Text = "(단말기에 저장된 사진)";
-                // Optionally: In the future, we could implement downloading the photo from the device
+                var bytes = Convert.FromBase64String(photo);
+                Person.PhotoData = bytes;
+                ShowPhotoPreview(bytes, "(등록된 사진)");
             }
-            // Try to decode as Base64
-            else
+            catch { SetPhotoUrlText("(사진 형식 오류)"); }
+            return;
+        }
+
+        // 단말기 내부 경로(/data/...) → 단말기 웹 UI를 통해 사진 다운로드 시도
+        SetPhotoUrlText("(사진 불러오는 중...)");
+        try
+        {
+            // 등록된 단말기 IP가 없으면 서버에서 가져옴
+            if (_deviceIpAddresses.Count == 0 && _httpClient != null)
             {
                 try
                 {
-                    Person.PhotoData = Convert.FromBase64String(photoUrl);
-                    txtPhotoUrl.Text = "(등록된 사진)";
+                    var devices = await _httpClient.GetFromJsonAsync<List<DeviceInfo>>("/admin/devices");
+                    if (devices != null)
+                        _deviceIpAddresses = devices
+                            .Where(d => !string.IsNullOrWhiteSpace(d.IpAddress))
+                            .Select(d => d.IpAddress!)
+                            .ToList();
+                }
+                catch { }
+            }
 
-                    // Show preview
-                    using (var ms = new MemoryStream(Person.PhotoData))
-                    {
-                        picPhotoPreview.Image = Image.FromStream(ms);
-                    }
-                }
-                catch
-                {
-                    // If decoding fails, it might be a regular string path or invalid data
-                    txtPhotoUrl.Text = photoUrl;
-                }
+            if (_deviceIpAddresses.Count == 0)
+            {
+                SetPhotoUrlText("(단말기 미연결 - 찾아보기로 사진 등록)");
+                return;
+            }
+
+            var photoBytes = await DevicePhotoService.FetchUserPhotoAsync(_deviceIpAddresses, userId);
+            if (photoBytes != null)
+            {
+                Person.PhotoData = photoBytes;
+                ShowPhotoPreview(photoBytes, "(단말기에서 불러온 사진)");
+            }
+            else
+            {
+                SetPhotoUrlText("(단말기 사진 없음 - 찾아보기로 등록)");
             }
         }
-        if (!string.IsNullOrEmpty(password))
-            txtPassword.Text = password;
+        catch (Exception ex)
+        {
+            SetPhotoUrlText($"(사진 로드 실패: {ex.Message})");
+        }
     }
 
+    private void SetPhotoUrlText(string text)
+    {
+        if (InvokeRequired) { Invoke(() => SetPhotoUrlText(text)); return; }
+        txtPhotoUrl.Text = text;
+    }
+
+    private void ShowPhotoPreview(byte[] bytes, string label)
+    {
+        if (InvokeRequired) { Invoke(() => ShowPhotoPreview(bytes, label)); return; }
+        try
+        {
+            picPhotoPreview.Image?.Dispose();
+            using var ms = new MemoryStream(bytes);
+            picPhotoPreview.Image = new Bitmap(Image.FromStream(ms));
+            txtPhotoUrl.Text = label;
+        }
+        catch
+        {
+            txtPhotoUrl.Text = "(사진 표시 실패)";
+        }
+    }
+
+    // 이전 시그니처 호환용 오버로드
+    public void SetInitialValues(string? userId, string? name, string? photoUrl = null, string? password = null)
+    {
+        var p = new PersonInfo
+        {
+            UserID   = userId   ?? "",
+            Name     = name     ?? "",
+            Photo    = photoUrl ?? "",
+            Password = password ?? ""
+        };
+        SetInitialValues(p);
+    }
+
+    // ── UI 구성 ──────────────────────────────────────────────────────────────
     private void InitializeComponent()
     {
-        this.Text = "사용자 추가/수정";
-        this.Size = new Size(650, 600);
-        this.StartPosition = FormStartPosition.CenterParent;
+        this.Text            = "사용자 추가/수정";
+        this.Size            = new Size(680, 700);
+        this.StartPosition   = FormStartPosition.CenterParent;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
-        this.MaximizeBox = false;
-        this.MinimizeBox = false;
+        this.MaximizeBox     = false;
+        this.MinimizeBox     = false;
 
-        var mainPanel = new Panel
+        var mainPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20) };
+
+        int y          = 10;
+        int labelWidth = 130;
+        int ctrlX      = 150;
+        int ctrlWidth  = 390;
+
+        Label MkLabel(string text) => new Label
         {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(20)
+            Text      = text,
+            Location  = new Point(10, y + 2),
+            Width     = labelWidth,
+            TextAlign = ContentAlignment.MiddleLeft
         };
 
-        int y = 10;
-        int labelWidth = 120;
-        int controlWidth = 350;
-
-        // 1. 사용자명
-        mainPanel.Controls.Add(new Label
-        {
-            Text = "사용자명:",
-            Location = new Point(10, y),
-            Width = labelWidth
-        });
-        txtName = new TextBox
-        {
-            Location = new Point(140, y - 3),
-            Width = controlWidth,
-            MaxLength = 64
-        };
+        // ── 사용자명 ──────────────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("사용자명:"));
+        txtName = new TextBox { Location = new Point(ctrlX, y), Width = ctrlWidth, MaxLength = 64 };
         mainPanel.Controls.Add(txtName);
-        y += 40;
+        y += 38;
 
-        // 2. 동 / 호 / 멤버
-        mainPanel.Controls.Add(new Label
-        {
-            Text = "동:",
-            Location = new Point(10, y),
-            Width = 40
-        });
-        txtDong = new TextBox
-        {
-            Location = new Point(55, y - 3),
-            Width = 80,
-            MaxLength = 10
-        };
+        // ── 동 / 호 / 멤버 ────────────────────────────────────────────────────
+        mainPanel.Controls.Add(new Label { Text = "동:", Location = new Point(10, y + 2), Width = 35 });
+        txtDong = new TextBox { Location = new Point(48, y), Width = 75, MaxLength = 10 };
         mainPanel.Controls.Add(txtDong);
 
-        mainPanel.Controls.Add(new Label
-        {
-            Text = "호:",
-            Location = new Point(145, y),
-            Width = 30
-        });
-        txtHo = new TextBox
-        {
-            Location = new Point(180, y - 3),
-            Width = 80,
-            MaxLength = 10
-        };
+        mainPanel.Controls.Add(new Label { Text = "호:", Location = new Point(135, y + 2), Width = 28 });
+        txtHo = new TextBox { Location = new Point(166, y), Width = 75, MaxLength = 10 };
         mainPanel.Controls.Add(txtHo);
 
-        mainPanel.Controls.Add(new Label
-        {
-            Text = "멤버:",
-            Location = new Point(270, y),
-            Width = 45
-        });
-        txtMember = new TextBox
-        {
-            Location = new Point(320, y - 3),
-            Width = 60,
-            MaxLength = 5
-        };
+        mainPanel.Controls.Add(new Label { Text = "멤버:", Location = new Point(253, y + 2), Width = 43 });
+        txtMember = new TextBox { Location = new Point(299, y), Width = 60, MaxLength = 5 };
         mainPanel.Controls.Add(txtMember);
-        y += 40;
+        y += 38;
 
-        // 3. 사진등록 (경로 표시)
+        // ── 카드번호 ──────────────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("카드번호:"));
+        txtCard = new TextBox { Location = new Point(ctrlX, y), Width = ctrlWidth, MaxLength = 32 };
+        mainPanel.Controls.Add(txtCard);
+        y += 38;
+
+        // ── 비밀번호 ──────────────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("비밀번호:"));
+        txtPassword = new TextBox
+        {
+            Location              = new Point(ctrlX, y),
+            Width                 = ctrlWidth,
+            MaxLength             = 16,
+            UseSystemPasswordChar = true
+        };
+        mainPanel.Controls.Add(txtPassword);
+        y += 38;
+
+        // ── 지문 (읽기 전용) ──────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("지문:"));
+        lblFingerprintCount = new Label { Location = new Point(ctrlX, y + 2), Width = 200, Text = "미등록", ForeColor = Color.Gray };
+        mainPanel.Controls.Add(lblFingerprintCount);
         mainPanel.Controls.Add(new Label
         {
-            Text = "사진등록:",
-            Location = new Point(10, y),
-            Width = labelWidth
+            Text      = "(단말기에서 직접 등록)",
+            Location  = new Point(ctrlX + 205, y + 2),
+            Width     = 180,
+            ForeColor = Color.Gray,
+            Font      = new System.Drawing.Font(this.Font.FontFamily, 8f)
         });
+        y += 30;
+
+        // ── 정맥 (읽기 전용) ──────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("정맥:"));
+        lblPalmveinCount = new Label { Location = new Point(ctrlX, y + 2), Width = 200, Text = "미등록", ForeColor = Color.Gray };
+        mainPanel.Controls.Add(lblPalmveinCount);
+        mainPanel.Controls.Add(new Label
+        {
+            Text      = "(단말기에서 직접 등록)",
+            Location  = new Point(ctrlX + 205, y + 2),
+            Width     = 180,
+            ForeColor = Color.Gray,
+            Font      = new System.Drawing.Font(this.Font.FontFamily, 8f)
+        });
+        y += 38;
+
+        // ── 사진 ──────────────────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("사진:"));
         txtPhotoUrl = new TextBox
         {
-            Location = new Point(140, y - 3),
-            Width = 250,
-            ReadOnly = true,
+            Location  = new Point(ctrlX, y),
+            Width     = 282,
+            ReadOnly  = true,
             BackColor = SystemColors.Window
         };
         mainPanel.Controls.Add(txtPhotoUrl);
 
         btnBrowsePhoto = new Button
         {
-            Text = "찾아보기",
-            Location = new Point(400, y - 5),
-            Size = new Size(90, 28)
+            Text     = "찾아보기",
+            Location = new Point(ctrlX + 290, y - 2),
+            Size     = new Size(90, 28)
         };
         btnBrowsePhoto.Click += BtnBrowsePhoto_Click;
         mainPanel.Controls.Add(btnBrowsePhoto);
-        y += 40;
+        y += 34;
 
         // 사진 미리보기
         picPhotoPreview = new PictureBox
         {
-            Location = new Point(140, y),
-            Size = new Size(100, 100),
+            Location    = new Point(ctrlX, y),
+            Size        = new Size(130, 130),
             BorderStyle = BorderStyle.FixedSingle,
-            SizeMode = PictureBoxSizeMode.Zoom,
-            BackColor = Color.WhiteSmoke
+            SizeMode    = PictureBoxSizeMode.Zoom,
+            BackColor   = Color.WhiteSmoke
         };
         mainPanel.Controls.Add(picPhotoPreview);
-        y += 110;
+        y += 140;
 
-        // 4. 패스워드
-        mainPanel.Controls.Add(new Label
-        {
-            Text = "패스워드:",
-            Location = new Point(10, y),
-            Width = labelWidth
-        });
-        txtPassword = new TextBox
-        {
-            Location = new Point(140, y - 3),
-            Width = controlWidth,
-            MaxLength = 16,
-            UseSystemPasswordChar = true
-        };
-        mainPanel.Controls.Add(txtPassword);
-        y += 40;
-
-        // 5. 단말기 할당
+        // ── 단말기 할당 ───────────────────────────────────────────────────────
         var grpDevices = new GroupBox
         {
-            Text = "단말기 할당",
+            Text     = "단말기 할당",
             Location = new Point(10, y),
-            Size = new Size(590, 170)
+            Size     = new Size(630, 145)
         };
-
         lstDevices = new CheckedListBox
         {
-            Location = new Point(10, 25),
-            Size = new Size(560, 130),
+            Location     = new Point(10, 22),
+            Size         = new Size(605, 110),
             CheckOnClick = true
         };
         grpDevices.Controls.Add(lstDevices);
-
         mainPanel.Controls.Add(grpDevices);
-        y += 190;
+        y += 160;
 
-        // 하단 버튼
+        // ── 하단 버튼 ─────────────────────────────────────────────────────────
         btnUploadToDevices = new Button
         {
-            Text = "저장 및 선택한 단말기로 전송",
+            Text     = "저장 및 선택한 단말기로 전송",
             Location = new Point(10, y),
-            Size = new Size(240, 35)
+            Size     = new Size(245, 35)
         };
         btnUploadToDevices.Click += BtnUploadToDevices_Click;
         mainPanel.Controls.Add(btnUploadToDevices);
 
-        btnOK = new Button
-        {
-            Text = "저장",
-            Location = new Point(260, y),
-            Size = new Size(100, 35)
-        };
+        btnOK = new Button { Text = "저장", Location = new Point(265, y), Size = new Size(100, 35) };
         btnOK.Click += BtnOK_Click;
         mainPanel.Controls.Add(btnOK);
 
         btnCancel = new Button
         {
-            Text = "취소",
-            Location = new Point(370, y),
-            Size = new Size(100, 35),
+            Text         = "취소",
+            Location     = new Point(375, y),
+            Size         = new Size(100, 35),
             DialogResult = DialogResult.Cancel
         };
         mainPanel.Controls.Add(btnCancel);
@@ -290,20 +376,18 @@ public partial class PersonForm : Form
         this.CancelButton = btnCancel;
     }
 
+    // ── 단말기 목록 로드 ──────────────────────────────────────────────────────
     private async Task LoadDevices()
     {
         if (_httpClient == null) return;
-
         try
         {
             var devices = await _httpClient.GetFromJsonAsync<List<DeviceInfo>>("/admin/devices");
             if (devices != null)
             {
                 _allDevices = devices;
-                foreach (var device in devices)
-                {
-                    lstDevices.Items.Add($"{device.DeviceName} ({device.IpAddress})");
-                }
+                foreach (var d in devices)
+                    lstDevices.Items.Add($"{d.DeviceName} ({d.IpAddress})");
             }
         }
         catch (Exception ex)
@@ -313,49 +397,56 @@ public partial class PersonForm : Form
         }
     }
 
+    // ── 사진 선택 ─────────────────────────────────────────────────────────────
     private void BtnBrowsePhoto_Click(object? sender, EventArgs e)
     {
-        using var openFileDialog = new OpenFileDialog
+        using var dlg = new OpenFileDialog
         {
             Filter = "이미지 파일|*.jpg;*.jpeg;*.png;*.bmp|모든 파일|*.*",
-            Title = "얼굴 사진 선택"
+            Title  = "얼굴 사진 선택"
         };
+        if (dlg.ShowDialog() != DialogResult.OK) return;
 
-        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        try
         {
-            try
+            // 파일을 직접 읽어 Bitmap으로 변환 후 JPEG 바이트로 저장
+            // (FacePhotoEditorForm 없이 바로 등록 ? 편집이 필요하면 추후 구현)
+            byte[] imageBytes;
+            using (var srcImg = Image.FromFile(dlg.FileName))
+            using (var bmp = new Bitmap(srcImg))
+            using (var ms = new MemoryStream())
             {
-                // 얼굴 사진 편집기 열기
-                using var editorForm = new FacePhotoEditorForm(openFileDialog.FileName);
-                if (editorForm.ShowDialog() == DialogResult.OK)
-                {
-                    if (editorForm.ProcessedImageData != null)
-                    {
-                        // 편집된 사진 데이터 저장
-                        Person.PhotoData = editorForm.ProcessedImageData;
-
-                        // 파일 경로는 표시용으로만 사용
-                        txtPhotoUrl.Text = openFileDialog.FileName;
-
-                        // 미리보기 업데이트
-                        using (var ms = new MemoryStream(editorForm.ProcessedImageData))
-                        {
-                            picPhotoPreview.Image = Image.FromStream(ms);
-                        }
-
-                        MessageBox.Show("얼굴 사진이 등록되었습니다", "완료",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
+                imageBytes = ms.ToArray();
             }
-            catch (Exception ex)
+
+            if (imageBytes.Length == 0)
             {
-                MessageBox.Show($"사진 처리 실패: {ex.Message}", "오류",
+                MessageBox.Show("사진 파일을 읽을 수 없습니다.", "오류",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
+
+            // PhotoData에 저장
+            Person.PhotoData = imageBytes;
+            txtPhotoUrl.Text  = dlg.FileName;
+
+            // 미리보기
+            picPhotoPreview.Image?.Dispose();
+            using var previewMs = new MemoryStream(imageBytes);
+            picPhotoPreview.Image = new Bitmap(Image.FromStream(previewMs));
+
+            MessageBox.Show("사진이 등록되었습니다.", "완료",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"사진 처리 실패: {ex.Message}", "오류",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
+    // ── 저장 및 단말기 전송 ───────────────────────────────────────────────────
     private async void BtnUploadToDevices_Click(object? sender, EventArgs e)
     {
         if (_httpClient == null)
@@ -365,158 +456,104 @@ public partial class PersonForm : Form
             return;
         }
 
-        var selectedIndices = lstDevices.CheckedIndices;
-        if (selectedIndices.Count == 0)
+        if (lstDevices.CheckedIndices.Count == 0)
         {
             MessageBox.Show("전송할 단말기를 선택해주세요", "안내",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        // 사용자 정보 검증
         if (string.IsNullOrWhiteSpace(txtName.Text))
         {
-            MessageBox.Show("사용자명과 사용자번호를 입력해주세요", "입력 오류",
+            MessageBox.Show("사용자명을 입력해주세요", "입력 오류",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
         if (!TryBuildUserID(out string builtUserID))
         {
-            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)", "입력 오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)",
+                "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         try
         {
             btnUploadToDevices.Enabled = false;
-            btnUploadToDevices.Text = "전송 중...";
+            btnUploadToDevices.Text    = "전송 중...";
 
-            // 1단계: 서버에 사용자 추가 (또는 업데이트)
-            var personInfo = new PersonInfo
-            {
-                UserID = builtUserID,
-                Name = txtName.Text.Trim(),
-                Password = txtPassword.Text.Trim()
-            };
+            var personInfo = BuildPersonInfo(builtUserID);
 
-            // 사진 데이터를 Base64로 변환하여 Photo 필드에 저장
-            if (Person.PhotoData != null && Person.PhotoData.Length > 0)
-            {
-                personInfo.Photo = Convert.ToBase64String(Person.PhotoData);
-            }
-
-            // 서버에서 사용자 존재 여부 확인
             bool userExists = false;
             try
             {
-                var checkResponse = await _httpClient.PostAsJsonAsync("/api/People/GetDetail", new { UserID = personInfo.UserID });
-                var checkResult = await checkResponse.Content.ReadFromJsonAsync<BrowserApiResponse<PersonInfo>>();
-                userExists = checkResult?.Code == 0;
+                var chk = await _httpClient.PostAsJsonAsync("/api/People/GetDetail", new { UserID = personInfo.UserID });
+                var chkR = await chk.Content.ReadFromJsonAsync<BrowserApiResponse<PersonInfo>>();
+                userExists = chkR?.Code == 0;
             }
             catch { }
 
-            // 존재하면 Update, 없으면 New
-            bool isEditMode = userExists || (IsEditMode && !string.IsNullOrEmpty(_originalUserID));
-            string apiEndpoint = isEditMode ? "/api/People/Update" : "/api/People/New";
-
-            // 서버에 사용자 추가/업데이트
-            var addResponse = await _httpClient.PostAsJsonAsync(apiEndpoint, personInfo);
-            var addResult = await addResponse.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+            bool edit     = userExists || (IsEditMode && !string.IsNullOrEmpty(_originalUserID));
+            string ep     = edit ? "/api/People/Update" : "/api/People/New";
+            var addResp   = await _httpClient.PostAsJsonAsync(ep, personInfo);
+            var addResult = await addResp.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
 
             if (addResult == null || addResult.Code != 0)
             {
-                MessageBox.Show(
-                    $"서버에 사용자 {(isEditMode ? "업데이트" : "추가")} 실패: {addResult?.Msg ?? "알 수 없는 오류"}",
-                    "오류",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show($"서버 저장 실패: {addResult?.Msg ?? "알 수 없는 오류"}",
+                    "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            // 2단계: 선택된 각 단말기로 전송 요청
-            var successCount = 0;
-            var failCount = 0;
-            var errorMessages = new List<string>();
+            int successCount = 0, failCount = 0;
+            var errors = new List<string>();
 
-            foreach (int index in selectedIndices)
+            foreach (int idx in lstDevices.CheckedIndices)
             {
-                if (index < _allDevices.Count)
+                if (idx >= _allDevices.Count) continue;
+                var dev = _allDevices[idx];
+                try
                 {
-                    var device = _allDevices[index];
-                    try
-                    {
-                        // 단말기에 사용자 추가 요청
-                        var requestUrl = $"/admin/devices/{device.SN}/request-add-people";
-                        var deviceResponse = await _httpClient.PostAsync(requestUrl, null);
-
-                        if (deviceResponse.IsSuccessStatusCode)
-                        {
-                            successCount++;
-                        }
-                        else
-                        {
-                            failCount++;
-                            errorMessages.Add($"{device.DeviceName}: HTTP {deviceResponse.StatusCode}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        failCount++;
-                        errorMessages.Add($"{device.DeviceName}: {ex.Message}");
-                    }
+                    var r = await _httpClient.PostAsync($"/admin/devices/{dev.SN}/request-add-people", null);
+                    if (r.IsSuccessStatusCode) successCount++;
+                    else { failCount++; errors.Add($"{dev.DeviceName}: HTTP {r.StatusCode}"); }
                 }
+                catch (Exception ex) { failCount++; errors.Add($"{dev.DeviceName}: {ex.Message}"); }
             }
 
-            // 3단계: 결과 표시
             if (failCount == 0)
             {
                 MessageBox.Show(
-                    $"성공: {successCount}개 단말기로 사용자 전송을 요청했습니다.\n\n" +
-                    $"단말기가 다음 Keepalive 신호를 보낼 때 사용자 정보를 다운로드합니다." +
-                    (Person.PhotoData != null ? "\n(얼굴 사진 포함)" : "") +
-                    "\n\n서버 콘솔에서 전송 과정을 확인할 수 있습니다.",
-                    "전송 성공",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    $"성공: {successCount}개 단말기로 사용자 전송을 요청했습니다.\n" +
+                    "단말기가 다음 Keepalive 신호를 보낼 때 사용자 정보를 다운로드합니다." +
+                    (personInfo.Photo != null ? "\n(얼굴 사진 포함)" : ""),
+                    "전송 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Update Person object for parent form
-                Person.UserID = personInfo.UserID;
-                Person.Name = personInfo.Name;
-                Person.Password = personInfo.Password;
-
-                AlreadySaved = true; // Person was saved by this button
+                Person            = personInfo;
+                AlreadySaved      = true;
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
             else
             {
-                var errorDetail = errorMessages.Count > 0
-                    ? "\n\n오류 상세:\n" + string.Join("\n", errorMessages.Take(5))
-                    : "";
-
-                MessageBox.Show(
-                    $"전송 완료: 성공 {successCount}개, 실패 {failCount}개{errorDetail}",
-                    "전송 결과",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                string detail = errors.Count > 0 ? "\n\n오류:\n" + string.Join("\n", errors.Take(5)) : "";
+                MessageBox.Show($"전송 완료: 성공 {successCount}개, 실패 {failCount}개{detail}",
+                    "전송 결과", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"전송 실패: {ex.Message}", "오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"전송 실패: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {
             btnUploadToDevices.Enabled = true;
-            btnUploadToDevices.Text = "선택한 단말기로 전송";
+            btnUploadToDevices.Text    = "저장 및 선택한 단말기로 전송";
         }
     }
 
+    // ── 저장 ─────────────────────────────────────────────────────────────────
     private void BtnOK_Click(object? sender, EventArgs e)
     {
-        // Validation
         if (string.IsNullOrWhiteSpace(txtName.Text))
         {
             MessageBox.Show("사용자명을 입력해주세요", "입력 오류",
@@ -527,36 +564,58 @@ public partial class PersonForm : Form
 
         if (!IsEditMode && !TryBuildUserID(out _))
         {
-            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)", "입력 오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)",
+                "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             txtDong.Focus();
             return;
         }
 
         TryBuildUserID(out string builtUserID);
+        string finalUserID = (IsEditMode && !string.IsNullOrEmpty(_originalUserID)) ? _originalUserID! : builtUserID;
 
-        // Save data - use original UserID for updates
-        Person.UserID = IsEditMode && !string.IsNullOrEmpty(_originalUserID)
-            ? _originalUserID
-            : builtUserID;
-        Person.Name = txtName.Text.Trim();
-        Person.PhotoUrl = txtPhotoUrl.Text.Trim();
-        Person.Password = txtPassword.Text.Trim();
+        Person = BuildPersonInfo(finalUserID);
+        // PhotoUrl(= Photo alias)은 덮어쓰지 않음 ? BuildPersonInfo에서 이미 Base64로 세팅됨
 
         this.DialogResult = DialogResult.OK;
         this.Close();
     }
 
-    /// <summary>동/호/멤버 입력값을 UserID 문자열로 변환합니다.</summary>
+    // ── 공통: PersonInfo 빌드 ─────────────────────────────────────────────────
+    private PersonInfo BuildPersonInfo(string userId)
+    {
+        var p = new PersonInfo
+        {
+            UserID       = userId,
+            Name         = txtName.Text.Trim(),
+            CardNum      = string.IsNullOrWhiteSpace(txtCard.Text) ? "0" : txtCard.Text.Trim(),
+            Password     = txtPassword.Text.Trim(),
+            Fingerprints = Person.Fingerprints,
+            Palmveins    = Person.Palmveins
+        };
+
+        if (Person.PhotoData != null && Person.PhotoData.Length > 0)
+        {
+            p.Photo = Convert.ToBase64String(Person.PhotoData);
+            System.Diagnostics.Debug.WriteLine($"[BuildPersonInfo] PhotoData={Person.PhotoData.Length}bytes → Base64({p.Photo.Length}chars)");
+        }
+        else
+        {
+            p.Photo = Person.Photo;
+            System.Diagnostics.Debug.WriteLine($"[BuildPersonInfo] PhotoData=null, Photo={p.Photo?.Substring(0, Math.Min(60, p.Photo?.Length ?? 0))}");
+        }
+
+        return p;
+    }
+
+    // ── UserID 빌드 ───────────────────────────────────────────────────────────
     private bool TryBuildUserID(out string userID)
     {
         userID = string.Empty;
-        if (!long.TryParse(txtDong.Text.Trim(), out long dong) ||
-            !long.TryParse(txtHo.Text.Trim(), out long ho) ||
+        if (!long.TryParse(txtDong.Text.Trim(),   out long dong)   ||
+            !long.TryParse(txtHo.Text.Trim(),     out long ho)     ||
             !long.TryParse(txtMember.Text.Trim(), out long member))
             return false;
-        long id = dong * 1_000_000L + ho * 100L + member;
-        userID = id.ToString();
+        userID = (dong * 1_000_000L + ho * 100L + member).ToString();
         return true;
     }
 }

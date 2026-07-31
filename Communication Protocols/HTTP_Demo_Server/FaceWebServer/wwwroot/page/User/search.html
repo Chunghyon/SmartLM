@@ -1,0 +1,141 @@
+<style>
+
+    .aligncenter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+<div class="layuimini-main" id="UserLog-search">
+
+    <form class="layui-form layui-form-pane" lay-filter="Userlog_search_div_filter">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='UserLog.u19'>时间范围：</label>
+                <div class="layui-input-inline" style="margin-right: 0px;">
+                    <input type="text" maxlength="30" name="LogTimeBegin" lay-verify="required" autocomplete="off"
+                        class="layui-input" value="2021年7月5日">
+                </div>
+                <label class="layui-form-label" language='UserLog.u20'>至</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="LogTimeEnd" lay-verify="required" autocomplete="off"
+                        class="layui-input">
+                </div>
+            </div>
+
+        </div>
+
+
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='UserLog.u21' style="width: 150px;">操作员名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="UserName" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='UserLog.u22' style="width: 150px;">操作类型</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="LogType" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='UserLog.u23' style="width: 150px;">设备信息</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="60" name="LogDrive" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='UserLog.u24' style="width: 180px;">人员信息</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="60" name="LogPeople" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u25'>内容</label>
+            <div class="layui-input-block">
+                <input type="text" maxlength="60" name="LogDetail" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item aligncenter">
+            <div class="layui-inline">
+                <button type="submit" class="layui-btn layui-btn-primary" lay-submit lay-filter="data-search-btn"><i
+                        class="layui-icon">&#xe615;</i><span language='UserLog.u26'>搜索</span> </button>
+                <button type="reset" class="layui-btn layui-btn-primary" id="btnreset" language='UserLog.u27'>重置</button>
+                <button class="layui-btn layui-btn-primary" id="btnsearchclose"><i
+                        class="layui-icon">&#x1006;</i><span language='UserLog.u28'>取消</span> </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+<script>
+    layui.use(['form', 'laydate', 'faceAPI'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        var laydate = layui.laydate;
+        var faceAPI = layui.faceAPI;
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="logTimeBegin"]', //指定元素
+            type: 'datetime',
+        });
+
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="logTimeEnd"]', //指定元素
+            type: 'datetime'
+        });
+
+        $('[name="logTimeBegin"]').attr("value", dayjs().subtract(7, 'day').format("YYYY-MM-DD") + ' 00:00:00');
+        $('[name="logTimeEnd"]').attr("value", dayjs().format("YYYY-MM-DD") + ' 23:59:59');
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        if (faceAPI.UserLogSearchPageResult != null) {
+            form.val("Userlog_search_div_filter", faceAPI.UserLogSearchPageResult.field);
+        } else
+            faceAPI.UserLogSearchPageResult = {};
+
+        faceAPI.UserLogSearchPageResult.Result = false;
+        //监听提交
+        form.on('submit(data-search-btn)', function (data) {
+            var result = data.field;
+            console.log(result);
+
+            faceAPI.UserLogSearchPageResult.Result = true;
+            faceAPI.UserLogSearchPageResult.field = result;
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+        $('#btnsearchclose').on('click', function () {
+            faceAPI.UserLogSearchPageResult.Result = false
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+
+    });
+    setTimeout(() => {
+        setLanguage();
+        setAllAttrVal()
+    }, 300);
+</script>

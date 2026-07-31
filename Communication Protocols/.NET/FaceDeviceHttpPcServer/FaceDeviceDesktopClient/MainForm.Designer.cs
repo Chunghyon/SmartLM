@@ -46,7 +46,6 @@ namespace FaceDeviceDesktopClient
             this.grpDeviceManagement = new System.Windows.Forms.GroupBox();
             this.btnRemoteControl = new System.Windows.Forms.Button();
             this.btnRemoveDevice = new System.Windows.Forms.Button();
-            this.btnDeviceSettings = new System.Windows.Forms.Button();
             this.dgvDevices = new System.Windows.Forms.DataGridView();
 
             // Department controls
@@ -286,7 +285,6 @@ namespace FaceDeviceDesktopClient
             // 
             this.grpDeviceManagement.Controls.Add(this.btnRemoteControl);
             this.grpDeviceManagement.Controls.Add(this.btnRemoveDevice);
-            this.grpDeviceManagement.Controls.Add(this.btnDeviceSettings);
             this.grpDeviceManagement.Dock = System.Windows.Forms.DockStyle.Top;
             this.grpDeviceManagement.Location = new System.Drawing.Point(10, 260);
             this.grpDeviceManagement.Name = "grpDeviceManagement";
@@ -299,7 +297,7 @@ namespace FaceDeviceDesktopClient
             this.btnRemoteControl.Name = "btnRemoteControl";
             this.btnRemoteControl.Size = new System.Drawing.Size(150, 35);
             this.btnRemoteControl.TabIndex = 0;
-            this.btnRemoteControl.Text = "수정";
+            this.btnRemoteControl.Text = "설정";
             this.btnRemoteControl.UseVisualStyleBackColor = true;
             this.btnRemoteControl.Click += new System.EventHandler(this.btnRemoteControl_Click);
 
@@ -311,14 +309,6 @@ namespace FaceDeviceDesktopClient
             this.btnRemoveDevice.ForeColor = System.Drawing.Color.DarkRed;
             this.btnRemoveDevice.UseVisualStyleBackColor = true;
             this.btnRemoveDevice.Click += new System.EventHandler(this.btnRemoveDevice_Click);
-
-            this.btnDeviceSettings.Location = new System.Drawing.Point(330, 25);
-            this.btnDeviceSettings.Name = "btnDeviceSettings";
-            this.btnDeviceSettings.Size = new System.Drawing.Size(150, 35);
-            this.btnDeviceSettings.TabIndex = 2;
-            this.btnDeviceSettings.Text = "설정";
-            this.btnDeviceSettings.UseVisualStyleBackColor = true;
-            this.btnDeviceSettings.Click += new System.EventHandler(this.btnDeviceSettings_Click);
 
             // 
             // tabDepartments
@@ -674,7 +664,6 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.GroupBox grpDeviceManagement;
         private System.Windows.Forms.Button btnRemoteControl;
         private System.Windows.Forms.Button btnRemoveDevice;
-        private System.Windows.Forms.Button btnDeviceSettings;
         private System.Windows.Forms.DataGridView dgvDevices;
         private System.Windows.Forms.Button btnAddDepartment;
         private System.Windows.Forms.Button btnRefreshDepartments;

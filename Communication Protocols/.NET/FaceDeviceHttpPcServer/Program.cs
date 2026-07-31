@@ -171,11 +171,13 @@ app.MapPost("/Device/DownloadWorkSetting", async (HttpRequest request, StateStor
     var workSetting = store.GetWorkSettingForDownload(sn);
     if (workSetting is null)
     {
-        return Results.Ok(new ApiResponseWithContent { Success = 404, Content = "No work-setting snapshot available" });
+        return Results.Ok(new ApiResponse(404, "No work-setting snapshot available"));
     }
 
-    // Return with Content field as per protocol - Success=1 for successful response
-    return Results.Ok(new ApiResponseWithContent { Success = 1, Content = workSetting });
+    // 단말기 프로토콜: WorkSetting 필드가 Success와 함께 최상위에 위치해야 함
+    // { "Success": 1, "ReleaseTime": ..., "FreeOpen": ..., ... }
+    workSetting["Success"] = 1;
+    return Results.Ok(workSetting);
 });
 
 app.MapPost("/People/DownloadPeopleList", DownloadPeopleList);
@@ -236,6 +238,37 @@ app.MapGet("/admin/people/device-assignments", (StateStore store) =>
     return Results.Ok(assignments);
 });
 
+// 사용자 Photo 필드가 Base64이면 직접 반환, 단말기 경로이면 온라인 단말기에서 프록시 다운로드
+app.MapGet("/admin/people/{userId}/photo", async (string userId, StateStore store) =>
+{
+    var person = store.GetPeople().FirstOrDefault(p =>
+        string.Equals(p.UserID, userId, StringComparison.OrdinalIgnoreCase));
+    if (person is null)
+        return Results.NotFound(new ApiResponse(404, "Person not found."));
+
+    var photo = person.Photo;
+    if (string.IsNullOrWhiteSpace(photo))
+        return Results.NotFound(new ApiResponse(404, "No photo."));
+
+    // Base64 사진인 경우 바로 반환
+    if (!photo.StartsWith("/") && !photo.Contains("\\"))
+    {
+        try
+        {
+            var bytes = Convert.FromBase64String(photo);
+            return Results.File(bytes, "image/jpeg");
+        }
+        catch
+        {
+            return Results.NotFound(new ApiResponse(404, "Invalid photo data."));
+        }
+    }
+
+    // 단말기 내부 경로(/data/...)는 단말기가 outbound HTTP 클라이언트 전용이므로
+    // 서버에서 역방향 접속이 불가능함
+    return Results.NotFound(new ApiResponse(404, "Device photo path is not accessible from server (device is outbound-only)."));
+});
+
 app.MapPost("/admin/people", (PersonInfo person, StateStore store) =>
 {
     var normalized = NormalizePerson(person);
@@ -270,6 +303,56 @@ app.MapGet("/admin/devices/{sn}", (string sn, StateStore store) =>
     return device is null
         ? Results.NotFound(new ApiResponse(404, "Device not found."))
         : Results.Ok(device);
+});
+
+app.MapGet("/admin/devices/{sn}/work-setting", (string sn, StateStore store) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    var ws = device.DesiredWorkSetting ?? device.LastUploadedWorkSetting;
+    return ws is null
+        ? Results.NotFound(new ApiResponse(404, "No work-setting available."))
+        : Results.Ok(ws);
+});
+
+// 단말기 내부 경로의 사진을 서버가 프록시로 다운로드하여 반환
+// GET /admin/devices/{sn}/photo?path=/data/user_pic/xxx.jpg
+app.MapGet("/admin/devices/{sn}/photo", async (string sn, string path, StateStore store, IHttpClientFactory httpClientFactory) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    if (string.IsNullOrWhiteSpace(path))
+        return Results.BadRequest(new ApiResponse(400, "path is required."));
+
+    // 단말기 IP:Port로 HTTP GET 요청
+    var ip   = device.IpAddress;
+    var port = device.HttpPort > 0 ? device.HttpPort : 80;
+    if (string.IsNullOrWhiteSpace(ip))
+        return Results.NotFound(new ApiResponse(404, "Device IP not available."));
+
+    try
+    {
+        var client = httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(5);
+        var url = $"http://{ip}:{port}{path}";
+        var bytes = await client.GetByteArrayAsync(url);
+        // 확장자로 Content-Type 결정
+        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        var mime = ext switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png"            => "image/png",
+            ".bmp"            => "image/bmp",
+            _                 => "application/octet-stream"
+        };
+        return Results.File(bytes, mime);
+    }
+    catch (Exception ex)
+    {
+        return Results.NotFound(new ApiResponse(404, $"Failed to fetch photo from device: {ex.Message}"));
+    }
 });
 
 app.MapPost("/admin/devices/{sn}/request-add-people", (string sn, StateStore store) =>
@@ -1702,21 +1785,39 @@ static PersonInfo NormalizePerson(PersonInfo person)
     // Calculate PhotoMD5 and PhotoLen if Photo is Base64 encoded
     if (!string.IsNullOrWhiteSpace(normalized.Photo))
     {
-        try
+        // 로컬 파일 경로 또는 단말기 내부 경로가 들어온 경우 Photo 초기화
+        // JPEG Base64는 "/9j/..."로 시작하므로 확장자 포함 여부로 단말기 경로 판별
+        bool looksLikePath = normalized.Photo.Contains(":\\") ||  // C:\...
+                             normalized.Photo.Contains(":/") ||   // C:/...
+                             (normalized.Photo.StartsWith("/") &&
+                              System.IO.Path.HasExtension(normalized.Photo));  // /data/user_pic/xxx.jpg
+        if (looksLikePath)
         {
-            var photoBytes = Convert.FromBase64String(normalized.Photo);
-            normalized.PhotoLen = photoBytes.Length;
-
-            if (string.IsNullOrWhiteSpace(normalized.PhotoMD5))
-            {
-                using var md5 = System.Security.Cryptography.MD5.Create();
-                var hash = md5.ComputeHash(photoBytes);
-                normalized.PhotoMD5 = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-            }
+            normalized.Photo    = string.Empty;
+            normalized.PhotoMD5 = string.Empty;
+            normalized.PhotoLen = 0;
         }
-        catch
+        else
         {
-            // Photo is not Base64, keep original values
+            try
+            {
+                var photoBytes = Convert.FromBase64String(normalized.Photo);
+                normalized.PhotoLen = photoBytes.Length;
+
+                if (string.IsNullOrWhiteSpace(normalized.PhotoMD5))
+                {
+                    using var md5 = System.Security.Cryptography.MD5.Create();
+                    var hash = md5.ComputeHash(photoBytes);
+                    normalized.PhotoMD5 = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
+            }
+            catch
+            {
+                // Base64 디코딩 실패 → 유효하지 않은 값이므로 초기화
+                normalized.Photo    = string.Empty;
+                normalized.PhotoMD5 = string.Empty;
+                normalized.PhotoLen = 0;
+            }
         }
     }
 

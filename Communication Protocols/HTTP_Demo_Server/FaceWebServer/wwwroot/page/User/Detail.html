@@ -1,0 +1,103 @@
+<style>
+
+    .aligncenter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+<div class="layuimini-main" id="admin-search">
+
+    <form class="layui-form layui-form-pane" lay-filter="UserLog_Detail_div_filter">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u13' style="width: 150px;">操作员名称</label>
+            <div class="layui-input-inline" style="width: calc(100% - 160px);">
+                <input type="text" name="UserName" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u14' style="width: 150px;">操作类型</label>
+            <div class="layui-input-inline" style="width: calc(100% - 160px);">
+                <input type="text" name="LogType" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u15' style="width: 150px;">操作时间</label>
+            <div class="layui-input-inline" style="width: calc(100% - 160px);">
+                <input type="text" name="LogTime" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u16' style="width: 150px;">设备信息</label>
+            <div class="layui-input-inline" style="width: calc(100% - 160px);">
+                <input type="text" name="LogDrive" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u17' style="width: 150px;">人员信息</label>
+            <div class="layui-input-inline" style="width: calc(100% - 160px);">
+                <input type="text" name="LogPeople" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='UserLog.u18' style="width: 150px;">内容</label>
+            <div class="layui-input-inline" style="width: calc(100% - 160px);">
+                <textarea name="LogDetail" class="layui-textarea" style=" height:220px"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-col-md12">
+
+            <div class="layui-btn-container aligncenter">
+                <button type="submit" class="layui-btn layui-btn-primary" id="btnsearchclose">
+                    <i class="layui-icon">&#x1006;</i>
+                    <span language='welcome.w39'>关闭</span>
+                </button>
+            </div>
+
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+
+            </div>
+        </div>
+    </form>
+
+</div>
+<script>
+
+    layui.use(['form', 'faceAPI'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        var faceAPI = layui.faceAPI;
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        if (faceAPI.UserLogDetail != null) {
+            form.val("UserLog_Detail_div_filter", faceAPI.UserLogDetail);
+        }
+
+        $('#btnsearchclose').on('click', function () {
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+    });
+    setTimeout(() => {
+        setLanguage();
+        setAllAttrVal()
+    }, 300);
+</script>

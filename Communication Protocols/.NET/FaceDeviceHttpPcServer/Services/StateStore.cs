@@ -347,6 +347,8 @@ public sealed class StateStore
             device.LastUploadedWorkSetting = (JsonObject?)setting.DeepClone();
             device.LastWorkSettingUploadAtUtc = DateTimeOffset.UtcNow;
             device.PendingUploadWorkParameter = false;
+            // 단말기가 새 설정 적용 후 업로드했으므로 DesiredWorkSetting은 더 이상 필요 없음
+            device.DesiredWorkSetting = null;
             SaveState();
         }
     }
@@ -368,7 +370,8 @@ public sealed class StateStore
 
             device.PendingSyncParameter = false;
             var copy = (JsonObject)source.DeepClone();
-            copy["Success"] = 0;
+            // Success 필드는 외부 wrapper에서 설정하므로 WorkSetting 내부에서는 제거
+            copy.Remove("Success");
             copy["DeviceSN"] = deviceSn;
             SaveState();
             return copy;
@@ -571,12 +574,27 @@ public sealed class StateStore
         }
     }
 
-    public void SetDesiredWorkSetting(string deviceSn, JsonObject workSetting)
+    public void SetDesiredWorkSetting(string deviceSn, JsonObject patch)
     {
         lock (_sync)
         {
             var device = GetOrCreateDevice(deviceSn);
-            device.DesiredWorkSetting = (JsonObject)workSetting.DeepClone();
+
+            // LastUploadedWorkSetting을 베이스로 삼아 변경 필드만 덮어씀
+            // → DesiredWorkSetting은 항상 전체 WorkSetting을 유지해야 단말기에 안전하게 전달됨
+            JsonObject merged;
+            if (device.LastUploadedWorkSetting is not null)
+            {
+                merged = (JsonObject)device.LastUploadedWorkSetting.DeepClone();
+                foreach (var kv in patch)
+                    merged[kv.Key] = kv.Value?.DeepClone();
+            }
+            else
+            {
+                merged = (JsonObject)patch.DeepClone();
+            }
+
+            device.DesiredWorkSetting = merged;
             device.PendingSyncParameter = true;
             SaveState();
         }
@@ -858,6 +876,22 @@ public sealed class StateStore
             {
                 device.PendingDeleteUserIds ??= new();
                 device.Records ??= new();
+
+                // 마이그레이션: DesiredWorkSetting이 partial patch(소수 필드)로 저장된 경우
+                // LastUploadedWorkSetting과 병합하여 완전한 스냅샷으로 복원
+                if (device.DesiredWorkSetting is not null && device.LastUploadedWorkSetting is not null)
+                {
+                    var desiredKeyCount  = device.DesiredWorkSetting.Count;
+                    var uploadedKeyCount = device.LastUploadedWorkSetting.Count;
+                    // DesiredWorkSetting의 키 수가 LastUploaded의 절반 미만이면 불완전한 patch로 판단
+                    if (desiredKeyCount < uploadedKeyCount / 2)
+                    {
+                        var merged = (JsonObject)device.LastUploadedWorkSetting.DeepClone();
+                        foreach (var kv in device.DesiredWorkSetting)
+                            merged[kv.Key] = kv.Value?.DeepClone();
+                        device.DesiredWorkSetting = merged;
+                    }
+                }
             }
 
             foreach (var person in state.People.Values)

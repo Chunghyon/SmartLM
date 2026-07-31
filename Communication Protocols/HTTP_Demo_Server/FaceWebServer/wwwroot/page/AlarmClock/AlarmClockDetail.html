@@ -1,0 +1,148 @@
+﻿
+<style>
+    #admin-AlarmClockedit label {
+        width: 150px;
+        background-color: #dddddd;
+    }
+
+
+    .defcenter {
+        text-align: center;
+    }
+</style>
+<div class="layuimini-main" id="admin-AlarmClockedit">
+
+    <div class="layui-form layuimini-form " lay-filter="AlarmClock_edit_div_filter">
+        <div class="layui-form-item">
+            <label class="layui-form-label">
+                <span language="AlarmClock.AlarmClocks_Num">序号</span>
+            </label>
+            <div class="layui-input-inline">
+                <input type="number" name="Num" disabled class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">
+                <span language="AlarmClock.AlarmClocks_Clock">响铃时间</span>
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" lay-verify="required" maxlength="5" value="" class="layui-input" name="Date" TimeFormat_HHmm>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">
+                <span language="AlarmClock.AlarmClocks_Times">响铃时长(秒)</span>
+            </label>
+            <div class="layui-input-inline">
+                <input type="number" max="255" min="1" name="Times" maxlength="3"
+                       autocomplete="off" class="layui-input" lay-verify="required">
+            </div>
+        </div>
+
+        <div class="layui-form-item defcenter">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveAlarmClock">
+                <i class="layui-icon">&#xe605;</i>
+                <span language="people.p39">保存</span>
+            </button>
+            <button class="layui-btn layui-btn-warm" id="BtnPeopleEditCancel">
+                <i class="layui-icon">&#x1006;</i>
+                <span language="people.p40">取消</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'faceAPI', 'laydate'], function () {
+        setLanguage();
+        setAllAttrVal();
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$,
+            laydate = layui.laydate,
+            faceAPI = layui.faceAPI;
+        var AlarmClock = faceAPI.AlarmClockEditPage;
+        var parentIndex = layer.index;
+        /**
+        * 初始化表单，要加上，不然刷新部分组件可能会不加载
+        */
+        form.render();
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="Date"]', //指定元素
+            type: 'time',
+            format: 'HH:mm'
+        });
+        faceAPI.AlarmClockEditPageResult = false;
+
+        function getNewNum() {
+            faceAPI.AjaxPOSTJson({
+                url: '/api/AlarmClock/GetNewNum',
+                success: function (result) {
+                    if (result.Result == false) {
+                        layer.alert(result.Error, {
+                            icon: 2
+                        });
+                        layer.close(parentIndex);
+                    } else {
+
+                        AlarmClock.Num = result.Content;
+                        form.val("AlarmClock_edit_div_filter", AlarmClock);
+
+                    }
+                }
+            });
+
+        }
+
+        //加载表单数据
+        if (AlarmClock == undefined) {
+            AlarmClock = {};
+            AlarmClock.Times = 10;
+            getNewNum();
+        }
+        else {
+            //debugger
+            AlarmClock.Date = AlarmClock.Date.slice(11, 16);
+        }
+
+        form.val("AlarmClock_edit_div_filter", AlarmClock);
+
+        //保存按钮事件
+        form.on('submit(saveAlarmClock)', function (data) {
+
+            var postData = data.field
+            postData.Num = Number(postData.Num);
+            postData.Times = Number(postData.Times);
+            postData.Date = '2024-04-01 ' + postData.Date.slice(0, 5) + ':00';
+
+            faceAPI.AjaxPOSTJson({
+                data: postData,
+                url: '/api/AlarmClock/Add',
+                success: function (result) {
+                    if (result.Result == false) {
+                        layer.alert(result.Error, {
+                            icon: 2
+                        });
+                    } else {
+                        faceAPI.AlarmClockEditPageResult = true;
+                    }
+                    layer.close(parentIndex);
+                }
+            });
+
+            return false;
+        });
+
+
+        //取消操作，关闭窗口
+        $('#BtnPeopleEditCancel').on('click', function () {
+            faceAPI.AlarmClockEditPageResult = false;
+            layer.close(parentIndex);
+
+        });
+
+        faceAPI.CheckInputBox();
+    });
+</script>

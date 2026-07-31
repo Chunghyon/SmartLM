@@ -1,0 +1,342 @@
+<div class="layuimini-container layuimini-page-anim" divname="deviceRemote">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend language='DeviceRemote.d1'>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" lay-filter="DeviceRemote_Search_div_filter">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label" language='DeviceRemote.d2'>设备SN</label>
+                            <div class="layui-input-inline">
+                                <input type="text" maxlength="16" name="SN" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label" style="width: 140px;" language='DeviceRemote.d3'>执行状态</label>
+                            <div class="layui-input-inline">
+                                <select name="TaskStatus" required lay-verify="">
+                                    <option value="" selected></option>
+                                    <option value="0" language='DeviceRemote.d20'>未执行</option>
+                                    <option value="1" language='DeviceRemote.d21'>已执行</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label" style="width: 140px;" language='DeviceRemote.d4'>操作类型</label>
+                            <div class="layui-input-inline  selectUp">
+                                <select name="TaskType" required lay-verify="">
+                                    <option value="" selected></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit lay-filter="data-search-btn">
+                                <i class="layui-icon"></i>
+                                <span language='DeviceRemote.d11' tt="搜 索"></span>
+                            </button>
+                            <!-- <button id="btntest" type="submit" class="layui-btn layui-btn-primary" lay-filter="data-test-btn">
+                                <i class="layui-icon"></i> 测试
+                            </button>
+                            -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+
+                <button class="layui-btn layui-btn-normal layui-btn-sm" lay-event="reload" language='DeviceRemote.d12' tt="刷新">  </button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete" language='DeviceRemote.d13' tt="删除">  </button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-delete-btn" lay-event="clearRemote" language='DeviceRemote.d14' tt="清空所有操作">  </button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="DeviceRemotePageTable" lay-filter="DeviceRemotePageTableFilter"></table>
+
+    </div>
+</div>
+<style>
+    .label_run {
+        color: #0034FF;
+    }
+
+    .label_wait {
+        color: #8C7F12;
+    }
+</style>
+
+<script>
+    setLanguage();
+    setAllAttrVal()
+    layui.use(['form', 'table', 'miniPage', 'element', 'faceAPI', 'dropdown'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+        var faceAPI = layui.faceAPI;
+        var tabDatas = null;
+        var dropdown = layui.dropdown;
+
+       
+
+
+
+
+        /// 任务类型 ；
+        /// 1，远程开门；2、远程关门；3、远程常开；4、锁定；5、解除锁定；6、关闭报警
+        /// 10、远程重启；11、恢复出厂设置； 12、重新上传所有记录；13、清空所有记录；
+        /// 14、推送软件固件升级包；15、推送系统文件更新；16、获取设备摄像头快照；
+        /// 20、上传所有人员；21、上传指定用户号的人员；
+        /// 22、在设备上注册凭证类型；
+        var RemoteTypeTable = [];
+        RemoteTypeTable[1] = getLanguage('DeviceRemote.RemoteOpen');//1，远程开门；；；；6、读取工作参数
+        RemoteTypeTable[2] = getLanguage('DeviceRemote.RemoteClose');//2、远程关门
+        RemoteTypeTable[3] = getLanguage('DeviceRemote.RemoteKeepOpen');//3、远程常开
+        RemoteTypeTable[4] = getLanguage('DeviceRemote.RemoteLockDoor');//4、锁定
+        RemoteTypeTable[5] = getLanguage('DeviceRemote.RemoteUnlockDoor');//5、解除锁定
+        RemoteTypeTable[6] = getLanguage('DeviceRemote.CloseAlarm');//6、关闭报警
+
+
+        RemoteTypeTable[10] = getLanguage('DeviceRemote.RemoteReboot');//10、远程重启
+        RemoteTypeTable[11] = getLanguage('DeviceRemote.Restore');//11、恢复出厂设置
+        RemoteTypeTable[12] = getLanguage('DeviceRemote.RepostRecord');//12、重新上传所有记录
+        RemoteTypeTable[13] = getLanguage('DeviceRemote.ClearRecord');//13、清空所有记录
+        RemoteTypeTable[14] = getLanguage('DeviceRemote.PushSoftware');//14、推送软件固件升级包
+        RemoteTypeTable[15] = getLanguage('DeviceRemote.PushSystemFile');//15、推送系统文件更新
+        RemoteTypeTable[16] = getLanguage('DeviceRemote.Snapshoot');//16、获取设备摄像头快照
+        RemoteTypeTable[17] = getLanguage('DeviceRemote.DeviceAuthorization');//17、发送设备授权信息
+
+        RemoteTypeTable[20] = getLanguage('DeviceRemote.PushAllPeople');// 20、上传所有人员
+        RemoteTypeTable[21] = getLanguage('DeviceRemote.QueryPeople');//21、上传指定人员;
+        RemoteTypeTable[22] = getLanguage('DeviceRemote.RegisterIdentifyTicket');//22、在设备上注册凭证类型;
+
+        RemoteTypeTable[100] = getLanguage('DeviceRemote.EmptyUser');// 100、清空所有人员
+        RemoteTypeTable[101] = getLanguage('DeviceRemote.UploadWorkSetting');//101、上传工作参数;
+
+        var sHtml = '<option value="" selected></option>';
+        for (let key of Object.keys(RemoteTypeTable)) {
+            let typeName = RemoteTypeTable[key];
+
+            sHtml += '<option value="' + key + '" >' + typeName + '</option>'; 
+        }
+        $('[name="TaskType"]').html(sHtml);
+
+
+        form.render();
+
+        var RemoteStatusTable = [];
+        RemoteStatusTable[0] = getLanguage('DeviceRemote.d20');//未执行
+        RemoteStatusTable[1] = getLanguage('DeviceRemote.d21');//已执行
+
+        table.render({
+            elem: '#DeviceRemotePageTable',
+            //**************************异步请求开始***********************
+            url: 'api/DeviceRemote/GetList',
+            method: 'post',
+            contentType: "application/json",
+            headers: {
+                //token: 'sasasas',
+                Authorization: "Bearer " + faceAPI.GetJWTToken()
+            },//增加Token验证头
+            request: {
+                pageName: 'PageIndex', //页码的参数名称，默认：page
+                limitName: 'PageSize' //每页数据量的参数名，默认：limit
+            },
+            parseData: function (res) { //res 即为原始返回的数据
+                if (res.ErrCode == 0) {
+                    var data = res.Content;
+                    var ret = {
+                        "code": res.ErrCode, //解析接口状态
+                        "msg": res.Error, //解析提示文本
+                        "count": data.TotalCount, //解析数据长度
+                        "data": data.DataList //解析数据列表
+                    };
+                    return ret;
+
+                } else {
+                    /*layer.open({
+                        title: '请求错误',
+                        content: '(' + res.ErrCode + ')' + res.Error
+                    });  */
+
+                    return {
+                        "code": 0, //解析接口状态
+                        "msg": '', //解析提示文本
+                        "count": 0, //解析数据长度
+                        "data": [] //解析数据列表
+                    };
+                }
+
+            },
+            //**************************异步请求结束***********************
+
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: getLanguage('DeviceRemote.d22'),
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                { type: "checkbox", width: 50 },
+                { field: 'SN', width: 170, title: 'SN', sort: true },
+                { field: 'CreateTime', width: 180, title: getLanguage('DeviceRemote.d23'), sort: true },
+                {
+                    field: 'TaskType', width: 180, title: getLanguage('DeviceRemote.d25'),
+                    templet: function (d) {
+                        return RemoteTypeTable[d.TaskType];
+                    }
+                },
+                {
+                    field: 'UserID', width: 180, title: getLanguage('DeviceRemote.UserID'),
+                    templet: function (d) {
+                        if (d.TaskType == 21) {
+                            return d.UserID;
+                        }
+                        else
+                            return '-';
+
+                    }
+                },
+                {
+                    //上传状态：0--未执行；1--已执行
+                    field: 'TaskStatus', width: 120, title: getLanguage('DeviceRemote.d26'),
+                    templet: function (d) {
+                        var stip;
+                        stip = '<span class="label ';
+                        if (d.TaskStatus == 0)
+                            stip = stip + '  label_wait">';
+                        else
+                            stip = stip + '  label_run">';
+                        stip = stip + RemoteStatusTable[d.TaskStatus] + '</span>';
+                        return stip;
+                    }
+                },
+                {
+                    field: 'TaskRunTime', width: 180, title: getLanguage('DeviceRemote.d27'),
+                    templet: function (d) {
+                        if (d.TaskStatus == 1) {
+                            return d.TaskRunTime;
+                        }
+                        else
+                            return '-';
+
+                    }
+                }
+            ]],
+            limits: [100, 200, 300, 400, 500, 600],
+            limit: 100,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var result = data.field;
+            if (result.SN == "") result.SN = null;
+            if (result.TaskType == "") result.TaskType = null;
+            if (result.TaskStatus == "") result.TaskStatus = null;
+
+            //执行搜索重载
+            table.reload('DeviceRemotePageTable', {
+                page: {
+                    curr: 1
+                }
+                , where: result
+            }, 'data');
+            setLanguage();
+            setAllAttrVal()
+            return false;
+        });
+
+        function ReloadPage() {
+            table.reload('DeviceRemotePageTable', {
+                page: {
+                    curr: 1
+                }
+                , where: {
+                    SN: null,
+                    TaskType: null,
+                    TaskStatus: null,
+                }
+            }, 'data');
+
+            var par = {
+                SN: "",
+                TaskType: "",
+                TaskStatus: "",
+            };
+            form.val('DeviceRemote_Search_div_filter',par);
+        }
+
+        /**
+         * toolbar事件监听
+         */
+        table.on('toolbar(DeviceRemotePageTableFilter)', function (obj) {
+            if (obj.event === 'clearRemote') {   // 监听添加操作
+                layer.confirm(getLanguage('DeviceRemote.d28'), { icon: 3 }, function (index) {
+                    faceAPI.AjaxPOSTJson({
+                        url: '/api/DeviceRemote/ClearRemote',
+                        success: function (result) {
+                            if (result.Result == false) {
+                                layer.alert(result.Error, { icon: 2 });
+                            }
+                            else {
+                                ReloadPage();
+                            }
+
+                        }
+                    });
+                    layer.close(index);
+                });
+
+            }
+            else if (obj.event === 'delete') {  // 监听删除操作
+                var checkStatus = table.checkStatus('DeviceRemotePageTable')
+                    , data = checkStatus.data;
+                var TaskIDs = [];
+                //console.log(data);
+                data.forEach(function (item, index) { TaskIDs.push(item.taskID); });
+                if (TaskIDs.length == 0) {
+
+                    layer.alert(getLanguage('DeviceRemote.d29'));
+                    return;
+                }
+                layer.confirm(getLanguage('Holiday.ClearTip'), { icon: 3 }, function (index) {
+                    layer.close(index);
+                    // debugger;
+                    faceAPI.AjaxPOSTJson({
+                        data: { TaskIDs },
+                        url: '/api/DeviceRemote/Delete',
+                        success: function (result) {
+                            if (result.Result == false) {
+                                layer.alert(result.Error, { icon: 2 });
+                            }
+                            else {
+                                //刷新页面
+                                ReloadPage();
+                            }
+
+                        }
+                    });
+                });
+            }
+            else if (obj.event === 'reload') {
+                ReloadPage();
+            }
+
+        });
+
+    });
+
+    setTimeout(() => {
+        setLanguage();
+        setAllAttrVal()
+    }, 100);
+
+</script>
+
+

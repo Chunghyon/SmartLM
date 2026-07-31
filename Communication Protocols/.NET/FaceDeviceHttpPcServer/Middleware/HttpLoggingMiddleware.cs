@@ -88,7 +88,7 @@ public sealed class HttpLoggingMiddleware(RequestDelegate next)
         if (!string.IsNullOrWhiteSpace(reqBody))
         {
             sb.AppendLine("¡å Request Body");
-            sb.AppendLine(Truncate(reqBody, 800));
+            sb.AppendLine(Truncate(reqBody, 1600));
         }
         else if (ctx.Request.HasFormContentType)
         {
@@ -103,7 +103,7 @@ public sealed class HttpLoggingMiddleware(RequestDelegate next)
         if (!string.IsNullOrWhiteSpace(respBody))
         {
             sb.AppendLine("¡å Response Body");
-            sb.AppendLine(Truncate(respBody, 800));
+            sb.AppendLine(Truncate(respBody, 1600));
         }
 
         return sb.Length > 0 ? sb.ToString().TrimEnd() : null;

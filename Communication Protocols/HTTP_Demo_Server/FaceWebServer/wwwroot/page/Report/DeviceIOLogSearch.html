@@ -1,0 +1,218 @@
+<style>
+
+    .aligncenter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+
+<div class="layuimini-main" id="DeviceLog-search">
+
+    <form class="layui-form layui-form-pane" lay-filter="DeviceLog_search_div_filter">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d27'>时间范围：</label>
+                <div class="layui-input-inline" style="margin-right: 0px;">
+                    <input type="text" maxlength="30" name="QueryBeginTime" lay-verify="required" autocomplete="off"
+                           class="layui-input" value="2021年7月5日">
+                </div>
+                <label class="layui-form-label" language='DeviceLog.d28'>至</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="QueryEndTime" lay-verify="required" autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.Protocol'>设备SN</label>
+                <div class="layui-input-inline">
+                    <select name="Protocol" lay-verify="">
+                        <option value="" selected></option>
+                        <option value="HTTPv1">HTTPv1</option>
+                        <option value="HTTPv2">HTTPv2</option>
+                        <option value="MQTT">MQTT</option>
+                        <option value="Websocket">Websocket</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d29'>设备SN</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="SN" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='DeviceLog.APIName'>API</label>
+            <div class="layui-input-inline">
+                <select name="APIName" lay-verify="">
+                </select>
+            </div>
+
+            <label class="layui-form-label" language='DeviceLog.d61'>过滤API</label>
+            <div class="layui-input-inline">
+                <select name="NotAPIName" lay-verify="">
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d53'>HTTP方向</label>
+                <div class="layui-input-inline">
+                    <select name="HttpType" lay-verify="">
+                        <option value="" selected></option>
+                        <option value="Request">Request</option>
+                        <option value="Response">Response</option>
+                        <option value="Server">Server</option>
+                        <option value="Device">Device</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="layui-form-item aligncenter">
+            <div class="layui-inline">
+                <button type="submit" class="layui-btn layui-btn-primary" lay-submit lay-filter="data-search-btn">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span language='DeviceLog.d56'>搜索</span>
+                </button>
+                <button type="reset" class="layui-btn layui-btn-primary" id="btnreset" language='DeviceLog.d57'>重置</button>
+                <button type="submit" class="layui-btn layui-btn-primary" id="btnsearchclose">
+                    <i class="layui-icon">&#x1006;</i>
+                    <span language='DeviceLog.d58'>取消</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+<script>
+    setLanguage();
+    setAllAttrVal()
+    layui.use(['form', 'laydate', 'faceAPI'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        var laydate = layui.laydate;
+        var faceAPI = layui.faceAPI;
+
+        function buildAPINameOption() {
+            var apiNames = [];
+            apiNames.push("心跳保活包");
+            apiNames.push("上传工作参数");
+            apiNames.push("拉取工作参数");
+            apiNames.push("获取远程操作指令");
+            apiNames.push("拉取待下载的人员");
+            apiNames.push("反馈下载的人员存储结果");
+            apiNames.push("拉取待删除人员名单");
+            apiNames.push("反馈删除人员结果");
+            apiNames.push("推送人员信息");
+            apiNames.push("推送打卡记录");
+            apiNames.push("推送系统记录");
+            apiNames.push("下载图片");
+            apiNames.push("离线通知");
+            apiNames.push("要求设备上传工作参数");
+            apiNames.push("下发工作参数");
+            apiNames.push("下发工作参数应答");
+            apiNames.push("发送远程指令");
+            apiNames.push("远程指令应答");
+            apiNames.push("推送人员");
+            apiNames.push("推送人员应答");
+            apiNames.push("删除人员");
+            apiNames.push("删除人员应答");
+            apiNames.push("上传人员");
+            apiNames.push("上传人员应答");
+            apiNames.push("上传打卡记录");
+            apiNames.push("上传打卡记录应答");
+            apiNames.push("上传系统记录");
+            apiNames.push("上传系统记录应答");
+
+            var apiLen = apiNames.length;
+            var sOptionList = [];
+            var optionFormat = '<option value="NAME">NAME</option>';
+            sOptionList.push('<option value="" selected></option>');
+            //var re = new RegExp('NAME', 'g');
+            for (var i = 0; i < apiLen; i++) {
+                var apiName = apiNames[i];
+                //var optionElm = optionFormat.replace(re, apiName);
+
+                var optionElm = '<option value="' + apiName + '">';
+                optionElm += getLanguage('DeviceLog.' + apiName);
+                optionElm += '</option>';
+                sOptionList.push(optionElm);
+            }
+
+            var sHTML = sOptionList.join();
+            $('[name="APIName"]').html(sHTML);
+            $('[name="NotAPIName"]').html(sHTML);
+        }
+
+
+
+        buildAPINameOption();
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="QueryBeginTime"]', //指定元素
+            type: 'datetime',
+        });
+
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="QueryEndTime"]', //指定元素
+            type: 'datetime'
+        });
+
+        $('[name="QueryBeginTime"]').attr("value", dayjs().subtract(7, 'day').format("YYYY-MM-DD") + ' 00:00:00');
+        $('[name="QueryEndTime"]').attr("value", dayjs().format("YYYY-MM-DD") + ' 23:59:59');
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        if (faceAPI.DeviceLogSearchPageResult != null) {
+            form.val("DeviceLog_search_div_filter", faceAPI.DeviceLogSearchPageResult.field);
+        } else
+            faceAPI.DeviceLogSearchPageResult = {};
+
+        faceAPI.DeviceLogSearchPageResult.Result = false;
+        //监听提交
+        form.on('submit(data-search-btn)', function (data) {
+            var result = data.field;
+
+
+
+
+            faceAPI.DeviceLogSearchPageResult.Result = true;
+            faceAPI.DeviceLogSearchPageResult.field = result;
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+        $('#btnsearchclose').on('click', function () {
+            faceAPI.DeviceLogSearchPageResult.Result = false
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+
+
+
+    });
+</script>

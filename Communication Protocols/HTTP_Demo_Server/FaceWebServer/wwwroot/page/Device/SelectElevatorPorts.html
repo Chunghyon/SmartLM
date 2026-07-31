@@ -1,0 +1,126 @@
+﻿<div class="layuimini-main" id="device-select-div">
+    <style>
+        .defcenter {
+            text-align: center;
+        }
+
+    </style>
+
+    <form class="layui-form" style="margin: 0 auto;max-width: 800px;">
+        <div>
+            <div class="layui-panel">
+
+
+                <table class="layui-hide"
+                       id="ID-table-Elevator"
+                       lay-filter="ID-table-Elevator"></table>
+                <div class="layui-inline">
+                    <label class="layui-form-label"
+                           language="people.p91"
+                           style="width: 150px">已选择数量</label>
+                    <div class="layui-input-inline" style="margin-left: 10px">
+                        <div class="layui-form-mid status-black"
+                             name="elevatorCount"
+                             id="elevatorCount"
+                             autoset>
+                            0
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-panel defcenter">
+            <button class="layui-btn" lay-submit lay-filter="btnSelectPort"
+                    language='people.BtnSelect'>
+                选择
+            </button>
+
+            <button class="layui-btn" lay-submit lay-filter="btnCancel"
+                    language='people.p62'>
+                取消
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    setLanguage();
+    setAllAttrVal()
+
+    layui.use(['form', 'laydate', 'miniPage', 'table', 'faceAPI'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            table = layui.table,
+            $ = layui.$;
+
+        var faceAPI = layui.faceAPI;
+        var miniPage = layui.miniPage;
+
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+
+        form.on('submit(btnSelectPort)', function (data) {
+            var checkStatus = table.checkStatus('ID-table-Elevator')
+                , data = checkStatus.data;
+            if (data.length == 0) {
+                return false;
+            }
+            var ports = [];
+            //获取勾选的设备列表
+            data.forEach(function (item, index) { ports.push(item.num); });
+            faceAPI.SelectElevatorPorts = ports.join(",");
+            layer.close(parentIndex);
+            return false;
+        });
+
+        form.on('submit(btnCancel)', function (data) {
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+
+        var data = [];
+        for (var i = 1; i <= 64; i++) {
+            data.push({
+                LAY_CHECKED: false,
+                num: i,
+            });
+        }
+        
+        //加载门列表
+        table.render({
+            elem: '#ID-table-Elevator',
+            cols: [
+                [
+                    //标题栏
+                    { type: "checkbox", width: 60 },
+                    { field: "num", title: getLanguage('DeviceRemote.ElevatorPort') },
+                ],
+            ],
+            data: data,
+            height: 430,
+            limit: 1000, // 每页默认显示的数量
+        });
+
+        var elevatorCount = 0;
+        table.on("checkbox(ID-table-Elevator)", function (obj) {
+            var ch = obj.checked;
+            if (obj.type == "all") {
+                elevatorCount = ch ? 64 : 0;
+            } else {
+                elevatorCount = ch ? elevatorCount + 1 : elevatorCount - 1;
+            }
+            var elevatorDiv = $("#elevatorCount");
+            elevatorDiv.html(elevatorCount);
+        });
+    });
+
+
+
+</script>

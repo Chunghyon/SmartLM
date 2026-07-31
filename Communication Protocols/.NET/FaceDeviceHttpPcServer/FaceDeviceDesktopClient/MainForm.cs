@@ -181,13 +181,16 @@ public partial class MainForm : Form
 
         dgvPersonnel.Columns.Clear();
 
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",     HeaderText = "동",     Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",       HeaderText = "호",       Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",   HeaderText = "멤버",   Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",     HeaderText = "사용자명", Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",    HeaderText = "사진등록",    Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword", HeaderText = "비밀번호", Width = 100, SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColAssigned", HeaderText = "할당된 단말기수",Width = 120, SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",        HeaderText = "동",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",          HeaderText = "호",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "멤버",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",        HeaderText = "사용자명",     Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",        HeaderText = "카드",         Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword",    HeaderText = "비밀번호",     Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFingerprint", HeaderText = "지문",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPalmvein",    HeaderText = "정맥",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",       HeaderText = "사진",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColAssigned",    HeaderText = "할당된 단말기수", Width = 120, SortMode = DataGridViewColumnSortMode.Programmatic });
 
         dgvPersonnel.CellFormatting += (sender, e) =>
         {
@@ -205,6 +208,22 @@ public partial class MainForm : Form
                     e.Value = new string('●', Math.Min(pw.Length, 8));
                     e.FormattingApplied = true;
                 }
+            }
+            else if (e.ColumnIndex == dgvPersonnel.Columns["ColCard"].Index && e.Value != null)
+            {
+                var cv = e.Value.ToString();
+                e.Value = (string.IsNullOrWhiteSpace(cv) || cv == "0") ? "X" : "O";
+                e.FormattingApplied = true;
+            }
+            else if (e.ColumnIndex == dgvPersonnel.Columns["ColFingerprint"].Index && e.Value != null)
+            {
+                e.Value = e.Value.ToString() == "0" ? "X" : "O";
+                e.FormattingApplied = true;
+            }
+            else if (e.ColumnIndex == dgvPersonnel.Columns["ColPalmvein"].Index && e.Value != null)
+            {
+                e.Value = e.Value.ToString() == "0" ? "X" : "O";
+                e.FormattingApplied = true;
             }
         };
 
@@ -315,48 +334,19 @@ public partial class MainForm : Form
     {
         var contextMenu = new ContextMenuStrip();
 
-        var menuRemoteControl = new ToolStripMenuItem("Remote Control");
+        var menuRemoteControl = new ToolStripMenuItem("수정");
         menuRemoteControl.Click += MenuRemoteControl_Click;
 
-        var menuRefresh = new ToolStripMenuItem("Refresh Status");
+        var menuRefresh = new ToolStripMenuItem("새로 고침");
         menuRefresh.Click += (s, e) => RefreshDevices();
 
-        var menuSeparator1 = new ToolStripSeparator();
+        var menuSeparator = new ToolStripSeparator();
 
-        // 설정 서브메뉴
-        var menuSettings = new ToolStripMenuItem("설정");
-
-        var menuNetworkSettings = new ToolStripMenuItem("네트워크 설정");
-        menuNetworkSettings.Click += MenuDeviceNetworkSettings_Click;
-
-        var menuAccessControlSettings = new ToolStripMenuItem("출입 제어 설정");
-        menuAccessControlSettings.Click += MenuDeviceAccessControlSettings_Click;
-
-        var menuAlarmSettings = new ToolStripMenuItem("알람 설정");
-        menuAlarmSettings.Click += MenuDeviceAlarmSettings_Click;
-
-        menuSettings.DropDownItems.AddRange(new ToolStripItem[] 
-        { 
-            menuNetworkSettings, 
-            menuAccessControlSettings, 
-            menuAlarmSettings 
-        });
-
-        var menuSeparator2 = new ToolStripSeparator();
-
-        var menuDelete = new ToolStripMenuItem("Remove Device");
+        var menuDelete = new ToolStripMenuItem("제거");
         menuDelete.Click += MenuDeleteDevice_Click;
         menuDelete.ForeColor = System.Drawing.Color.DarkRed;
 
-        contextMenu.Items.AddRange(new ToolStripItem[] 
-        { 
-            menuRemoteControl, 
-            menuRefresh, 
-            menuSeparator1,
-            menuSettings,
-            menuSeparator2, 
-            menuDelete 
-        });
+        contextMenu.Items.AddRange(new ToolStripItem[] { menuRemoteControl, menuRefresh, menuSeparator, menuDelete });
         dgvDevices.ContextMenuStrip = contextMenu;
     }
 
@@ -580,8 +570,11 @@ public partial class MainForm : Form
             int rowIdx = dgvPersonnel.Rows.Add(
                 dong, ho, member,
                 person.Name ?? "",
-                person.Photo ?? "",
+                person.CardNum ?? "",
                 person.Password ?? "",
+                person.Fingerprints?.Count.ToString() ?? "0",
+                person.Palmveins?.Count.ToString() ?? "0",
+                person.Photo ?? "",
                 assigned);
             dgvPersonnel.Rows[rowIdx].Tag = person;
         }
@@ -1324,13 +1317,12 @@ public partial class MainForm : Form
                 {
                     var person = form.Person;
 
-                    if (person.PhotoData != null && person.PhotoData.Length > 0)
+                    // PersonForm.BuildPersonInfo()에서 PhotoData → Photo(Base64) 변환이 이미 완료됨
+                    // PhotoData가 있는데 Photo가 아직 변환 안 됐을 경우만 보정
+                    if (person.PhotoData != null && person.PhotoData.Length > 0 &&
+                        string.IsNullOrWhiteSpace(person.Photo))
                     {
                         person.Photo = Convert.ToBase64String(person.PhotoData);
-                    }
-                    else
-                    {
-                        person.Photo = null;
                     }
 
                     var response = await _httpClient.PostAsJsonAsync("/api/People/New", person);
@@ -1387,8 +1379,8 @@ public partial class MainForm : Form
             var person = getResult.Content;
             using var form = new PersonForm(_httpClient);
 
-            // Set initial values including photo and password
-            form.SetInitialValues(person.UserID, person.Name, person.Photo, person.Password);
+            // Set initial values including photo, password, card, fingerprints, palmveins
+            form.SetInitialValues(person);
 
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -1405,15 +1397,15 @@ public partial class MainForm : Form
                     // User clicked "저장" button - need to save now
                     try
                     {
-                        if (form.Person.PhotoData != null && form.Person.PhotoData.Length > 0)
-                        {
-                            form.Person.Photo = Convert.ToBase64String(form.Person.PhotoData);
-                        }
-                        else if (string.IsNullOrWhiteSpace(form.Person.Photo))
+                        // PersonForm.BuildPersonInfo()에서 PhotoData → Photo(Base64) 변환이 이미 완료됨
+                        // Photo가 단말기 내부 경로("/data/...")인 채로 남아있으면 null 처리
+                        if (!string.IsNullOrWhiteSpace(form.Person.Photo) &&
+                            (form.Person.Photo.StartsWith("/") || form.Person.Photo.Contains("\\")))
                         {
                             form.Person.Photo = null;
                         }
 
+                        System.Diagnostics.Debug.WriteLine($"[Update] Photo length={form.Person.Photo?.Length ?? 0}");
                         var response = await _httpClient.PostAsJsonAsync("/api/People/Update", form.Person);
                         var result = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
 
@@ -1694,131 +1686,7 @@ public partial class MainForm : Form
         MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    // Device Context Menu Event Handlers (단말기별 설정)
-    private void MenuDeviceNetworkSettings_Click(object? sender, EventArgs e)
-    {
-        if (dgvDevices.SelectedRows.Count == 0)
-        {
-            MessageBox.Show("단말기를 선택해주세요", "안내",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        var row = dgvDevices.SelectedRows[0];
-        var sn = row.Cells["SN"].Value?.ToString();
-        var deviceName = row.Cells["DeviceName"].Value?.ToString() ?? "Unknown";
-
-        if (string.IsNullOrWhiteSpace(sn))
-        {
-            ShowError("Invalid device selection");
-            return;
-        }
-
-        using var form = new NetworkSettingsForm(_httpClient, sn, deviceName);
-        form.ShowDialog();
-    }
-
-    private void MenuDeviceAccessControlSettings_Click(object? sender, EventArgs e)
-    {
-        if (dgvDevices.SelectedRows.Count == 0)
-        {
-            MessageBox.Show("단말기를 선택해주세요", "안내",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        var row = dgvDevices.SelectedRows[0];
-        var sn = row.Cells["SN"].Value?.ToString();
-        var deviceName = row.Cells["DeviceName"].Value?.ToString() ?? "Unknown";
-
-        if (string.IsNullOrWhiteSpace(sn))
-        {
-            ShowError("Invalid device selection");
-            return;
-        }
-
-        using var form = new AccessControlSettingsForm(_httpClient, sn, deviceName);
-        form.ShowDialog();
-    }
-
-    private void MenuDeviceAlarmSettings_Click(object? sender, EventArgs e)
-    {
-        if (dgvDevices.SelectedRows.Count == 0)
-        {
-            MessageBox.Show("단말기를 선택해주세요", "안내",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        var row = dgvDevices.SelectedRows[0];
-        var sn = row.Cells["SN"].Value?.ToString();
-        var deviceName = row.Cells["DeviceName"].Value?.ToString() ?? "Unknown";
-
-        if (string.IsNullOrWhiteSpace(sn))
-        {
-            ShowError("Invalid device selection");
-            return;
-        }
-
-        using var form = new AlarmSettingsForm(_httpClient, sn, deviceName);
-        form.ShowDialog();
-    }
-
-    private void btnDeviceSettings_Click(object? sender, EventArgs e)
-    {
-        if (dgvDevices.SelectedRows.Count == 0)
-        {
-            MessageBox.Show("단말기를 선택해주세요", "안내",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        var row = dgvDevices.SelectedRows[0];
-        var sn = row.Cells["SN"].Value?.ToString();
-        var deviceName = row.Cells["DeviceName"].Value?.ToString() ?? "Unknown";
-
-        if (string.IsNullOrWhiteSpace(sn))
-        {
-            ShowError("Invalid device selection");
-            return;
-        }
-
-        // 설정 메뉴를 표시
-        var settingsMenu = new ContextMenuStrip();
-
-        var networkItem = new ToolStripMenuItem("네트워크 설정");
-        networkItem.Click += (s, args) => {
-            using var form = new NetworkSettingsForm(_httpClient, sn, deviceName);
-            form.ShowDialog();
-        };
-
-        var accessControlItem = new ToolStripMenuItem("출입 제어 설정");
-        accessControlItem.Click += (s, args) => {
-            using var form = new AccessControlSettingsForm(_httpClient, sn, deviceName);
-            form.ShowDialog();
-        };
-
-        var alarmItem = new ToolStripMenuItem("알람 설정");
-        alarmItem.Click += (s, args) => {
-            using var form = new AlarmSettingsForm(_httpClient, sn, deviceName);
-            form.ShowDialog();
-        };
-
-        settingsMenu.Items.AddRange(new ToolStripItem[] 
-        {
-            networkItem,
-            accessControlItem,
-            alarmItem
-        });
-
-        // 버튼 위치에서 메뉴 표시
-        var btn = sender as Button;
-        if (btn != null)
-        {
-            settingsMenu.Show(btn, new Point(0, btn.Height));
-        }
-    }
-
+    // Device Context Menu Event Handlers
     private async void btnRefreshPersonnel_Click(object sender, EventArgs e)
     {
         await RefreshPersonnel();

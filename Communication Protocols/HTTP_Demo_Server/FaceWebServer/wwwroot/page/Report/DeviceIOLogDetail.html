@@ -1,0 +1,132 @@
+<div class="layuimini-main" id="DeviceLog-Detail">
+
+
+    <form class="layui-form layui-form-pane" lay-filter="DeviceLog_Detail_div_filter">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d17'>时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="LogTime" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d18'>设备SN</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="SN" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d19'>IP地址</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="IPAddr" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d20'>HTTP方向</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="HttpType" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d21'>HTTP方法</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="Method" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d22'>请求ID</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="RequestID" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d23'>长度</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="ContentLength" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.d24'>格式</label>
+                <div class="layui-input-inline" style="width:515px">
+                    <input type="text" name="ContentType" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.Protocol'>协议类型</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="Protocol" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" language='DeviceLog.APIName'>APIName</label>
+                <div class="layui-input-inline" style="width:515px">
+                    <input type="text" name="APIName" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">URL</label>
+            <div class="layui-input-block">
+                <input type="text" name="URL" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" language='DeviceLog.d25'>内容</label>
+            <div class="layui-input-block">
+                <textarea name="Body" class="layui-textarea" style="width:100%; height:750px"></textarea>
+            </div>
+        </div>
+    </form>
+
+</div>
+<script>
+    setLanguage();
+    setAllAttrVal()
+    layui.use(['form', 'faceAPI'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        var faceAPI = layui.faceAPI;
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        if (faceAPI.DeviceLogDetail != null) {
+            var report = faceAPI.DeviceLogDetail;
+            var b = report.Body;
+            if (b.length > 10) {
+                try {
+                    
+                    var json = JSON.parse(b); //将json字符串格式化为json对象
+                    report.Body = JSON.stringify(json, null, "\t");
+                } catch (error) {
+                    console.log('Json 转换时报错：');
+                    console.log(error);
+                }
+
+            }
+
+            form.val("DeviceLog_Detail_div_filter", report);
+
+        }
+
+        $('#btnDetailClose').on('click', function () {
+            layer.close(parentIndex);
+            return false;
+        });
+
+    });
+</script>

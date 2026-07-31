@@ -1,0 +1,186 @@
+<div class="layuimini-main" id="SystemReport-search">
+    <style>
+        .searchlabel {
+            width: 140px;
+        }
+
+        .defcenter {
+            text-align: center;
+        }
+    </style>
+    <form class="layui-form layui-form-pane" lay-filter="SystemReport_search_div_filter">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label searchlabel" language='Report.r95'>时间范围：</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="QueryBeginTime" lay-verify="required" autocomplete="off"
+                           class="layui-input" value="2024年1月1日">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label searchlabel" language='Report.r96'>至</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="QueryEndTime" lay-verify="required" autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label" language="device.d2">设备SN</label>
+                <div class="layui-input-inline">
+                    <input type="text" maxlength="30" name="SN" autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label searchlabel" language='Report.r99'>事件类型</label>
+                <div class="layui-input-block" id="RecordTypeList" />
+            </div>
+        </div>
+
+
+        <div class="layui-form-item defcenter">
+            <button type="submit" class="layui-btn  " lay-submit lay-filter="data-search-btn" id="btnName" language='Report.r120'>
+                搜索
+            </button>
+            <button type="submit" class="layui-btn layui-bg-bluey" id="btnreset" language='Report.r121'>重置</button>
+            <button type="submit" class="layui-btn layui-bg-orange" id="btnsearchclose">
+                <i class="layui-icon">&#x1006;</i> <span language='Report.r122'>取消</span>
+            </button>
+        </div>
+    </form>
+
+</div>
+<script>
+    setLanguage();
+    setAllAttrVal()
+    layui.use(['form', 'laydate', 'faceAPI', 'selectM'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        var laydate = layui.laydate;
+        var faceAPI = layui.faceAPI;
+        var selectM = layui.selectM;
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="QueryBeginTime"]', //指定元素
+            type: 'datetime',
+        });
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '[name="QueryEndTime"]', //指定元素
+            type: 'datetime'
+        });
+
+
+        // 当前弹出层，防止ID被覆盖
+        var parentIndex = layer.index;
+
+        //动态设置选择框
+
+
+        var eventMap = [];
+
+
+        faceAPI.SystemReportSearch.EnentTypeTable.forEach((item, index, arr) => {
+
+            var eventItem = {};
+            eventItem.id = index;
+            eventItem.name = item;
+            eventItem.status = 1;
+            eventMap.push(eventItem);
+
+            //console.log(eventItem);
+        })
+        //console.log(eventMap);
+        var eventSelected = [];
+        if (faceAPI.SystemReportSearch.hasOwnProperty("RecordTypeList")) {
+            
+            if (faceAPI.SystemReportSearch.RecordTypeList != null) {
+                //debugger
+                //var sMaps = faceAPI.SystemReportSearch.RecordTypeList.split(",");
+                eventSelected = faceAPI.SystemReportSearch.RecordTypeList;
+            }
+        }
+
+        //多选标签-基本配置
+        var tagIns1 = selectM({
+            //元素容器【必填】
+            elem: '#RecordTypeList'
+            //候选数据【必填】
+            , data: eventMap
+            , max: 5
+            , width: 400
+            , selected: eventSelected
+        });
+
+
+        
+
+        form.val("SystemReport_search_div_filter", faceAPI.SystemReportSearch);
+
+        faceAPI.SystemReportSearchPageResult.Result = false;
+
+
+
+
+        //监听提交
+        form.on('submit(data-search-btn)', function (data) {
+            var result = data.field;
+
+            
+            //result.QueryBeginTime = dayjs(result.QueryBeginTime, "YYYY-MM-DD HH:mm:ss").unix();
+            //result.QueryEndTime = dayjs(result.QueryEndTime, "YYYY-MM-DD HH:mm:ss").unix();
+            if (result.RecordTypeList.length > 0) {
+
+                result.RecordTypeList = result.RecordTypeList.split(",");
+            }
+            else {
+                result.RecordTypeList = null;
+            }
+
+            faceAPI.SystemReportSearchPageResult.Result = true;
+            faceAPI.SystemReportSearchPageResult.field = result;
+            layer.close(parentIndex);
+            return false;
+        });
+
+        //重置
+        $('#btnreset').on('click', function () {
+
+            faceAPI.SystemReportSearch = {
+                QueryBeginTime: dayjs().subtract(7, 'day').format("YYYY-MM-DD") + ' 00:00:00',//将 年月日时分秒 转为 时间戳
+                QueryEndTime: dayjs().format("YYYY-MM-DD") + ' 23:59:59',
+                SN: "",
+                RecordTypeList: []
+            }
+
+            form.val("SystemReport_search_div_filter", faceAPI.SystemReportSearch);
+
+            tagIns1.set([]);
+            return false;
+        });
+
+
+        $('#btnsearchclose').on('click', function () {
+            faceAPI.SystemReportSearchPageResult.Result = false
+            layer.close(parentIndex);
+            return false;
+        });
+
+
+
+
+
+    });
+</script>
