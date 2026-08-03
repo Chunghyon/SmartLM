@@ -239,7 +239,11 @@ public sealed class DeviceSnapshot
     public bool PendingUploadWorkParameter { get; set; }
     public int PendingAddPeopleCount { get; set; }
     public List<string> PendingDeleteUserIds { get; set; } = new();
-    public List<string> DownloadedUserIds { get; set; } = new(); // Track users already sent to device in current batch
+    public List<string> DownloadedUserIds { get; set; } = new();
+    /// <summary>단말기에 실제 등록되어 있는 사용자 목록 (서버 사용자와 독립)</summary>
+    public Dictionary<string, PersonInfo> OwnedPeople { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>이 단말기에만 전송 대기 중인 사용자 (사용자 정보 창에서 추가/수정)</summary>
+    public Dictionary<string, PersonInfo> StagedPeople { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<RecordSnapshot> Records { get; set; } = new();
     public PendingRemoteCommand? PendingRemote { get; set; }
 }

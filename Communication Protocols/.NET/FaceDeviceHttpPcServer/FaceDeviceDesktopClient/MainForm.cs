@@ -16,6 +16,11 @@ public partial class MainForm : Form
     private string _personnelSortColumn = string.Empty;
     private ListSortDirection _personnelSortDirection = ListSortDirection.Ascending;
 
+    // 단말기 고정 순번: SN → 순번 (한 번 부여된 번호는 변경되지 않음)
+    private readonly Dictionary<string, int> _deviceRowNumbers =
+        new(StringComparer.OrdinalIgnoreCase);
+    private int _deviceRowCounter = 0;
+
     public MainForm()
     {
         InitializeComponent();
@@ -128,19 +133,12 @@ public partial class MainForm : Form
             ReadOnly = true
         });
 
-        // 체크박스 클릭 처리: MouseDown으로 싱글클릭 즉시 토글 (더블클릭과 충돌 방지)
-        dgvDevices.MouseDown += (s, e) =>
+        // 체크박스 클릭 처리: CellContentClick + CommitEdit로 즉시 반영
+        dgvDevices.CellContentClick += (s, e) =>
         {
-            var hit = dgvDevices.HitTest(e.X, e.Y);
-            if (hit.RowIndex < 0) return;
-            if (hit.ColumnIndex != dgvDevices.Columns["Selected"].Index) return;
-            // 싱글클릭만 처리 (더블클릭 두 번째 Click은 무시)
-            if (e.Clicks == 1)
-            {
-                var cell = dgvDevices.Rows[hit.RowIndex].Cells["Selected"];
-                cell.Value = !(cell.Value is true);
-                dgvDevices.InvalidateRow(hit.RowIndex);
-            }
+            if (e.RowIndex < 0) return;
+            if (e.ColumnIndex != dgvDevices.Columns["Selected"].Index) return;
+            dgvDevices.CommitEdit(DataGridViewDataErrorContexts.Commit);
         };
 
         // 상태 컬럼 색상 표시 + 최신 상태 재계산
@@ -175,22 +173,22 @@ public partial class MainForm : Form
     {
         dgvPersonnel.AutoGenerateColumns = false;
         dgvPersonnel.AllowUserToAddRows = false;
-        dgvPersonnel.ReadOnly = true;
+        dgvPersonnel.ReadOnly = false;
         dgvPersonnel.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         dgvPersonnel.ColumnHeaderMouseClick += DgvPersonnel_ColumnHeaderMouseClick;
 
         dgvPersonnel.Columns.Clear();
 
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",        HeaderText = "동",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",          HeaderText = "호",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "멤버",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",        HeaderText = "사용자명",     Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",        HeaderText = "카드",         Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword",    HeaderText = "비밀번호",     Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFingerprint", HeaderText = "지문",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPalmvein",    HeaderText = "정맥",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",       HeaderText = "사진",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColAssigned",    HeaderText = "할당된 단말기수", Width = 120, SortMode = DataGridViewColumnSortMode.Programmatic });
+        dgvPersonnel.Columns.Add(new DataGridViewCheckBoxColumn { Name = "ColSelect",      HeaderText = "선택",         Width = 55,  SortMode = DataGridViewColumnSortMode.NotSortable, ReadOnly = false });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",        HeaderText = "동",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",          HeaderText = "호",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "멤버",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",        HeaderText = "사용자명",     Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",        HeaderText = "카드",         Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword",    HeaderText = "비밀번호",     Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFingerprint", HeaderText = "지문",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPalmvein",    HeaderText = "손바닥",       Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",       HeaderText = "얼굴",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
 
         dgvPersonnel.CellFormatting += (sender, e) =>
         {
@@ -285,25 +283,32 @@ public partial class MainForm : Form
 
     private void DgvDevices_RowPostPaint(object? sender, DataGridViewRowPostPaintEventArgs e)
     {
-        // Display row number in "No." column
+        // Display fixed row number in "No." column (based on SN, not row index)
         var grid = sender as DataGridView;
         if (grid == null) return;
 
-        // Calculate the X offset of the "No" column (sum of widths of preceding columns)
+        // 해당 행의 SN으로 고정 순번 조회
+        string? sn = null;
+        if (e.RowIndex >= 0 && e.RowIndex < grid.Rows.Count)
+            sn = grid.Rows[e.RowIndex].Cells["SN"].Value?.ToString();
+        string rowLabel = (sn != null && _deviceRowNumbers.TryGetValue(sn, out var fixedNo))
+            ? fixedNo.ToString()
+            : (e.RowIndex + 1).ToString();
+
+        // Calculate the X offset of the "No" column
         int xOffset = grid.RowHeadersWidth;
         int noColIndex = grid.Columns["No"].Index;
         for (int i = 0; i < noColIndex; i++)
             if (grid.Columns[i].Visible)
                 xOffset += grid.Columns[i].Width;
 
-        var rowIdx = (e.RowIndex + 1).ToString();
         var centerFormat = new StringFormat()
         {
             Alignment = StringAlignment.Center,
             LineAlignment = StringAlignment.Center
         };
         var noBounds = new Rectangle(xOffset, e.RowBounds.Top, grid.Columns["No"].Width, e.RowBounds.Height);
-        e.Graphics.DrawString(rowIdx, grid.Font, SystemBrushes.ControlText, noBounds, centerFormat);
+        e.Graphics.DrawString(rowLabel, grid.Font, SystemBrushes.ControlText, noBounds, centerFormat);
     }
 
     private void DgvDevices_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
@@ -479,16 +484,67 @@ public partial class MainForm : Form
 
     private void UpdateDeviceGrid(List<DeviceInfo> devices)
     {
+        // 현재 체크된 SN 목록 보존
+        var checkedSNs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (DataGridViewRow row in dgvDevices.Rows)
+            if (row.Cells["Selected"].Value is true)
+            {
+                var sn = row.Cells["SN"].Value?.ToString();
+                if (!string.IsNullOrEmpty(sn)) checkedSNs.Add(sn);
+            }
+
+        // 현재 스크롤 위치와 선택 SN 보존
+        int firstVisibleRow = dgvDevices.FirstDisplayedScrollingRowIndex;
+        string? selectedSN = null;
+        if (dgvDevices.SelectedRows.Count > 0)
+            selectedSN = dgvDevices.SelectedRows[0].Cells["SN"].Value?.ToString();
+
         // Clear existing data (but keep columns)
         dgvDevices.DataSource = null;
 
         if (devices.Count > 0)
         {
+            // 새로 나타난 SN에 순번 부여 (기존 SN은 유지)
+            foreach (var d in devices)
+                if (!_deviceRowNumbers.ContainsKey(d.SN))
+                    _deviceRowNumbers[d.SN] = ++_deviceRowCounter;
+
+            // 순번 기준으로 정렬하여 표시 순서를 고정
+            devices.Sort((a, b) =>
+            {
+                int na = _deviceRowNumbers.TryGetValue(a.SN, out var va) ? va : int.MaxValue;
+                int nb = _deviceRowNumbers.TryGetValue(b.SN, out var vb) ? vb : int.MaxValue;
+                return na.CompareTo(nb);
+            });
+
             var bindingList = new System.ComponentModel.BindingList<DeviceInfo>(devices);
             dgvDevices.DataSource = bindingList;
             lblStatus.Text = $"Loaded {devices.Count} device(s)";
 
-            // 상태 컬럼 주기 갱신 타이머 (10초마다 Refresh)
+            // 체크박스 상태 복원 (미선택 행도 명시적으로 false 지정하여 null 방지)
+            foreach (DataGridViewRow row in dgvDevices.Rows)
+            {
+                var sn = row.Cells["SN"].Value?.ToString();
+                row.Cells["Selected"].Value = !string.IsNullOrEmpty(sn) && checkedSNs.Contains(sn);
+            }
+
+            // 선택 행 복원 (자동 선택된 행 먼저 해제 후 복원)
+            dgvDevices.ClearSelection();
+            if (selectedSN != null)
+            {
+                foreach (DataGridViewRow row in dgvDevices.Rows)
+                    if (string.Equals(row.Cells["SN"].Value?.ToString(), selectedSN, StringComparison.OrdinalIgnoreCase))
+                    {
+                        row.Selected = true;
+                        break;
+                    }
+            }
+
+            // 스크롤 위치 복원
+            if (firstVisibleRow >= 0 && firstVisibleRow < dgvDevices.RowCount)
+                dgvDevices.FirstDisplayedScrollingRowIndex = firstVisibleRow;
+
+            // 상태 컬럼 주기 갱신 타이머 (20초마다 Refresh)
             _deviceStatusTimer?.Stop();
             _deviceStatusTimer?.Dispose();
             _deviceStatusTimer = new System.Windows.Forms.Timer { Interval = 20_000 };
@@ -564,18 +620,15 @@ public partial class MainForm : Form
             string dong   = parsed ? (idNum / 1_000_000L).ToString() : person.UserID;
             string ho     = parsed ? ((idNum / 100L) % 10_000L).ToString() : "";
             string member = parsed ? (idNum % 100L).ToString() : "";
-            string assigned = "0";
-            if (assignments != null && assignments.TryGetValue(person.UserID, out var cnt))
-                assigned = cnt.ToString();
             int rowIdx = dgvPersonnel.Rows.Add(
+                false,
                 dong, ho, member,
                 person.Name ?? "",
                 person.CardNum ?? "",
                 person.Password ?? "",
                 person.Fingerprints?.Count.ToString() ?? "0",
                 person.Palmveins?.Count.ToString() ?? "0",
-                person.Photo ?? "",
-                assigned);
+                person.Photo ?? "");
             dgvPersonnel.Rows[rowIdx].Tag = person;
         }
     }
@@ -1397,12 +1450,16 @@ public partial class MainForm : Form
                     // User clicked "저장" button - need to save now
                     try
                     {
-                        // PersonForm.BuildPersonInfo()에서 PhotoData → Photo(Base64) 변환이 이미 완료됨
-                        // Photo가 단말기 내부 경로("/data/...")인 채로 남아있으면 null 처리
-                        if (!string.IsNullOrWhiteSpace(form.Person.Photo) &&
-                            (form.Person.Photo.StartsWith("/") || form.Person.Photo.Contains("\\")))
+                        // Photo가 단말기 내부 경로("/data/user_pic/xxx.jpg" 형태)인 경우만 null 처리
+                        // Base64 JPEG는 "/9j/"로 시작하므로 확장자 포함 여부로 단말기 경로 판별
+                        if (!string.IsNullOrWhiteSpace(form.Person.Photo))
                         {
-                            form.Person.Photo = null;
+                            bool looksLikePath = form.Person.Photo.Contains(":\\") ||
+                                                 form.Person.Photo.Contains(":/") ||
+                                                 (form.Person.Photo.StartsWith("/") &&
+                                                  System.IO.Path.HasExtension(form.Person.Photo));
+                            if (looksLikePath)
+                                form.Person.Photo = null;
                         }
 
                         System.Diagnostics.Debug.WriteLine($"[Update] Photo length={form.Person.Photo?.Length ?? 0}");
@@ -1435,7 +1492,14 @@ public partial class MainForm : Form
 
     private async void btnDeletePerson_Click(object sender, EventArgs e)
     {
-        if (dgvPersonnel.SelectedRows.Count == 0)
+        // ColSelect 체크된 행 우선, 없으면 SelectedRows 전체 사용
+        var targetRows = dgvPersonnel.Rows.Cast<DataGridViewRow>()
+            .Where(r => r.Cells["ColSelect"].Value is true)
+            .ToList();
+        if (targetRows.Count == 0)
+            targetRows = dgvPersonnel.SelectedRows.Cast<DataGridViewRow>().ToList();
+
+        if (targetRows.Count == 0)
         {
             MessageBox.Show("삭제할 사용자를 선택해주세요", "안내",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1444,34 +1508,43 @@ public partial class MainForm : Form
 
         try
         {
-            var row = dgvPersonnel.SelectedRows[0];
-            var boundPerson = row.Tag as PersonInfo;
-            var userID = boundPerson?.UserID;
-            var userName = boundPerson?.Name;
-
+            var names = string.Join(", ", targetRows
+                .Select(r => (r.Tag as PersonInfo)?.Name)
+                .Where(n => n != null));
             var result = MessageBox.Show(
-                $"{userName} ({GetLocationLabel(userID)})를 삭제하시겠습니까?",
+                $"{names} ({targetRows.Count}명)를 삭제하시겠습니까?",
                 "사용자 삭제 확인",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
 
-            if (result == DialogResult.Yes)
-            {
-                var deleteRequest = new { UserID = userID };
-                var response = await _httpClient.PostAsJsonAsync("/api/People/Delete", deleteRequest);
-                var apiResult = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+            if (result != DialogResult.Yes) return;
 
-                if (apiResult?.Code == 0)
+            int successCount = 0;
+            var errors = new List<string>();
+            foreach (var row in targetRows)
+            {
+                var boundPerson = row.Tag as PersonInfo;
+                var userID = boundPerson?.UserID;
+                if (string.IsNullOrEmpty(userID)) continue;
+                try
                 {
-                    lblStatus.Text = "사용자가 삭제되었습니다";
-                    await RefreshPersonnel();
-                    await RefreshSystemInfo();
+                    var deleteRequest = new { UserID = userID };
+                    var response = await _httpClient.PostAsJsonAsync("/api/People/Delete", deleteRequest);
+                    var apiResult = await response.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
+                    if (apiResult?.Code == 0) successCount++;
+                    else errors.Add($"{boundPerson?.Name}: {apiResult?.Msg}");
                 }
-                else
+                catch (Exception ex)
                 {
-                    ShowError($"사용자 삭제 실패: {apiResult?.Msg}");
+                    errors.Add($"{boundPerson?.Name}: {ex.Message}");
                 }
             }
+
+            lblStatus.Text = $"{successCount}명 삭제 완료";
+            if (errors.Count > 0)
+                ShowError($"일부 삭제 실패:\n{string.Join("\n", errors)}");
+            await RefreshPersonnel();
+            await RefreshSystemInfo();
         }
         catch (Exception ex)
         {
@@ -1614,6 +1687,174 @@ public partial class MainForm : Form
     private void btnRefreshDevices_Click(object sender, EventArgs e) => _ = RefreshDevices();
     private void btnRefreshDepartments_Click(object sender, EventArgs e) => _ = RefreshDepartments();
 
+    // ── 단말기에서 사용자 가져오기 ──────────────────────────────────────────────────
+    private async void btnPullPeople_Click(object sender, EventArgs e)
+    {
+        // 체크된 단말기 목록 수집
+        var checkedRows = dgvDevices.Rows.Cast<DataGridViewRow>()
+            .Where(r => r.Cells["Selected"].Value is true)
+            .ToList();
+
+        if (checkedRows.Count == 0 && dgvDevices.SelectedRows.Count > 0)
+            checkedRows = dgvDevices.SelectedRows.Cast<DataGridViewRow>().ToList();
+
+        if (checkedRows.Count == 0)
+        {
+            MessageBox.Show("사용자를 가져올 단말기를 선택(체크)하세요.", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var names = checkedRows
+            .Select(r => r.Cells["DeviceName"].Value?.ToString() ?? r.Cells["SN"].Value?.ToString() ?? "")
+            .Where(n => !string.IsNullOrEmpty(n));
+
+        var confirm = MessageBox.Show(
+            $"다음 단말기 {checkedRows.Count}개에 저장된 모든 사용자 데이터를\nPC 서버로 가져오겠습니까?\n\n{string.Join("\n", names)}\n\n단말기가 다음 폴링 시에 사용자 데이터를 전송합니다.",
+            "사용자 가져오기 확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (confirm != DialogResult.Yes) return;
+
+        try
+        {
+            int ok = 0, fail = 0;
+            foreach (var row in checkedRows)
+            {
+                var sn = row.Cells["SN"].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(sn)) continue;
+                var resp = await _httpClient.PostAsJsonAsync($"/admin/devices/{sn}/pull-all-people", new { });
+                if (resp.IsSuccessStatusCode) ok++; else fail++;
+            }
+            lblStatus.Text = $"사용자 가져오기 명령 전송: {ok}개 성공, {fail}개 실패";
+            MessageBox.Show(
+                $"{ok}개 단말기에 사용자 가져오기 명령을 전송했습니다.\n단말기가 다음 폴링 시 사용자 데이터를 서버로 전송합니다.\n\n잠시 후 사용자 탭을 새로고침하세요.",
+                "전송 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"사용자 가져오기 실패: {ex.Message}");
+        }
+    }
+
+    // ── 서버 사용자를 단말기로 배포 ──────────────────────────────────────────────
+    private async void btnDistributePeople_Click(object sender, EventArgs e)
+    {
+        // 접속된 단말기 목록 표시 후 선택
+        List<DeviceInfo>? devices;
+        try
+        {
+            devices = await _httpClient.GetFromJsonAsync<List<DeviceInfo>>("/admin/devices");
+        }
+        catch (Exception ex)
+        {
+            ShowError($"단말기 목록 조회 실패: {ex.Message}");
+            return;
+        }
+
+        if (devices == null || devices.Count == 0)
+        {
+            MessageBox.Show("등록된 단말기가 없습니다.", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        // 단말기 선택 다이얼로그
+        using var dlg = new Form
+        {
+            Text = "배포 대상 단말기 선택",
+            Size = new Size(500, 400),
+            StartPosition = FormStartPosition.CenterParent,
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            MaximizeBox = false, MinimizeBox = false
+        };
+
+        var lbl = new Label
+        {
+            Text = "사용자를 전송할 단말기를 선택하세요 (복수 선택 가능):",
+            Location = new Point(15, 15), Size = new Size(460, 20)
+        };
+
+        var clb = new CheckedListBox
+        {
+            Location = new Point(15, 45), Size = new Size(460, 270),
+            CheckOnClick = true
+        };
+        foreach (var d in devices)
+        {
+            var label = string.IsNullOrWhiteSpace(d.DeviceName) ? d.SN : $"{d.DeviceName} ({d.SN})";
+            clb.Items.Add(new KeyValuePair<string, string>(d.SN, label), false);
+        }
+        clb.DisplayMember = "Value";
+
+        var btnAll = new Button { Text = "전체 선택", Location = new Point(15, 325), Size = new Size(100, 28) };
+        btnAll.Click += (s, _) => { for (int i = 0; i < clb.Items.Count; i++) clb.SetItemChecked(i, true); };
+
+        var btnOk = new Button
+        {
+            Text = "배포 시작", DialogResult = DialogResult.OK,
+            Location = new Point(275, 325), Size = new Size(90, 28)
+        };
+        var btnCancel = new Button
+        {
+            Text = "취소", DialogResult = DialogResult.Cancel,
+            Location = new Point(375, 325), Size = new Size(90, 28)
+        };
+
+        dlg.Controls.AddRange(new Control[] { lbl, clb, btnAll, btnOk, btnCancel });
+        dlg.AcceptButton = btnOk;
+        dlg.CancelButton = btnCancel;
+
+        if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        var selectedSNs = clb.CheckedItems.Cast<KeyValuePair<string, string>>()
+            .Select(kv => kv.Key).ToList();
+
+        if (selectedSNs.Count == 0)
+        {
+            MessageBox.Show("배포할 단말기를 하나 이상 선택하세요.", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        // 그리드에서 선택(체크)된 사용자 ID 수집
+        var selectedUserIds = dgvPersonnel.Rows
+            .Cast<DataGridViewRow>()
+            .Where(r => r.Cells["ColSelect"].Value is true)
+            .Select(r => (r.Tag as PersonInfo)?.UserID)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToList();
+
+        if (selectedUserIds.Count == 0)
+        {
+            MessageBox.Show("배포할 사용자를 하나 이상 선택하세요.", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        try
+        {
+            var resp = await _httpClient.PostAsJsonAsync(
+                "/admin/people/distribute-to-devices",
+                new { TargetSNs = selectedSNs, PersonIds = selectedUserIds });
+
+            if (resp.IsSuccessStatusCode)
+            {
+                lblStatus.Text = $"배포 명령 전송 완료: {selectedSNs.Count}개 단말기, {selectedUserIds.Count}명";
+                MessageBox.Show(
+                    $"{selectedUserIds.Count}명을 {selectedSNs.Count}개 단말기로 배포 명령을 전송했습니다.\n단말기가 다음 Keepalive 시 사용자 데이터를 수신합니다.",
+                    "배포 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await RefreshDevices();
+            }
+            else
+            {
+                ShowError($"배포 명령 전송 실패: HTTP {resp.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"배포 실패: {ex.Message}");
+        }
+    }
+
     private void btnRemoteControl_Click(object sender, EventArgs e)
     {
         var row = dgvDevices.SelectedRows.Count > 0 ? dgvDevices.SelectedRows[0] : null;
@@ -1690,6 +1931,39 @@ public partial class MainForm : Form
     private async void btnRefreshPersonnel_Click(object sender, EventArgs e)
     {
         await RefreshPersonnel();
+    }
+
+    private async void btnReloadFromFiles_Click(object sender, EventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "서버의 people 폴더에 저장된 JSON 파일들을 읽어 사용자 목록을 갱신합니다.\n" +
+            "현재 메모리에 없는 사용자가 추가되고, 기존 사용자는 파일 내용으로 덮어씁니다.\n\n계속하시겠습니까?",
+            "파일에서 불러오기", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (confirm != DialogResult.Yes) return;
+
+        try
+        {
+            var resp = await _httpClient.PostAsync("/admin/people/reload-from-files", null);
+            if (!resp.IsSuccessStatusCode)
+            {
+                ShowError($"파일 불러오기 실패: HTTP {resp.StatusCode}");
+                return;
+            }
+            var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.Nodes.JsonObject>();
+            int loaded  = result?["loaded"]?.GetValue<int>()  ?? 0;
+            int skipped = result?["skipped"]?.GetValue<int>() ?? 0;
+            int errors  = result?["errors"]?.GetValue<int>()  ?? 0;
+
+            await RefreshPersonnel();
+            lblStatus.Text = $"파일 불러오기 완료: {loaded}명 로드, {skipped}건 건너뜀, {errors}건 오류";
+            MessageBox.Show(
+                $"people 폴더에서 불러오기 완료\n\n로드: {loaded}명\n건너뜀: {skipped}건\n오류: {errors}건",
+                "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"파일 불러오기 중 오류: {ex.Message}");
+        }
     }
 
     private static (string? exact, long? min, long? max) BuildAttUserIDFilter(string dong, string ho, string member)

@@ -102,6 +102,7 @@ public class PersonInfo
     // 지문 / 정맥 (서버 PersonInfo와 동일 구조)
     public List<FingerprintItem> Fingerprints { get; set; } = new();
     public List<PalmveinItem>    Palmveins     { get; set; } = new();
+    public string? FaceFeature { get; set; }
 }
 
 public class FingerprintItem

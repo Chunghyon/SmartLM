@@ -238,6 +238,14 @@ app.MapGet("/admin/people/device-assignments", (StateStore store) =>
     return Results.Ok(assignments);
 });
 
+// POST /admin/people/reload-from-files  →  people 폴더 JSON 파일에서 사용자 목록 재로드
+app.MapPost("/admin/people/reload-from-files", (StateStore store) =>
+{
+    var (loaded, skipped, errors) = store.ReloadPeopleFromFiles();
+    LogHub.Instance.Info($"[ReloadFromFiles] people 폴더 로드 완료: {loaded}명 로드, {skipped}건 건너뜀, {errors}건 오류");
+    return Results.Ok(new { loaded, skipped, errors });
+});
+
 // 사용자 Photo 필드가 Base64이면 직접 반환, 단말기 경로이면 온라인 단말기에서 프록시 다운로드
 app.MapGet("/admin/people/{userId}/photo", async (string userId, StateStore store) =>
 {
@@ -537,6 +545,201 @@ app.MapDelete("/admin/departments/{id}", (string id, StateStore store) =>
         ? Results.Ok(ApiResponse.Ok($"Department {id} deleted."))
         : Results.NotFound(new ApiResponse(404, "Department not found.")));
 
+// ── Admin: 단말기→서버 전체 사용자 Pull 요청 ─────────────────────────────────────
+// 단말기에게 PushAllPeople 원격 명령 전송 → 단말기가 /People/PushPeople 로 모든 사용자 Push
+app.MapPost("/admin/devices/{sn}/pull-all-people", (string sn, StateStore store) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+
+    store.QueueRemoteCommand(sn, pushAllPeople: true);
+    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 다음 RemoteCommand 폴링 시 실행");
+    return Results.Ok(ApiResponse.Ok($"PushAllPeople command queued for device {sn}. Device will upload all users via /People/PushPeople."));
+});
+
+// ── Admin: 단말기→서버 Photo 가져오기 (단말기 경로 → Base64 변환 저장) ──────────────
+app.MapPost("/admin/devices/{sn}/fetch-photo", async (string sn, JsonNode? body, StateStore store, IHttpClientFactory httpClientFactory) =>
+{
+    var userId = body?["UserID"]?.GetValue<string>();
+    var photoPath = body?["PhotoPath"]?.GetValue<string>();
+
+    if (string.IsNullOrWhiteSpace(userId))
+        return Results.BadRequest(new ApiResponse(400, "UserID is required."));
+
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+
+    if (string.IsNullOrWhiteSpace(photoPath))
+    {
+        var people = store.GetPeople();
+        var person = people.FirstOrDefault(p => string.Equals(p.UserID, userId, StringComparison.OrdinalIgnoreCase));
+        if (person is null)
+            return Results.NotFound(new ApiResponse(404, "Person not found."));
+        photoPath = person.Photo;
+    }
+
+    if (string.IsNullOrWhiteSpace(photoPath) || !photoPath.StartsWith("/"))
+        return Results.BadRequest(new ApiResponse(400, "No device photo path to fetch."));
+
+    var ip   = device.IpAddress;
+    var port = device.HttpPort > 0 ? device.HttpPort : 80;
+    if (string.IsNullOrWhiteSpace(ip))
+        return Results.NotFound(new ApiResponse(404, "Device IP not available."));
+
+    try
+    {
+        var client = httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+        var url = $"http://{ip}:{port}{photoPath}";
+        var bytes = await client.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        store.UpdatePersonPhoto(userId, base64);
+        LogHub.Instance.Info($"[FetchPhoto] 단말기 {sn}에서 사용자 {userId} 사진 다운로드 완료 ({bytes.Length} bytes)");
+        return Results.Ok(ApiResponse.Ok($"Photo fetched and saved for user {userId} ({bytes.Length} bytes)."));
+    }
+    catch (Exception ex)
+    {
+        LogHub.Instance.Error($"[FetchPhoto] 단말기 {sn}에서 사용자 {userId} 사진 다운로드 실패: {ex.Message}");
+        return Results.Ok(new ApiResponse(500, $"Failed to fetch photo: {ex.Message}"));
+    }
+});
+
+// ── Admin: 사용자 데이터 내보내기 (개별) ─────────────────────────────────────────
+app.MapGet("/admin/people/{userId}/export", (string userId, StateStore store) =>
+{
+    var json = store.ExportPersonJson(userId);
+    if (json is null)
+        return Results.NotFound(new ApiResponse(404, "Person not found."));
+
+    var bytes = Encoding.UTF8.GetBytes(json);
+    return Results.File(bytes, "application/json", $"person_{userId}.json");
+});
+
+// ── Admin: 전체 사용자 데이터 내보내기 (JSON 배열) ────────────────────────────────
+app.MapGet("/admin/people/export-all", (StateStore store) =>
+{
+    var people = store.GetPeople();
+    var options = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = null };
+    var json = JsonSerializer.Serialize(people, options);
+    var bytes = Encoding.UTF8.GetBytes(json);
+    var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+    return Results.File(bytes, "application/json", $"people_export_{timestamp}.json");
+});
+
+// ── Admin: 사용자 데이터를 특정 단말기로 배포 ────────────────────────────────────
+// POST /admin/people/{userId}/distribute  body: { "TargetSN": "SN001" }
+app.MapPost("/admin/people/{userId}/distribute", (string userId, JsonNode? body, StateStore store) =>
+{
+    var targetSn = body?["TargetSN"]?.GetValue<string>();
+    if (string.IsNullOrWhiteSpace(targetSn))
+        return Results.BadRequest(new ApiResponse(400, "TargetSN is required."));
+
+    var people = store.GetPeople();
+    var person = people.FirstOrDefault(p => string.Equals(p.UserID, userId, StringComparison.OrdinalIgnoreCase));
+    if (person is null)
+        return Results.NotFound(new ApiResponse(404, "Person not found."));
+
+    var device = store.GetDevice(targetSn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, $"Target device {targetSn} not found."));
+
+    var count = store.MarkAddPeopleRequested(targetSn);
+    LogHub.Instance.Info($"[Distribute] 사용자 {userId}를 단말기 {targetSn}으로 전달 예약 (총 {count}명 전송 예정)");
+    return Results.Ok(ApiResponse.Ok($"User {userId} will be sent to device {targetSn} on next keepalive (total {count} pending)."));
+});
+
+// ── Admin: 전체 사용자를 특정 단말기로 배포 ──────────────────────────────────────
+// POST /admin/people/distribute-all  body: { "TargetSN": "SN001" }
+app.MapPost("/admin/people/distribute-all", (JsonNode? body, StateStore store) =>
+{
+    var targetSn = body?["TargetSN"]?.GetValue<string>();
+    if (string.IsNullOrWhiteSpace(targetSn))
+        return Results.BadRequest(new ApiResponse(400, "TargetSN is required."));
+
+    var device = store.GetDevice(targetSn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, $"Target device {targetSn} not found."));
+
+    var count = store.MarkAddPeopleRequested(targetSn);
+    LogHub.Instance.Info($"[Distribute-All] 전체 {count}명을 단말기 {targetSn}으로 전달 예약");
+    return Results.Ok(ApiResponse.Ok($"All {count} users queued for delivery to device {targetSn}."));
+});
+
+// ── Admin: 복수 단말기에 전체 사용자 배포 ────────────────────────────────────────
+// POST /admin/people/distribute-to-devices  body: { "TargetSNs": ["SN001","SN002"] }
+app.MapPost("/admin/people/distribute-to-devices", (JsonNode? body, StateStore store) =>
+{
+    var snArray = body?["TargetSNs"]?.AsArray();
+    if (snArray is null || snArray.Count == 0)
+        return Results.BadRequest(new ApiResponse(400, "TargetSNs array is required."));
+
+    // PersonIds가 전달된 경우 해당 사용자만, 없으면 전체
+    var personIdsNode = body?["PersonIds"]?.AsArray();
+    var allPeople = store.GetPeople();
+    HashSet<string>? personIdFilter = null;
+    if (personIdsNode != null && personIdsNode.Count > 0)
+        personIdFilter = personIdsNode.Select(n => n?.GetValue<string>() ?? "").Where(s => s.Length > 0).ToHashSet();
+    var serverPeople = personIdFilter != null
+        ? allPeople.Where(p => personIdFilter.Contains(p.UserID)).ToList()
+        : allPeople;
+
+    var results = new List<object>();
+    foreach (var snNode in snArray)
+    {
+        var sn = snNode?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(sn)) continue;
+
+        var device = store.GetDevice(sn);
+        if (device is null)
+        {
+            results.Add(new { SN = sn, Success = false, Message = "Device not found." });
+            continue;
+        }
+
+        store.StageServerPeopleForDevice(sn, serverPeople);
+        var count = store.MarkAddPeopleRequested(sn);
+        LogHub.Instance.Info($"[Distribute-Multi] {count}명을 단말기 {sn}으로 전달 예약 (stage={serverPeople.Count()}명)");
+        results.Add(new { SN = sn, Success = true, PendingCount = count });
+    }
+
+    return Results.Ok(ApiResponseWithContent.Ok(results));
+});
+
+// ── Admin: 단말기별 사용자 목록 조회 (단말기에 실제 등록된 사용자) ─────────────────
+app.MapGet("/admin/devices/{sn}/people", (string sn, StateStore store) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    return Results.Ok(store.GetDeviceOwnedPeople(sn));
+});
+
+// ── Admin: 단말기별 사용자 추가/수정 ─────────────────────────────────────────────
+app.MapPost("/admin/devices/{sn}/people", (string sn, PersonInfo person, StateStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(person.UserID))
+        return Results.BadRequest(new ApiResponse(400, "UserID is required."));
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    store.UpsertDeviceOwnedPerson(sn, person);
+    LogHub.Instance.Info($"[DevicePeople] 단말기 {sn}: 사용자 {person.UserID} 추가/수정 (단말기 전용)");
+    return Results.Ok(ApiResponse.Ok($"User {person.UserID} staged for device {sn}."));
+});
+
+// ── Admin: 단말기별 사용자 삭제 ───────────────────────────────────────────────────
+app.MapDelete("/admin/devices/{sn}/people/{userId}", (string sn, string userId, StateStore store) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    store.DeleteDeviceOwnedPerson(sn, userId);
+    LogHub.Instance.Info($"[DevicePeople] 단말기 {sn}: 사용자 {userId} 삭제 명령 예약");
+    return Results.Ok(ApiResponse.Ok($"User {userId} queued for deletion from device {sn}."));
+});
+
 // ???????????????????????????????????????????????????????????????????????????????
 // HTTP-Docking Protocol  (Device → Server)
 // ???????????????????????????????????????????????????????????????????????????????
@@ -624,7 +827,7 @@ app.MapPost("/People/DeletePeopleListResult", (DeletePeopleListResultRequest req
 });
 
 // ── /People/PushPeople  (device uploads its stored people to server) ──────────
-app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore store) =>
+app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore store, IHttpClientFactory httpClientFactory) =>
 {
     List<PersonInfo>? people = null;
     string? sn = null;
@@ -664,6 +867,24 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
             {
                 // Try to parse as array
                 people = System.Text.Json.JsonSerializer.Deserialize<List<PersonInfo>>(detailJson);
+            }
+        }
+
+        // Photo 파일이 multipart로 함께 전송된 경우 base64로 변환하여 사용자 Photo에 설정
+        // (단말기 내부 경로 /data/... 를 실제 바이트로 대체)
+        var photoFile = form.Files["Photo"];
+        if (photoFile != null && photoFile.Length > 0 && people != null && people.Count > 0)
+        {
+            using var ms = new MemoryStream();
+            await photoFile.CopyToAsync(ms);
+            var photoBytes = ms.ToArray();
+            var photoBase64 = Convert.ToBase64String(photoBytes);
+            var photoMd5 = Convert.ToHexString(System.Security.Cryptography.MD5.HashData(photoBytes));
+            foreach (var p in people)
+            {
+                p.Photo = photoBase64;
+                p.PhotoLen = photoBytes.Length;
+                p.PhotoMD5 = photoMd5;
             }
         }
 
@@ -744,10 +965,52 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, StateStore sto
             LogHub.Instance.Info($"[PushPeople-Delete] 단말기 {sn}에서 {success}명 삭제 처리 완료");
             break;
 
-        case 4: // Query - just return success, no state change
-            success = people?.Count ?? 0;
-            LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회");
+        case 4: // Query - 단말기 현재 사용자 전체 목록으로 OwnedPeople 전면 교체
+        {
+            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new());
+            success = s; fail = f;
+            LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회 → OwnedPeople 동기화 완료");
+
+            // 사진이 단말기 내부 경로인 경우 백그라운드에서 자동 다운로드
+            if (photoPathsToFetch.Count > 0)
+            {
+                var device = store.GetDevice(sn);
+                var ip = device?.IpAddress;
+                var port = device?.HttpPort > 0 ? device.HttpPort : 80;
+                if (!string.IsNullOrWhiteSpace(ip))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        var client = httpClientFactory.CreateClient();
+                        client.Timeout = TimeSpan.FromSeconds(15);
+                        int photoOk = 0, photoFail = 0;
+                        foreach (var (userId, photoPath) in photoPathsToFetch)
+                        {
+                            try
+                            {
+                                var url = $"http://{ip}:{port}{photoPath}";
+                                var bytes = await client.GetByteArrayAsync(url);
+                                if (bytes.Length > 0)
+                                {
+                                    var base64 = Convert.ToBase64String(bytes);
+                                    store.UpdatePersonPhoto(userId, base64);
+                                    photoOk++;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogHub.Instance.Warn($"[PushPeople-Query] 사용자 {userId} 사진 다운로드 실패: {ex.Message}");
+                                photoFail++;
+                            }
+                        }
+                        LogHub.Instance.Info($"[PushPeople-Query] 사진 자동 다운로드 완료: 성공={photoOk}, 실패={photoFail}");
+                        if (photoOk > 0)
+                            LogHub.Instance.NotifyPeopleListChanged();
+                    });
+                }
+            }
             break;
+        }
 
         default: // Unknown or 0 - treat as Update for backward compatibility
             (success, fail) = store.SavePushedPeople(sn, people ?? new(), addOnly: false);

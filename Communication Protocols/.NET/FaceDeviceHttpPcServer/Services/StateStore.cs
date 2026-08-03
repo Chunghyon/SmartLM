@@ -17,15 +17,18 @@ public sealed class StateStore
         PropertyNamingPolicy = null
     };
 
+    private readonly string _peoplePath;
     private PersistedState _state;
 
     public StateStore(string rootPath)
     {
         Directory.CreateDirectory(rootPath);
         _recordsPath = Path.Combine(rootPath, "records");
-        _photosPath = Path.Combine(rootPath, "photos");
+        _photosPath  = Path.Combine(rootPath, "photos");
+        _peoplePath  = Path.Combine(rootPath, "people");
         Directory.CreateDirectory(_recordsPath);
         Directory.CreateDirectory(_photosPath);
+        Directory.CreateDirectory(_peoplePath);
 
         _stateFilePath = Path.Combine(rootPath, "state.json");
         _state = LoadState();
@@ -123,11 +126,9 @@ public sealed class StateStore
 
             _state.People[person.UserID] = Clone(person);
             _state.DeletedUserIds.RemoveAll(userId => string.Equals(userId, person.UserID, StringComparison.OrdinalIgnoreCase));
-            foreach (var device in _state.Devices.Values)
-            {
-                device.PendingAddPeopleCount = _state.People.Count;
-            }
+            // 서버 사용자 추가는 단말기에 자동 반영안함 - distribute를 통해서만 전달됨
 
+            SavePersonFile(person);
             SaveState();
             return true;
         }
@@ -143,6 +144,7 @@ public sealed class StateStore
             }
 
             _state.People[person.UserID] = Clone(person);
+            SavePersonFile(person);
             SaveState();
             return true;
         }
@@ -180,34 +182,10 @@ public sealed class StateStore
                 return false;
             }
 
-            if (!_state.DeletedUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
-            {
-                _state.DeletedUserIds.Add(userId);
-            }
+            // 서버 사용자 삭제는 단말기에 자동 반영안함 - distribute를 통해서만 연동됨
+            LogHub.Instance.Info($"[DeletePerson] 서버 사용자 {userId} 삭제 완료");
 
-            // Queue deletion only on devices that have this user assigned
-            int devicesAffected = 0;
-            foreach (var device in _state.Devices.Values)
-            {
-                // Check if this device has the user in its downloaded list
-                bool hasUser = device.DownloadedUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase);
-
-                if (hasUser)
-                {
-                    // Remove from device's downloaded list
-                    device.DownloadedUserIds.RemoveAll(id => string.Equals(id, userId, StringComparison.OrdinalIgnoreCase));
-
-                    // Add to pending delete queue for this device
-                    if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
-                    {
-                        device.PendingDeleteUserIds.Add(userId);
-                        devicesAffected++;
-                    }
-                }
-            }
-
-            LogHub.Instance.Info($"[DeletePerson] 사용자 {userId} 삭제: {devicesAffected}개 단말기에 삭제 명령 전송 예정");
-
+            DeletePersonFile(userId);
             SaveState();
             return true;
         }
@@ -235,9 +213,7 @@ public sealed class StateStore
                     if (_state.Devices.TryGetValue(deviceSn, out var device))
                     {
                         if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
-                        {
                             device.PendingDeleteUserIds.Add(userId);
-                        }
                     }
                 }
                 else
@@ -246,10 +222,26 @@ public sealed class StateStore
                     foreach (var device in _state.Devices.Values)
                     {
                         if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
-                        {
                             device.PendingDeleteUserIds.Add(userId);
-                        }
                     }
+                }
+            }
+
+            // OwnedPeople / DownloadedUserIds 초기화
+            if (deviceSn != null)
+            {
+                if (_state.Devices.TryGetValue(deviceSn, out var targetDevice))
+                {
+                    targetDevice.OwnedPeople.Clear();
+                    targetDevice.DownloadedUserIds.Clear();
+                }
+            }
+            else
+            {
+                foreach (var device in _state.Devices.Values)
+                {
+                    device.OwnedPeople.Clear();
+                    device.DownloadedUserIds.Clear();
                 }
             }
 
@@ -270,38 +262,50 @@ public sealed class StateStore
                 return Array.Empty<PersonInfo>();
             }
 
-            // Protocol allows up to 1000 people per request
-            // Use device-requested limit or default to 1000
             var batchSize = limit > 0 ? Math.Min(limit, 1000) : 1000;
 
-            // Get people not yet downloaded by this device
-            var people = _state.People.Values
+            // StagedPeople(단말기별 전송 대기)이 있으면 우선 사용, 없으면 서버 전체 사용자 사용
+            var sourcePool = device.StagedPeople.Count > 0
+                ? device.StagedPeople.Values.Cast<PersonInfo>()
+                : _state.People.Values.Cast<PersonInfo>();
+
+            var people = sourcePool
                 .Where(p => !device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase))
                 .OrderBy(person => person.UserID, StringComparer.OrdinalIgnoreCase)
                 .Take(batchSize)
-                .Select(Clone)
+                .Select(p =>
+                {
+                    var c = Clone(p);
+                    // 단말기 내부 경로는 서버에서 전송 불가 → 빈 값으로 처리
+                    if (!string.IsNullOrWhiteSpace(c.Photo) && c.Photo.StartsWith("/") && !c.Photo.StartsWith("/9j/"))
+                    {
+                        c.Photo = string.Empty;
+                        c.PhotoLen = 0;
+                        c.PhotoMD5 = string.Empty;
+                    }
+                    return c;
+                })
                 .ToArray();
 
-            // Mark these users as sent (but not confirmed yet)
             foreach (var person in people)
             {
                 if (!device.DownloadedUserIds.Contains(person.UserID, StringComparer.OrdinalIgnoreCase))
-                {
                     device.DownloadedUserIds.Add(person.UserID);
-                }
+
+                // OwnedPeople도 갱신하여 단말기 설정 창의 사용자 정보에 반영
+                device.OwnedPeople[person.UserID] = Clone(person);
             }
 
-            // If all people have been sent, clear pending count
-            var remainingPeople = _state.People.Values
+            var remainingPeople = sourcePool
                 .Count(p => !device.DownloadedUserIds.Contains(p.UserID, StringComparer.OrdinalIgnoreCase));
 
             if (remainingPeople == 0)
             {
                 device.PendingAddPeopleCount = 0;
+                device.StagedPeople.Clear(); // 전송 완료 후 Stage 초기화
             }
 
             SaveState();
-
             return people;
         }
     }
@@ -549,8 +553,11 @@ public sealed class StateStore
         lock (_sync)
         {
             var device = GetOrCreateDevice(deviceSn);
-            device.PendingAddPeopleCount = _state.People.Count;
-            device.DownloadedUserIds.Clear(); // Reset tracking for new download session
+            // StagedPeople\uc774 \uc788\uc73c\uba74 \uadf8 \uc218\ub97c, \uc5c6\uc73c\uba74 \uc11c\ubc84 \uc804\uccb4 \uc0ac\uc6a9\uc790 \uc218\ub97c \uc0ac\uc6a9
+            device.PendingAddPeopleCount = device.StagedPeople.Count > 0
+                ? device.StagedPeople.Count
+                : _state.People.Count;
+            device.DownloadedUserIds.Clear();
             SaveState();
             return device.PendingAddPeopleCount;
         }
@@ -696,19 +703,39 @@ public sealed class StateStore
             {
                 if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
 
-                // If addOnly=true (PushType=1), only add if not exists
+                // addOnly=true(PushType=1)여도 서버에 없는 사용자(사용자 탭에서 삭제됐거나
+                // 아직 서버에 등록되지 않은 사용자)는 재등록 허용.
+                // 서버에 이미 있는 사용자만 skip(중복 방지).
                 if (addOnly && _state.People.ContainsKey(p.UserID))
                 {
-                    fail++;
+                    // OwnedPeople은 항상 최신 단말기 상태로 갱신
+                    device.OwnedPeople[p.UserID] = Clone(p);
+                    success++;
                     continue;
                 }
 
-                // If Photo field contains a device file path (e.g., /data/attend_data/photo/frame...),
-                // keep it as-is for now - it indicates the person has a photo on the device
-                // Later we can implement photo download from device if needed
-                // The UI will show "O" if Photo field is not empty (length > 50 check)
-
-                _state.People[p.UserID] = Clone(p);
+                // 단말기 내부 경로(예: /data/user_pic/...)는 서버에서 사용 불가 → 기존 서버 Photo 보존
+                var toSave = Clone(p);
+                if (!string.IsNullOrWhiteSpace(toSave.Photo) && toSave.Photo.StartsWith("/") && !toSave.Photo.StartsWith("/9j/"))
+                {
+                    if (_state.People.TryGetValue(p.UserID, out var existing) &&
+                        !string.IsNullOrWhiteSpace(existing.Photo) &&
+                        !existing.Photo.StartsWith("/"))
+                    {
+                        // 기존 base64 Photo 보존
+                        toSave.Photo = existing.Photo;
+                        toSave.PhotoLen = existing.PhotoLen;
+                        toSave.PhotoMD5 = existing.PhotoMD5;
+                    }
+                    else
+                    {
+                        // 가져올 수 없는 경로만 있으면 빈 값으로
+                        toSave.Photo = string.Empty;
+                        toSave.PhotoLen = 0;
+                        toSave.PhotoMD5 = string.Empty;
+                    }
+                }
+                _state.People[p.UserID] = toSave;
                 _state.DeletedUserIds.RemoveAll(id => string.Equals(id, p.UserID, StringComparison.OrdinalIgnoreCase));
 
                 // Mark this user as being on this device for device assignment tracking
@@ -717,11 +744,71 @@ public sealed class StateStore
                     device.DownloadedUserIds.Add(p.UserID);
                 }
 
+                // 단말기 고유 사용자 목록에도 저장 (단말기별 독립 관리)
+                device.OwnedPeople[p.UserID] = Clone(toSave);
+
+                SavePersonFile(toSave);
                 success++;
             }
 
             SaveState();
             return (success, fail);
+        }
+    }
+
+    /// <summary>단말기가 Query(PushType=4)로 전체 목록을 보내왔을 때 OwnedPeople 전면 교체 + _state.People 병합</summary>
+    /// <returns>(success, fail, photoPathsToFetch): photoPathsToFetch는 (userId, photoPath) 목록 - 호출자가 비동기로 다운로드</returns>
+    public (int success, int fail, List<(string userId, string photoPath)> photoPathsToFetch) ReplaceDeviceOwnedPeople(string deviceSn, List<PersonInfo> people)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.OwnedPeople.Clear();
+            device.DownloadedUserIds.Clear();
+            int success = 0, fail = 0;
+            var photoPathsToFetch = new List<(string, string)>();
+
+            foreach (var p in people)
+            {
+                if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
+
+                var toSave = Clone(p);
+
+                // 단말기 내부 경로인 경우: 기존 base64가 있으면 보존, 없으면 경로를 기억해두고 나중에 다운로드
+                if (!string.IsNullOrWhiteSpace(toSave.Photo) && toSave.Photo.StartsWith("/") && !toSave.Photo.StartsWith("/9j/"))
+                {
+                    var devicePhotoPath = toSave.Photo;
+                    if (_state.People.TryGetValue(p.UserID, out var existing) &&
+                        !string.IsNullOrWhiteSpace(existing.Photo) &&
+                        !existing.Photo.StartsWith("/"))
+                    {
+                        // 기존 base64 Photo 보존
+                        toSave.Photo = existing.Photo;
+                        toSave.PhotoLen = existing.PhotoLen;
+                        toSave.PhotoMD5 = existing.PhotoMD5;
+                    }
+                    else
+                    {
+                        // 아직 사진 없음 → 다운로드 목록에 추가, Photo는 일단 빈 값
+                        photoPathsToFetch.Add((p.UserID, devicePhotoPath));
+                        toSave.Photo = string.Empty;
+                        toSave.PhotoLen = 0;
+                        toSave.PhotoMD5 = string.Empty;
+                    }
+                }
+
+                device.OwnedPeople[p.UserID] = Clone(toSave);
+                device.DownloadedUserIds.Add(p.UserID);
+
+                // _state.People에도 병합 (사용자 탭 새로고침에 표시되도록)
+                _state.People[p.UserID] = toSave;
+                _state.DeletedUserIds.RemoveAll(id => string.Equals(id, p.UserID, StringComparison.OrdinalIgnoreCase));
+                SavePersonFile(toSave);
+
+                success++;
+            }
+            SaveState();
+            return (success, fail, photoPathsToFetch);
         }
     }
 
@@ -736,7 +823,8 @@ public sealed class StateStore
             {
                 if (string.IsNullOrWhiteSpace(p.UserID)) { fail++; continue; }
 
-                // Remove user from this device's assignment list
+                // Remove user from this device's OwnedPeople and assignment list
+                device.OwnedPeople.Remove(p.UserID);
                 device.DownloadedUserIds.RemoveAll(id => string.Equals(id, p.UserID, StringComparison.OrdinalIgnoreCase));
 
                 // Count how many devices still have this user assigned
@@ -785,6 +873,19 @@ public sealed class StateStore
     public void ConfirmDeletePeopleResult(string deviceSn, List<string> confirmedIds)
     {
         // Deletions are already cleared on GetDeletePeople; nothing extra to do.
+    }
+
+    /// <summary>서버 사용자 목록을 특정 단말기의 StagedPeople에 복사 (단말기로 배포 시 사용)</summary>
+    public void StageServerPeopleForDevice(string deviceSn, IReadOnlyCollection<PersonInfo> serverPeople)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.StagedPeople.Clear();
+            foreach (var p in serverPeople)
+                device.StagedPeople[p.UserID] = Clone(p);
+            SaveState();
+        }
     }
 
     // ── Record management ────────────────────────────────────────────────────
@@ -852,67 +953,223 @@ public sealed class StateStore
 
     private PersistedState LoadState()
     {
+        PersistedState state;
+
         if (!File.Exists(_stateFilePath))
         {
-            return new PersistedState();
+            state = new PersistedState();
+        }
+        else
+        {
+            try
+            {
+                var json = File.ReadAllText(_stateFilePath);
+                state = JsonSerializer.Deserialize<PersistedState>(json, _serializerOptions) ?? new PersistedState();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[WARN] Failed to load persisted state from '{_stateFilePath}': {ex.Message}");
+                state = new PersistedState();
+            }
         }
 
-        try
+        state.Devices = new Dictionary<string, DeviceSnapshot>(
+            state.Devices ?? new Dictionary<string, DeviceSnapshot>(),
+            StringComparer.OrdinalIgnoreCase);
+        state.People = new Dictionary<string, PersonInfo>(
+            state.People ?? new Dictionary<string, PersonInfo>(),
+            StringComparer.OrdinalIgnoreCase);
+        state.DeletedUserIds ??= new();
+        state.Departments = new Dictionary<string, DepartmentInfo>(
+            state.Departments ?? new Dictionary<string, DepartmentInfo>(),
+            StringComparer.OrdinalIgnoreCase);
+
+        // people 폴더의 JSON 파일을 _state.People로 병합 (파일이 우선순위)
+        if (Directory.Exists(_peoplePath))
         {
-            var json = File.ReadAllText(_stateFilePath);
-            var state = JsonSerializer.Deserialize<PersistedState>(json, _serializerOptions) ?? new PersistedState();
-            state.Devices = new Dictionary<string, DeviceSnapshot>(
-                state.Devices ?? new Dictionary<string, DeviceSnapshot>(),
-                StringComparer.OrdinalIgnoreCase);
-            state.People = new Dictionary<string, PersonInfo>(
-                state.People ?? new Dictionary<string, PersonInfo>(),
-                StringComparer.OrdinalIgnoreCase);
-            state.DeletedUserIds ??= new();
-            state.Departments = new Dictionary<string, DepartmentInfo>(
-                state.Departments ?? new Dictionary<string, DepartmentInfo>(),
-                StringComparer.OrdinalIgnoreCase);
-
-            foreach (var device in state.Devices.Values)
+            foreach (var file in Directory.GetFiles(_peoplePath, "*.json", SearchOption.TopDirectoryOnly))
             {
-                device.PendingDeleteUserIds ??= new();
-                device.Records ??= new();
-
-                // 마이그레이션: DesiredWorkSetting이 partial patch(소수 필드)로 저장된 경우
-                // LastUploadedWorkSetting과 병합하여 완전한 스냅샷으로 복원
-                if (device.DesiredWorkSetting is not null && device.LastUploadedWorkSetting is not null)
+                try
                 {
-                    var desiredKeyCount  = device.DesiredWorkSetting.Count;
-                    var uploadedKeyCount = device.LastUploadedWorkSetting.Count;
-                    // DesiredWorkSetting의 키 수가 LastUploaded의 절반 미만이면 불완전한 patch로 판단
-                    if (desiredKeyCount < uploadedKeyCount / 2)
-                    {
-                        var merged = (JsonObject)device.LastUploadedWorkSetting.DeepClone();
-                        foreach (var kv in device.DesiredWorkSetting)
-                            merged[kv.Key] = kv.Value?.DeepClone();
-                        device.DesiredWorkSetting = merged;
-                    }
+                    var personJson = File.ReadAllText(file);
+                    var person = JsonSerializer.Deserialize<PersonInfo>(personJson, _serializerOptions);
+                    if (person == null || string.IsNullOrWhiteSpace(person.UserID)) continue;
+                    person.Fingerprints ??= new();
+                    person.Palmveins    ??= new();
+                    state.People[person.UserID] = person;
+                }
+                catch { /* 단일 파일 오류는 무시 */ }
+            }
+        }
+
+        foreach (var device in state.Devices.Values)
+        {
+            device.PendingDeleteUserIds ??= new();
+            device.Records ??= new();
+            device.OwnedPeople ??= new(StringComparer.OrdinalIgnoreCase);
+            device.StagedPeople ??= new(StringComparer.OrdinalIgnoreCase);
+
+            if (device.DesiredWorkSetting is not null && device.LastUploadedWorkSetting is not null)
+            {
+                var desiredKeyCount  = device.DesiredWorkSetting.Count;
+                var uploadedKeyCount = device.LastUploadedWorkSetting.Count;
+                if (desiredKeyCount < uploadedKeyCount / 2)
+                {
+                    var merged = (JsonObject)device.LastUploadedWorkSetting.DeepClone();
+                    foreach (var kv in device.DesiredWorkSetting)
+                        merged[kv.Key] = kv.Value?.DeepClone();
+                    device.DesiredWorkSetting = merged;
                 }
             }
-
-            foreach (var person in state.People.Values)
-            {
-                person.Fingerprints ??= new();
-                person.Palmveins ??= new();
-            }
-
-            return state;
         }
-        catch (Exception ex)
+
+        foreach (var person in state.People.Values)
         {
-            Console.Error.WriteLine($"[WARN] Failed to load persisted state from '{_stateFilePath}': {ex.Message}");
-            return new PersistedState();
+            person.Fingerprints ??= new();
+            person.Palmveins ??= new();
         }
+
+        return state;
     }
 
     private void SaveState()
     {
         var json = JsonSerializer.Serialize(_state, _serializerOptions);
         File.WriteAllText(_stateFilePath, json);
+    }
+
+    /// <summary>사용자 데이터를 App_Data/people/{UserID}.json 파일로 저장</summary>
+    private void SavePersonFile(PersonInfo person)
+    {
+        var fileName = SanitizeForFileName(person.UserID);
+        if (string.IsNullOrEmpty(fileName)) return;
+        var filePath = Path.Combine(_peoplePath, $"{fileName}.json");
+        var json = JsonSerializer.Serialize(person, _serializerOptions);
+        File.WriteAllText(filePath, json);
+    }
+
+    /// <summary>people 폴더의 JSON 파일들을 읽어 _state.People을 재구성합니다.</summary>
+    public (int loaded, int skipped, int errors) ReloadPeopleFromFiles()
+    {
+        lock (_sync)
+        {
+            int loaded = 0, skipped = 0, errors = 0;
+            var files = Directory.GetFiles(_peoplePath, "*.json", SearchOption.TopDirectoryOnly);
+            foreach (var file in files)
+            {
+                try
+                {
+                    var json = File.ReadAllText(file);
+                    var person = JsonSerializer.Deserialize<PersonInfo>(json, _serializerOptions);
+                    if (person == null || string.IsNullOrWhiteSpace(person.UserID))
+                    {
+                        skipped++;
+                        continue;
+                    }
+                    person.Fingerprints ??= new();
+                    person.Palmveins    ??= new();
+                    _state.People[person.UserID] = person;
+                    loaded++;
+                }
+                catch
+                {
+                    errors++;
+                }
+            }
+            SaveState();
+            return (loaded, skipped, errors);
+        }
+    }
+
+    /// <summary>사용자 개별 파일 삭제</summary>
+    private void DeletePersonFile(string userId)
+    {
+        var fileName = SanitizeForFileName(userId);
+        if (string.IsNullOrEmpty(fileName)) return;
+        var filePath = Path.Combine(_peoplePath, $"{fileName}.json");
+        if (File.Exists(filePath)) File.Delete(filePath);
+    }
+
+    /// <summary>특정 사용자의 JSON 파일 경로 반환 (내보내기용)</summary>
+    public string? GetPersonFilePath(string userId)
+    {
+        var fileName = SanitizeForFileName(userId);
+        if (string.IsNullOrEmpty(fileName)) return null;
+        var filePath = Path.Combine(_peoplePath, $"{fileName}.json");
+        return File.Exists(filePath) ? filePath : null;
+    }
+
+    /// <summary>사용자 데이터를 Photo/FaceFeature 등 전체 포함 JSON 문자열로 반환 (내보내기용)</summary>
+    public string? ExportPersonJson(string userId)
+    {
+        lock (_sync)
+        {
+            if (!_state.People.TryGetValue(userId, out var person))
+                return null;
+            return JsonSerializer.Serialize(person, _serializerOptions);
+        }
+    }
+
+    /// <summary>단말기에 Push된 Photo(Base64)를 파일로도 저장하고 PersonInfo를 업데이트</summary>
+    public void UpdatePersonPhoto(string userId, string base64Photo)
+    {
+        lock (_sync)
+        {
+            if (!_state.People.TryGetValue(userId, out var person))
+                return;
+            person.Photo = base64Photo;
+            // base64 → 실제 바이트 크기 계산하여 PhotoLen 갱신
+            var bytes = Convert.FromBase64String(base64Photo);
+            person.PhotoLen = bytes.Length;
+            person.PhotoMD5 = Convert.ToHexString(System.Security.Cryptography.MD5.HashData(bytes));
+            SavePersonFile(person);
+            SaveState();
+        }
+    }
+
+    // ── 단말기별 사용자 관리 (서버와 독립) ──────────────────────────────
+
+    /// <summary>단말기에 등록된 사용자 목록 반환 (PushPeople로 받은 OwnedPeople)</summary>
+    public IReadOnlyCollection<PersonInfo> GetDeviceOwnedPeople(string deviceSn)
+    {
+        lock (_sync)
+        {
+            if (!_state.Devices.TryGetValue(deviceSn, out var device))
+                return Array.Empty<PersonInfo>();
+            return device.OwnedPeople.Values.OrderBy(p => p.UserID, StringComparer.OrdinalIgnoreCase).ToArray();
+        }
+    }
+
+    /// <summary>단말기별 사용자 추가/수정 (단말기에만 영향, 서버 사용자와 독립)</summary>
+    public void UpsertDeviceOwnedPerson(string deviceSn, PersonInfo person)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.OwnedPeople[person.UserID] = Clone(person);
+            // StagedPeople에도 놓아서 다음 Keepalive 시 단말기로 전송
+            device.StagedPeople[person.UserID] = Clone(person);
+            device.PendingAddPeopleCount = device.StagedPeople.Count;
+            SaveState();
+        }
+    }
+
+    /// <summary>단말기별 사용자 삭제 (단말기에만 영향, 서버 사용자와 독립)</summary>
+    public void DeleteDeviceOwnedPerson(string deviceSn, string userId)
+    {
+        lock (_sync)
+        {
+            if (!_state.Devices.TryGetValue(deviceSn, out var device))
+                return;
+            device.OwnedPeople.Remove(userId);
+            device.StagedPeople.Remove(userId);
+            // DownloadedUserIds에서도 제거 (재배포 시 다시 전달되도록)
+            device.DownloadedUserIds.RemoveAll(id =>
+                string.Equals(id, userId, StringComparison.OrdinalIgnoreCase));
+            if (!device.PendingDeleteUserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                device.PendingDeleteUserIds.Add(userId);
+            SaveState();
+        }
     }
 
     private T Clone<T>(T value)
@@ -946,7 +1203,7 @@ public sealed class StateStore
     }
 
     public void QueueRemoteCommand(string deviceSn, bool restart = false, bool opendoor = false, 
-        bool closealarm = false, bool clearRecord = false, bool repostRecord = false)
+        bool closealarm = false, bool clearRecord = false, bool repostRecord = false, bool pushAllPeople = false)
     {
         lock (_sync)
         {
@@ -957,7 +1214,8 @@ public sealed class StateStore
                 Opendoor = opendoor ? 1 : null,
                 Closealarm = closealarm ? 1 : null,
                 ClearRecord = clearRecord ? 1 : null,
-                RepostRecord = repostRecord ? 1 : null
+                RepostRecord = repostRecord ? 1 : null,
+                PushAllPeople = pushAllPeople ? 1 : null
             };
             SaveState();
         }

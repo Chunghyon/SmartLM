@@ -19,6 +19,7 @@ public partial class FacePhotoEditorForm : Form
     private Point _offset = Point.Empty;
     private const int CANVAS_SIZE = 400;
     private const int FACE_GUIDE_SIZE = 300;
+    private const int OUTPUT_SIZE = 640;    // 출력 해상도 (SV 모델 호환)
 
     public byte[]? ProcessedImageData { get; private set; }
 
@@ -262,10 +263,10 @@ public partial class FacePhotoEditorForm : Form
             btnOK.Enabled = false;
             btnOK.Text = "처리 중...";
 
-            // 최종 이미지 생성 (300x300 고정 크기)
-            var finalImage = new Bitmap(FACE_GUIDE_SIZE, FACE_GUIDE_SIZE);
+            // 가이드 영역 기준으로 중간 렌더링 (300x300)
+            var guideImage = new Bitmap(FACE_GUIDE_SIZE, FACE_GUIDE_SIZE);
 
-            using (var g = Graphics.FromImage(finalImage))
+            using (var g = Graphics.FromImage(guideImage))
             {
                 g.SmoothingMode = SmoothingMode.HighQuality;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -273,16 +274,12 @@ public partial class FacePhotoEditorForm : Form
 
                 if (_originalImage != null)
                 {
-                    // 가이드라인 중심에 맞춰 이미지 그리기
                     int centerX = FACE_GUIDE_SIZE / 2;
                     int centerY = FACE_GUIDE_SIZE / 2;
 
                     float scaledWidth = _originalImage.Width * _zoom;
                     float scaledHeight = _originalImage.Height * _zoom;
 
-                    // 캔버스 좌표를 최종 이미지 좌표로 변환
-                    float canvasCenterX = CANVAS_SIZE / 2;
-                    float canvasCenterY = CANVAS_SIZE / 2;
                     float guideOffsetX = (CANVAS_SIZE - FACE_GUIDE_SIZE) / 2;
                     float guideOffsetY = (CANVAS_SIZE - FACE_GUIDE_SIZE) / 2;
 
@@ -294,10 +291,25 @@ public partial class FacePhotoEditorForm : Form
                 }
             }
 
-            // 이미지를 바이트 배열로 변환
+            // 최종 출력: OUTPUT_SIZE×OUTPUT_SIZE 업스케일 (SV 모델 고해상도 요구 대응)
+            var finalImage = new Bitmap(OUTPUT_SIZE, OUTPUT_SIZE);
+            using (var g = Graphics.FromImage(finalImage))
+            {
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(guideImage, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+            }
+            guideImage.Dispose();
+
+            // JPEG 품질 90으로 저장 (기본 75는 SV 모델 얼굴인식 실패 유발)
             using (var ms = new MemoryStream())
             {
-                finalImage.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
+                var jpegEncoder = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders()
+                    .First(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
+                var encoderParams = new System.Drawing.Imaging.EncoderParameters(1);
+                encoderParams.Param[0] = new System.Drawing.Imaging.EncoderParameter(
+                    System.Drawing.Imaging.Encoder.Quality, 90L);
+                finalImage.Save(ms, jpegEncoder, encoderParams);
                 ProcessedImageData = ms.ToArray();
             }
 

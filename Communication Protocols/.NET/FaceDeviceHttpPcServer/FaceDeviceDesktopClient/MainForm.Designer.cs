@@ -46,6 +46,7 @@ namespace FaceDeviceDesktopClient
             this.grpDeviceManagement = new System.Windows.Forms.GroupBox();
             this.btnRemoteControl = new System.Windows.Forms.Button();
             this.btnRemoveDevice = new System.Windows.Forms.Button();
+            this.btnPullPeople = new System.Windows.Forms.Button();
             this.dgvDevices = new System.Windows.Forms.DataGridView();
 
             // Department controls
@@ -58,6 +59,8 @@ namespace FaceDeviceDesktopClient
             this.btnEditPerson = new System.Windows.Forms.Button();
             this.btnDeletePerson = new System.Windows.Forms.Button();
             this.btnRefreshPersonnel = new System.Windows.Forms.Button();
+            this.btnDistributePeople = new System.Windows.Forms.Button();
+            this.btnReloadFromFiles  = new System.Windows.Forms.Button();
             this.dgvPersonnel = new System.Windows.Forms.DataGridView();
             this.cmbDepartment = new System.Windows.Forms.ComboBox();
 
@@ -285,6 +288,7 @@ namespace FaceDeviceDesktopClient
             // 
             this.grpDeviceManagement.Controls.Add(this.btnRemoteControl);
             this.grpDeviceManagement.Controls.Add(this.btnRemoveDevice);
+            this.grpDeviceManagement.Controls.Add(this.btnPullPeople);
             this.grpDeviceManagement.Dock = System.Windows.Forms.DockStyle.Top;
             this.grpDeviceManagement.Location = new System.Drawing.Point(10, 260);
             this.grpDeviceManagement.Name = "grpDeviceManagement";
@@ -309,6 +313,14 @@ namespace FaceDeviceDesktopClient
             this.btnRemoveDevice.ForeColor = System.Drawing.Color.DarkRed;
             this.btnRemoveDevice.UseVisualStyleBackColor = true;
             this.btnRemoveDevice.Click += new System.EventHandler(this.btnRemoveDevice_Click);
+
+            this.btnPullPeople.Location = new System.Drawing.Point(330, 25);
+            this.btnPullPeople.Name = "btnPullPeople";
+            this.btnPullPeople.Size = new System.Drawing.Size(170, 35);
+            this.btnPullPeople.TabIndex = 2;
+            this.btnPullPeople.Text = "사용자 가져오기";
+            this.btnPullPeople.UseVisualStyleBackColor = true;
+            this.btnPullPeople.Click += new System.EventHandler(this.btnPullPeople_Click);
 
             // 
             // tabDepartments
@@ -360,6 +372,8 @@ namespace FaceDeviceDesktopClient
             this.tabPersonnel.Controls.Add(this.btnEditPerson);
             this.tabPersonnel.Controls.Add(this.btnDeletePerson);
             this.tabPersonnel.Controls.Add(this.btnRefreshPersonnel);
+            this.tabPersonnel.Controls.Add(this.btnDistributePeople);
+            this.tabPersonnel.Controls.Add(this.btnReloadFromFiles);
             this.tabPersonnel.Controls.Add(this.dgvPersonnel);
             this.tabPersonnel.Location = new System.Drawing.Point(4, 24);
             this.tabPersonnel.Name = "tabPersonnel";
@@ -401,6 +415,22 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshPersonnel.Text = "새로고침";
             this.btnRefreshPersonnel.UseVisualStyleBackColor = true;
             this.btnRefreshPersonnel.Click += new System.EventHandler(this.btnRefreshPersonnel_Click);
+
+            this.btnDistributePeople.Location = new System.Drawing.Point(460, 10);
+            this.btnDistributePeople.Name = "btnDistributePeople";
+            this.btnDistributePeople.Size = new System.Drawing.Size(150, 30);
+            this.btnDistributePeople.TabIndex = 4;
+            this.btnDistributePeople.Text = "단말기로 배포";
+            this.btnDistributePeople.UseVisualStyleBackColor = true;
+            this.btnDistributePeople.Click += new System.EventHandler(this.btnDistributePeople_Click);
+
+            this.btnReloadFromFiles.Location = new System.Drawing.Point(620, 10);
+            this.btnReloadFromFiles.Name = "btnReloadFromFiles";
+            this.btnReloadFromFiles.Size = new System.Drawing.Size(160, 30);
+            this.btnReloadFromFiles.TabIndex = 5;
+            this.btnReloadFromFiles.Text = "파일에서 불러오기";
+            this.btnReloadFromFiles.UseVisualStyleBackColor = true;
+            this.btnReloadFromFiles.Click += new System.EventHandler(this.btnReloadFromFiles_Click);
 
             this.dgvPersonnel.AllowUserToAddRows = false;
             this.dgvPersonnel.AllowUserToDeleteRows = false;
@@ -664,6 +694,7 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.GroupBox grpDeviceManagement;
         private System.Windows.Forms.Button btnRemoteControl;
         private System.Windows.Forms.Button btnRemoveDevice;
+        private System.Windows.Forms.Button btnPullPeople;
         private System.Windows.Forms.DataGridView dgvDevices;
         private System.Windows.Forms.Button btnAddDepartment;
         private System.Windows.Forms.Button btnRefreshDepartments;
@@ -672,6 +703,8 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.Button btnEditPerson;
         private System.Windows.Forms.Button btnDeletePerson;
         private System.Windows.Forms.Button btnRefreshPersonnel;
+        private System.Windows.Forms.Button btnDistributePeople;
+        private System.Windows.Forms.Button btnReloadFromFiles;
         private System.Windows.Forms.DataGridView dgvPersonnel;
         private System.Windows.Forms.ComboBox cmbDepartment;
         private System.Windows.Forms.GroupBox grpAttendanceSearch;

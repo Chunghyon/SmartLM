@@ -761,28 +761,108 @@ namespace DeviceProtocolServer.Controllers.DeviceAPI
                 }
             }
 
+            var peopleService = _ServiceProvider.GetService<IPeopleService>();
+
             if (httpOption.FeatureCodeUseBase64 == true)
             {
-                //特征码使用Base64
-                var peopleService = _ServiceProvider.GetService<IPeopleService>();
+                // 특징 코드를 Base64로 변환하여 전달
                 foreach (var people in rst.PeopleList)
                 {
                     await LoadFeatureCode(people, peopleService);
                 }
             }
-
-            if (httpOption.HTTPURLUsePrefix && httpOption.UploadPeoplePhotoType == HTTPProtocolOption.UseURL)
+            else
             {
-                var peopleService = _ServiceProvider.GetService<IPeopleService>();
+                // URL 방식: 특징 코드 파일 경로를 단말기에 전달
                 foreach (var people in rst.PeopleList)
                 {
-                    if (!string.IsNullOrEmpty(people.Photo))
+                    await EnsureFeatureCodePaths(people, peopleService);
+                }
+            }
+
+            if (httpOption.HTTPURLUsePrefix)
+            {
+                foreach (var people in rst.PeopleList)
+                {
+                    if (!string.IsNullOrEmpty(people.Photo) && httpOption.UploadPeoplePhotoType == HTTPProtocolOption.UseURL)
                     {
                         people.Photo = httpOption.PeopleURLPrefix + people.Photo;
+                    }
+
+                    if (!string.IsNullOrEmpty(people.FaceFeature) && !people.FaceFeature.StartsWith("http"))
+                    {
+                        people.FaceFeature = httpOption.PeopleURLPrefix + people.FaceFeature;
+                    }
+
+                    if (people.Fingerprints != null)
+                    {
+                        foreach (var fp in people.Fingerprints)
+                        {
+                            if (!string.IsNullOrEmpty(fp.Data) && !fp.Data.StartsWith("http"))
+                                fp.Data = httpOption.PeopleURLPrefix + fp.Data;
+                        }
+                    }
+
+                    if (people.Palmveins != null)
+                    {
+                        foreach (var pv in people.Palmveins)
+                        {
+                            if (!string.IsNullOrEmpty(pv.Data) && !pv.Data.StartsWith("http"))
+                                pv.Data = httpOption.PeopleURLPrefix + pv.Data;
+                        }
                     }
                 }
             }
             return new JsonResult(rst);
+        }
+
+        /// <summary>
+        /// URL 방식에서 특징 코드 파일 경로의 유효성을 확인하고, 파일이 없으면 경로를 지움
+        /// </summary>
+        private Task EnsureFeatureCodePaths(HTTPPeopleV2 hPeople, IPeopleService service)
+        {
+            string wwwroot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+
+            void validatePath(ref string data)
+            {
+                if (string.IsNullOrEmpty(data)) return;
+                if (data.Length > 200) { data = string.Empty; return; } // already base64
+                string localPath = data.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                string fullPath = Path.Combine(wwwroot, localPath);
+                if (!System.IO.File.Exists(fullPath))
+                    data = string.Empty;
+            }
+
+            if (!string.IsNullOrEmpty(hPeople.FaceFeature))
+            {
+                string tmp = hPeople.FaceFeature;
+                validatePath(ref tmp);
+                hPeople.FaceFeature = tmp;
+                if (string.IsNullOrEmpty(hPeople.FaceFeature))
+                    hPeople.FaceFeatureMD5 = string.Empty;
+            }
+
+            if (hPeople.Fingerprints != null)
+            {
+                foreach (var fp in hPeople.Fingerprints)
+                {
+                    string tmp = fp.Data;
+                    validatePath(ref tmp);
+                    fp.Data = tmp;
+                }
+            }
+
+            if (hPeople.Palmveins != null)
+            {
+                foreach (var pv in hPeople.Palmveins)
+                {
+                    string tmp = pv.Data;
+                    validatePath(ref tmp);
+                    pv.Data = tmp;
+                }
+            }
+
+            return Task.CompletedTask;
         }
 
         private async Task LoadFeatureCode(HTTPPeopleV2 hPeople, IPeopleService service)
@@ -811,8 +891,26 @@ namespace DeviceProtocolServer.Controllers.DeviceAPI
 
             if (!string.IsNullOrEmpty(hPeople.FaceFeature))
             {
-                hPeople.FaceFeature = dto.FaceFeature.Data;
-                hPeople.FaceFeatureMD5 = dto.FaceFeature.MD5;
+                hPeople.FaceFeature = dto.FaceFeature?.Data;
+                hPeople.FaceFeatureMD5 = dto.FaceFeature?.MD5;
+            }
+
+            if (hPeople.Fingerprints != null && dto.Fingerprints != null)
+            {
+                for (int i = 0; i < hPeople.Fingerprints.Count && i < dto.Fingerprints.Count; i++)
+                {
+                    hPeople.Fingerprints[i].Data = dto.Fingerprints[i].Data;
+                    hPeople.Fingerprints[i].MD5 = dto.Fingerprints[i].MD5;
+                }
+            }
+
+            if (hPeople.Palmveins != null && dto.Palmveins != null)
+            {
+                for (int i = 0; i < hPeople.Palmveins.Count && i < dto.Palmveins.Count; i++)
+                {
+                    hPeople.Palmveins[i].Data = dto.Palmveins[i].Data;
+                    hPeople.Palmveins[i].MD5 = dto.Palmveins[i].MD5;
+                }
             }
         }
 

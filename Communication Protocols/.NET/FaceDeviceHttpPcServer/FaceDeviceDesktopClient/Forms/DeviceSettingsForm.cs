@@ -13,30 +13,27 @@ public class DeviceSettingsForm : Form
     private TextBox txtTagName    = null!;
     private Button  btnSaveInfo   = null!;
 
-    // Basic / Advanced Control
-    private GroupBox grpBasicControl    = null!;
-    private GroupBox grpAdvancedControl = null!;
+    // 제어 버튼
     private Button btnRestart         = null!;
     private Button btnOpenDoor        = null!;
-    private Button btnCloseAlarm      = null!;
-    private Button btnSyncTime        = null!;
-    private Button btnSyncPeople      = null!;
+    private Button btnDevicePeople    = null!;
     private Button btnDeleteAllPeople = null!;
     private Button btnClearRecords    = null!;
     private Button btnRequestUpload   = null!;
 
-    // 출입제어설정 (남은 항목만)
-    private NumericUpDown numReleaseTime        = null!;  // 문 열림 유지시간
-    private CheckBox      chkFreeOpen           = null!;  // 무인증 개방
-    private ComboBox      cmbVerificationType   = null!;  // 인증 방식
-    private CheckBox      chkRelay              = null!;  // 릴레이 쌍안정  ← 제거 목록에 없으므로 유지
-    private TextBox       txtShortMessage       = null!;  // 인증 성공 메시지
-    private TextBox       txtVisitorRootPassword= null!;  // 방문자 루트 비밀번호
-    private NumericUpDown numMultiPerson        = null!;  // 다중 인증 인원
+    // 출입제어설정
+    private NumericUpDown numReleaseTime         = null!;
+    private CheckBox      chkFreeOpen            = null!;
+    private ComboBox      cmbVerificationType    = null!;
+    private TextBox       txtShortMessage        = null!;
+    private TextBox       txtVisitorRootPassword = null!;
+    private NumericUpDown numMultiPerson         = null!;
 
     // 로그
     private TextBox txtResult = null!;
     private Button  btnClose  = null!;
+
+    private JsonObject? _fullWorkSetting;
 
     public DeviceSettingsForm(DeviceInfo device, HttpClient httpClient)
     {
@@ -77,25 +74,28 @@ public class DeviceSettingsForm : Form
         Controls.Add(btnSaveInfo);
         y += 42;
 
-        // ── Basic Control ─────────────────────────────────────
-        grpBasicControl = new GroupBox { Text = "Basic Control", Location = new Point(20, y), Size = new Size(fw, 80) };
-        btnRestart    = MkBtn("재시작",      10,  25, BtnRestart_Click);
-        btnOpenDoor   = MkBtn("문 열기",     140, 25, BtnOpenDoor_Click);
-        btnCloseAlarm = MkBtn("알람 해제",   270, 25, BtnCloseAlarm_Click);
-        btnSyncTime   = MkBtn("시간 동기화", 400, 25, BtnSyncTime_Click);
-        grpBasicControl.Controls.AddRange(new Control[] { btnRestart, btnOpenDoor, btnCloseAlarm, btnSyncTime });
-        Controls.Add(grpBasicControl);
-        y += 95;
+        // ── 단말기 제어 (Basic + Advanced 통합) ──────────────
+        var grpControl = new GroupBox
+        {
+            Text = "단말기 제어",
+            Location = new Point(20, y),
+            Size = new Size(fw, 120)
+        };
 
-        // ── Advanced Control ──────────────────────────────────
-        grpAdvancedControl = new GroupBox { Text = "Advanced Control", Location = new Point(20, y), Size = new Size(fw, 80) };
-        btnSyncPeople      = MkBtn("사용자 동기화",   10,  25, BtnSyncPeople_Click);
-        btnDeleteAllPeople = MkBtn("사용자 전체삭제", 140, 25, BtnDeleteAllPeople_Click, System.Drawing.Color.DarkRed);
-        btnClearRecords    = MkBtn("기록 삭제",       270, 25, BtnClearRecords_Click,    System.Drawing.Color.DarkRed);
-        btnRequestUpload   = MkBtn("업로드 요청",     400, 25, BtnRequestUpload_Click);
-        grpAdvancedControl.Controls.AddRange(new Control[] { btnSyncPeople, btnDeleteAllPeople, btnClearRecords, btnRequestUpload });
-        Controls.Add(grpAdvancedControl);
-        y += 95;
+        btnRestart         = MkBtn("재시작",          10,  25, BtnRestart_Click);
+        btnOpenDoor        = MkBtn("문 열기",         140, 25, BtnOpenDoor_Click);
+        btnDevicePeople    = MkBtn("사용자 정보",     270, 25, BtnDevicePeople_Click);
+        btnDeleteAllPeople = MkBtn("사용자 전체삭제", 400, 25, BtnDeleteAllPeople_Click, System.Drawing.Color.DarkRed);
+        btnClearRecords    = MkBtn("로그 삭제",        10, 68, BtnClearRecords_Click,    System.Drawing.Color.DarkRed);
+        btnRequestUpload   = MkBtn("로그 가져오기",   140, 68, BtnRequestUpload_Click);
+
+        grpControl.Controls.AddRange(new Control[]
+        {
+            btnRestart, btnOpenDoor, btnDevicePeople, btnDeleteAllPeople,
+            btnClearRecords, btnRequestUpload
+        });
+        Controls.Add(grpControl);
+        y += grpControl.Height + 10;
 
         // ── 출입제어설정 ──────────────────────────────────────
         var grpAccess = new GroupBox { Text = "출입제어설정", Location = new Point(20, y), Size = new Size(fw, 10) };
@@ -110,15 +110,12 @@ public class DeviceSettingsForm : Form
             gy += 30;
         }
 
-        // 문 열림 유지시간 (ReleaseTime / Unlock Hold)
         numReleaseTime = new NumericUpDown { Minimum = 0, Maximum = 65535, Value = 3, Width = cw };
         AR("문 열림 유지시간 (s):", numReleaseTime);
 
-        // 무인증 개방 (FreeOpen / No-Verification Unlock)
         chkFreeOpen = new CheckBox { Text = "활성화", Width = cw };
         AR("무인증 개방:", chkFreeOpen);
 
-        // 인증 방식 (VerificationType)
         cmbVerificationType = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = cw };
         cmbVerificationType.Items.AddRange(new object[]
         {
@@ -142,19 +139,15 @@ public class DeviceSettingsForm : Form
         cmbVerificationType.SelectedIndex = 0;
         AR("인증 방식:", cmbVerificationType);
 
-        // 인증 성공 메시지 (ShortMessage)
         txtShortMessage = new TextBox { Width = cw };
         AR("인증 성공 메시지:", txtShortMessage);
 
-        // 방문자 루트 비밀번호 (VisitorRootPassword)
         txtVisitorRootPassword = new TextBox { UseSystemPasswordChar = true, Width = cw };
         AR("방문자 루트 비밀번호:", txtVisitorRootPassword);
 
-        // 다중 인증 인원 (MultiPerson)
         numMultiPerson = new NumericUpDown { Minimum = 1, Maximum = 50, Value = 1, Width = cw };
         AR("다중 인증 인원 (명):", numMultiPerson);
 
-        // 버튼 행
         var btnLoadAccess = new Button { Text = "설정 불러오기", Location = new Point(tx, gy), Size = new Size(130, 28) };
         btnLoadAccess.Click += async (s, e) => await LoadAccessControlSettings();
         grpAccess.Controls.Add(btnLoadAccess);
@@ -168,7 +161,7 @@ public class DeviceSettingsForm : Form
         Controls.Add(grpAccess);
         y += grpAccess.Height + 10;
 
-        // ── 로그 창 (최하단) ─────────────────────────────────
+        // ── 로그 창 ───────────────────────────────────────────
         txtResult = new TextBox
         {
             Location = new Point(20, y), Size = new Size(fw, 80),
@@ -215,36 +208,33 @@ public class DeviceSettingsForm : Form
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
         await ExecCmd("재시작", "restart");
     }
-    private async void BtnOpenDoor_Click(object? sender, EventArgs e)   => await ExecCmd("문 열기", "opendoor");
-    private async void BtnCloseAlarm_Click(object? sender, EventArgs e) => await ExecCmd("알람 해제", "closealarm");
-    private async void BtnSyncTime_Click(object? sender, EventArgs e)
+
+    private async void BtnOpenDoor_Click(object? sender, EventArgs e) =>
+        await ExecCmd("문 열기", "opendoor");
+
+    private void BtnDevicePeople_Click(object? sender, EventArgs e)
     {
-        AddLog($"[{DateTime.Now:HH:mm:ss}] 시간 동기화 요청...");
-        await Task.Delay(300);
-        AddLog($"[{DateTime.Now:HH:mm:ss}] ? 시간 동기화 완료.");
+        using var form = new DeviceUserListForm(_device, _httpClient);
+        form.ShowDialog(this);
     }
-    private async void BtnSyncPeople_Click(object? sender, EventArgs e)
-    {
-        if (MessageBox.Show("전체 사용자를 단말기에 동기화하시겠습니까?", "확인",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-        await ExecCmd("사용자 동기화", "pushAllPeople");
-    }
+
     private async void BtnDeleteAllPeople_Click(object? sender, EventArgs e)
     {
-        if (MessageBox.Show("단말기의 사용자를 전체 삭제하시겠습니까?", "경고",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        if (MessageBox.Show(
+            "단말기의 사용자를 전체 삭제하시겠습니까?\n\n이 작업은 단말기의 사용자 정보만 삭제하며\n서버에는 영향을 주지 않습니다.",
+            "경고", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
         await ExecCmd("사용자 전체삭제", "deleteAllPeople");
     }
+
     private async void BtnClearRecords_Click(object? sender, EventArgs e)
     {
-        if (MessageBox.Show("단말기의 기록을 전체 삭제하시겠습니까?", "경고",
+        if (MessageBox.Show("단말기의 로그를 전체 삭제하시겠습니까?", "경고",
             MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-        await ExecCmd("기록 삭제", "clearRecords");
+        await ExecCmd("로그 삭제", "clearRecords");
     }
-    private async void BtnRequestUpload_Click(object? sender, EventArgs e) => await ExecCmd("업로드 요청", "repostRecord");
 
-    // 마지막으로 불러온 전체 WorkSetting (저장 시 베이스로 사용)
-    private JsonObject? _fullWorkSetting;
+    private async void BtnRequestUpload_Click(object? sender, EventArgs e) =>
+        await ExecCmd("로그 가져오기", "repostRecord");
 
     private async Task LoadAccessControlSettings()
     {
@@ -259,10 +249,8 @@ public class DeviceSettingsForm : Form
             var ws = await resp.Content.ReadFromJsonAsync<JsonObject>();
             if (ws == null) { AddLog($"[{DateTime.Now:HH:mm:ss}] 저장된 출입제어설정이 없습니다."); return; }
 
-            // 전체 WorkSetting 보관 (저장 시 나머지 필드 유지용)
             _fullWorkSetting = (JsonObject)ws.DeepClone();
 
-            // 안전한 int 읽기: Number/String 모두 처리
             int Val(string key, int def)
             {
                 var node = ws[key];
@@ -279,8 +267,7 @@ public class DeviceSettingsForm : Form
             txtVisitorRootPassword.Text       = Str("VisitorRootPassword");
             numMultiPerson.Value              = Math.Min(Math.Max(Val("MultiPerson", 1), 1), 50);
 
-            AddLog($"[{DateTime.Now:HH:mm:ss}] ? 출입제어설정을 불러왔습니다. " +
-                   $"(ReleaseTime={Val("ReleaseTime",3)}, FreeOpen={Val("FreeOpen",0)}, VerificationType={Val("VerificationType",1)})");
+            AddLog($"[{DateTime.Now:HH:mm:ss}] ? 출입제어설정을 불러왔습니다.");
         }
         catch (Exception ex) { AddLog($"[{DateTime.Now:HH:mm:ss}] ? 설정 불러오기 오류: {ex.Message}"); }
     }
@@ -289,12 +276,9 @@ public class DeviceSettingsForm : Form
     {
         try
         {
-            // 기존 전체 WorkSetting을 베이스로 하고 변경 필드만 덮어씀
-            JsonObject ws;
-            if (_fullWorkSetting != null)
-                ws = (JsonObject)_fullWorkSetting.DeepClone();
-            else
-                ws = new JsonObject();
+            JsonObject ws = _fullWorkSetting != null
+                ? (JsonObject)_fullWorkSetting.DeepClone()
+                : new JsonObject();
 
             ws["DeviceSN"]            = _device.SN;
             ws["ReleaseTime"]         = (int)numReleaseTime.Value;

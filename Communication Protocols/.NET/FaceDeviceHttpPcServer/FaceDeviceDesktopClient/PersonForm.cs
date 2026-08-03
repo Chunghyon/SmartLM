@@ -37,12 +37,8 @@ public partial class PersonForm : Form
     private Button     btnBrowsePhoto  = null!;
     private PictureBox picPhotoPreview = null!;
 
-    private CheckedListBox lstDevices         = null!;
-    private Button         btnUploadToDevices = null!;
     private Button         btnOK              = null!;
     private Button         btnCancel          = null!;
-
-    private List<DeviceInfo> _allDevices = new();
 
     // ── 생성자 ───────────────────────────────────────────────────────────────
     public PersonForm()
@@ -54,7 +50,6 @@ public partial class PersonForm : Form
     public PersonForm(HttpClient httpClient) : this()
     {
         _httpClient = httpClient;
-        _ = LoadDevices();
     }
 
     // ── SetInitialValues (서버 PersonInfo 전체 전달) ─────────────────────────
@@ -186,7 +181,7 @@ public partial class PersonForm : Form
             picPhotoPreview.Image?.Dispose();
             using var ms = new MemoryStream(bytes);
             picPhotoPreview.Image = new Bitmap(Image.FromStream(ms));
-            txtPhotoUrl.Text = label;
+            txtPhotoUrl.Text = "얼굴 등록됨";
         }
         catch
         {
@@ -331,41 +326,15 @@ public partial class PersonForm : Form
         mainPanel.Controls.Add(picPhotoPreview);
         y += 140;
 
-        // ── 단말기 할당 ───────────────────────────────────────────────────────
-        var grpDevices = new GroupBox
-        {
-            Text     = "단말기 할당",
-            Location = new Point(10, y),
-            Size     = new Size(630, 145)
-        };
-        lstDevices = new CheckedListBox
-        {
-            Location     = new Point(10, 22),
-            Size         = new Size(605, 110),
-            CheckOnClick = true
-        };
-        grpDevices.Controls.Add(lstDevices);
-        mainPanel.Controls.Add(grpDevices);
-        y += 160;
-
         // ── 하단 버튼 ─────────────────────────────────────────────────────────
-        btnUploadToDevices = new Button
-        {
-            Text     = "저장 및 선택한 단말기로 전송",
-            Location = new Point(10, y),
-            Size     = new Size(245, 35)
-        };
-        btnUploadToDevices.Click += BtnUploadToDevices_Click;
-        mainPanel.Controls.Add(btnUploadToDevices);
-
-        btnOK = new Button { Text = "저장", Location = new Point(265, y), Size = new Size(100, 35) };
+        btnOK = new Button { Text = "저장", Location = new Point(10, y), Size = new Size(100, 35) };
         btnOK.Click += BtnOK_Click;
         mainPanel.Controls.Add(btnOK);
 
         btnCancel = new Button
         {
             Text         = "취소",
-            Location     = new Point(375, y),
+            Location     = new Point(120, y),
             Size         = new Size(100, 35),
             DialogResult = DialogResult.Cancel
         };
@@ -374,27 +343,6 @@ public partial class PersonForm : Form
         this.Controls.Add(mainPanel);
         this.AcceptButton = btnOK;
         this.CancelButton = btnCancel;
-    }
-
-    // ── 단말기 목록 로드 ──────────────────────────────────────────────────────
-    private async Task LoadDevices()
-    {
-        if (_httpClient == null) return;
-        try
-        {
-            var devices = await _httpClient.GetFromJsonAsync<List<DeviceInfo>>("/admin/devices");
-            if (devices != null)
-            {
-                _allDevices = devices;
-                foreach (var d in devices)
-                    lstDevices.Items.Add($"{d.DeviceName} ({d.IpAddress})");
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"단말기 목록 로드 실패: {ex.Message}", "오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
     }
 
     // ── 사진 선택 ─────────────────────────────────────────────────────────────
@@ -409,145 +357,31 @@ public partial class PersonForm : Form
 
         try
         {
-            // 파일을 직접 읽어 Bitmap으로 변환 후 JPEG 바이트로 저장
-            // (FacePhotoEditorForm 없이 바로 등록 ? 편집이 필요하면 추후 구현)
-            byte[] imageBytes;
-            using (var srcImg = Image.FromFile(dlg.FileName))
-            using (var bmp = new Bitmap(srcImg))
-            using (var ms = new MemoryStream())
-            {
-                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-                imageBytes = ms.ToArray();
-            }
+            // FacePhotoEditorForm을 통해 얼굴 영역 지정
+            using var editor = new Forms.FacePhotoEditorForm(dlg.FileName);
+            if (editor.ShowDialog(this) != DialogResult.OK) return;
 
-            if (imageBytes.Length == 0)
+            var imageBytes = editor.ProcessedImageData;
+            if (imageBytes == null || imageBytes.Length == 0)
             {
-                MessageBox.Show("사진 파일을 읽을 수 없습니다.", "오류",
+                MessageBox.Show("사진 처리 결과가 비어 있습니다.", "오류",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             // PhotoData에 저장
             Person.PhotoData = imageBytes;
-            txtPhotoUrl.Text  = dlg.FileName;
+            txtPhotoUrl.Text  = "얼굴 등록됨";
 
             // 미리보기
             picPhotoPreview.Image?.Dispose();
             using var previewMs = new MemoryStream(imageBytes);
             picPhotoPreview.Image = new Bitmap(Image.FromStream(previewMs));
-
-            MessageBox.Show("사진이 등록되었습니다.", "완료",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
             MessageBox.Show($"사진 처리 실패: {ex.Message}", "오류",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
-
-    // ── 저장 및 단말기 전송 ───────────────────────────────────────────────────
-    private async void BtnUploadToDevices_Click(object? sender, EventArgs e)
-    {
-        if (_httpClient == null)
-        {
-            MessageBox.Show("HTTP 클라이언트가 초기화되지 않았습니다", "오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-
-        if (lstDevices.CheckedIndices.Count == 0)
-        {
-            MessageBox.Show("전송할 단말기를 선택해주세요", "안내",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(txtName.Text))
-        {
-            MessageBox.Show("사용자명을 입력해주세요", "입력 오류",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-        if (!TryBuildUserID(out string builtUserID))
-        {
-            MessageBox.Show("동/호/멤버 번호를 올바르게 입력해주세요.\n(동·호·멤버는 모두 숫자여야 합니다)",
-                "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        try
-        {
-            btnUploadToDevices.Enabled = false;
-            btnUploadToDevices.Text    = "전송 중...";
-
-            var personInfo = BuildPersonInfo(builtUserID);
-
-            bool userExists = false;
-            try
-            {
-                var chk = await _httpClient.PostAsJsonAsync("/api/People/GetDetail", new { UserID = personInfo.UserID });
-                var chkR = await chk.Content.ReadFromJsonAsync<BrowserApiResponse<PersonInfo>>();
-                userExists = chkR?.Code == 0;
-            }
-            catch { }
-
-            bool edit     = userExists || (IsEditMode && !string.IsNullOrEmpty(_originalUserID));
-            string ep     = edit ? "/api/People/Update" : "/api/People/New";
-            var addResp   = await _httpClient.PostAsJsonAsync(ep, personInfo);
-            var addResult = await addResp.Content.ReadFromJsonAsync<BrowserApiResponse<object>>();
-
-            if (addResult == null || addResult.Code != 0)
-            {
-                MessageBox.Show($"서버 저장 실패: {addResult?.Msg ?? "알 수 없는 오류"}",
-                    "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            int successCount = 0, failCount = 0;
-            var errors = new List<string>();
-
-            foreach (int idx in lstDevices.CheckedIndices)
-            {
-                if (idx >= _allDevices.Count) continue;
-                var dev = _allDevices[idx];
-                try
-                {
-                    var r = await _httpClient.PostAsync($"/admin/devices/{dev.SN}/request-add-people", null);
-                    if (r.IsSuccessStatusCode) successCount++;
-                    else { failCount++; errors.Add($"{dev.DeviceName}: HTTP {r.StatusCode}"); }
-                }
-                catch (Exception ex) { failCount++; errors.Add($"{dev.DeviceName}: {ex.Message}"); }
-            }
-
-            if (failCount == 0)
-            {
-                MessageBox.Show(
-                    $"성공: {successCount}개 단말기로 사용자 전송을 요청했습니다.\n" +
-                    "단말기가 다음 Keepalive 신호를 보낼 때 사용자 정보를 다운로드합니다." +
-                    (personInfo.Photo != null ? "\n(얼굴 사진 포함)" : ""),
-                    "전송 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                Person            = personInfo;
-                AlreadySaved      = true;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-            else
-            {
-                string detail = errors.Count > 0 ? "\n\n오류:\n" + string.Join("\n", errors.Take(5)) : "";
-                MessageBox.Show($"전송 완료: 성공 {successCount}개, 실패 {failCount}개{detail}",
-                    "전송 결과", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"전송 실패: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        finally
-        {
-            btnUploadToDevices.Enabled = true;
-            btnUploadToDevices.Text    = "저장 및 선택한 단말기로 전송";
         }
     }
 
