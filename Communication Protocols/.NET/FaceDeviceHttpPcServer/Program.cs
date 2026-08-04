@@ -79,9 +79,32 @@ app.UseRequestDecompression();
 // HTTP 요청 로깅 미들웨어 추가
 app.UseMiddleware<HttpLoggingMiddleware>();
 
+// admin UI 파일을 런타임에 자동 생성 (wwwroot/admin 폴더가 비어있거나 없을 때)
+AdminUiWriter.EnsureFiles(app.Environment.WebRootPath);
+
 // 정적 파일 서비스 구성
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// 소스 wwwroot/admin 폴더를 추가 경로로 등록 (빌드 출력에 없는 경우 대비)
+var extraAdminPaths = new[]
+{
+    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "admin"),
+    Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "admin"),
+};
+foreach (var adminPath in extraAdminPaths)
+{
+    if (Directory.Exists(adminPath))
+    {
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(adminPath),
+            RequestPath = "/admin"
+        });
+        LogHub.Instance.Info($"Admin static files served from: {adminPath}");
+        break;
+    }
+}
 
 // Favicon 404 방지
 app.MapGet("/favicon.ico", () => Results.File(Array.Empty<byte>(), "image/x-icon"));
@@ -449,6 +472,12 @@ app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, St
                 LogHub.Instance.Info($"Remote command queued: Repost records from {sn}");
                 return Results.Ok(ApiResponse.Ok("Repost records command queued"));
 
+            case "synctime":
+                var nowTs = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                store.QueueSyncTime(sn, nowTs);
+                LogHub.Instance.Info($"[시간동기화] 단말기 {sn}에 시간 동기화 명령 예약 (Unix={nowTs})");
+                return Results.Ok(ApiResponse.Ok($"SetTime command queued (ts={nowTs})"));
+
             default:
                 return Results.BadRequest(new ApiResponse(400, $"Unknown command type: {commandType}"));
         }
@@ -526,6 +555,23 @@ app.MapPost("/admin/devices/{sn}/remote", (string sn, DeviceRemoteRequest cmd, S
         Closealarm = cmd.Closealarm
     });
     return Results.Ok(ApiResponse.Ok($"Remote command queued for {sn}."));
+});
+
+// ── Admin: system-info (dashboard summary) ───────────────────────────────────
+app.MapGet("/admin/system-info", (StateStore store) =>
+{
+    var devs    = store.GetDeviceSummaries();
+    var people  = store.GetPeople();
+    var totalRecords = devs.Sum(d => d.RecordCount);
+    var cutoff = DateTimeOffset.UtcNow.AddMinutes(-5);
+    var onlineCount  = devs.Count(d => d.LastKeepaliveAtUtc.HasValue && d.LastKeepaliveAtUtc.Value >= cutoff);
+    return Results.Ok(new
+    {
+        TotalDevices   = devs.Count,
+        OnlineDevices  = onlineCount,
+        TotalPeople    = people.Count,
+        TotalRecords   = totalRecords
+    });
 });
 
 // ── Admin: departments ────────────────────────────────────────────────────────
@@ -763,7 +809,8 @@ app.MapPost("/Device/RemoteCommand", (RemoteCommandRequest request, StateStore s
         RepostRecord = cmd.RepostRecord,
         PushAllPeople = cmd.PushAllPeople,
         QueryPeople = cmd.QueryPeople,
-        ClearRecord = cmd.ClearRecord
+        ClearRecord = cmd.ClearRecord,
+        SetTime = cmd.SetTime
     });
 });
 
@@ -1858,6 +1905,44 @@ app.MapPost("/api/Record/Delete/ByType", (DeleteRecordsByTypeRequest req, StateS
 
 // HTTP 서버를 백그라운드에서 실행
 var cts = new CancellationTokenSource();
+
+// ── 자동 시간동기화 타이머 (하루 4회: 00:00, 06:00, 12:00, 18:00) ──────────────
+_ = Task.Run(async () =>
+{
+    // 다음 정각(0, 6, 12, 18시) 까지 대기 후 반복
+    while (!cts.Token.IsCancellationRequested)
+    {
+        var now = DateTime.Now;
+        var nextHours = new[] { 0, 6, 12, 18 };
+        var next = nextHours
+            .Select(h => new DateTime(now.Year, now.Month, now.Day, h, 0, 0))
+            .Select(t => t <= now ? t.AddDays(1) : t)
+            .OrderBy(t => t)
+            .First();
+
+        var delay = next - now;
+        try { await Task.Delay(delay, cts.Token); } catch { break; }
+
+        if (cts.Token.IsCancellationRequested) break;
+
+        var sns = app.Services.GetRequiredService<StateStore>().GetAllDeviceSNs();
+        var ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        foreach (var sn in sns)
+            app.Services.GetRequiredService<StateStore>().QueueSyncTime(sn, ts);
+        LogHub.Instance.Info($"[자동 시간동기화] {sns.Count}개 단말기에 시간 동기화 명령 예약 (Unix={ts})");
+    }
+});
+
+// ── 관리자: 전체 단말기 시간동기화 즉시 실행 ─────────────────────────────────────
+app.MapPost("/admin/devices/sync-time-all", (StateStore store) =>
+{
+    var sns = store.GetAllDeviceSNs();
+    var ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    foreach (var sn in sns)
+        store.QueueSyncTime(sn, ts);
+    LogHub.Instance.Info($"[시간동기화] 전체 {sns.Count}개 단말기에 시간 동기화 명령 예약 (Unix={ts})");
+    return Results.Ok(ApiResponse.Ok($"{sns.Count}개 단말기에 시간 동기화 명령 예약 완료"));
+});
 
 // Windows 방화벽 체크
 try

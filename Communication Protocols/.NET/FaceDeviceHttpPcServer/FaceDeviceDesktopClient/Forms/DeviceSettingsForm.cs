@@ -20,6 +20,7 @@ public class DeviceSettingsForm : Form
     private Button btnDeleteAllPeople = null!;
     private Button btnClearRecords    = null!;
     private Button btnRequestUpload   = null!;
+    private Button btnSyncTime        = null!;
 
     // 출입제어설정
     private NumericUpDown numReleaseTime         = null!;
@@ -88,11 +89,12 @@ public class DeviceSettingsForm : Form
         btnDeleteAllPeople = MkBtn("사용자 전체삭제", 400, 25, BtnDeleteAllPeople_Click, System.Drawing.Color.DarkRed);
         btnClearRecords    = MkBtn("로그 삭제",        10, 68, BtnClearRecords_Click,    System.Drawing.Color.DarkRed);
         btnRequestUpload   = MkBtn("로그 가져오기",   140, 68, BtnRequestUpload_Click);
+        btnSyncTime        = MkBtn("시간 동기화",     270, 68, BtnSyncTime_Click);
 
         grpControl.Controls.AddRange(new Control[]
         {
             btnRestart, btnOpenDoor, btnDevicePeople, btnDeleteAllPeople,
-            btnClearRecords, btnRequestUpload
+            btnClearRecords, btnRequestUpload, btnSyncTime
         });
         Controls.Add(grpControl);
         y += grpControl.Height + 10;
@@ -235,6 +237,9 @@ public class DeviceSettingsForm : Form
 
     private async void BtnRequestUpload_Click(object? sender, EventArgs e) =>
         await ExecCmd("로그 가져오기", "repostRecord");
+
+    private async void BtnSyncTime_Click(object? sender, EventArgs e) =>
+        await ExecCmd("시간 동기화", "synctime");
 
     private async Task LoadAccessControlSettings()
     {

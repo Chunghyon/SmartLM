@@ -1,413 +1,317 @@
-﻿<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FaceDevice PC Client</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      font-family: "Segoe UI", "맑은 고딕", Malgun Gothic, sans-serif; 
-      background: #f0f2f5; 
-      color: #333;
-    }
-
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 16px 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .header h1 { font-size: 24px; font-weight: 600; }
-    .header .subtitle { font-size: 13px; opacity: 0.9; margin-top: 4px; }
-
-    .nav-tabs {
-      background: white;
-      border-bottom: 2px solid #e0e0e0;
-      display: flex;
-      padding: 0 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .nav-tab {
-      padding: 14px 24px;
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-size: 14px;
-      font-weight: 500;
-      color: #666;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
-    }
-    .nav-tab:hover { color: #667eea; background: #f8f9fa; }
-    .nav-tab.active { color: #667eea; border-bottom-color: #667eea; }
-
-    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    .panel {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-    .panel-header {
-      padding: 16px 20px;
-      background: #fafbfc;
-      border-bottom: 1px solid #e1e4e8;
-      font-weight: 600;
-      font-size: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .panel-body { padding: 20px; }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { font-size: 13px; font-weight: 500; color: #555; }
-    .form-group input, .form-group select {
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    .form-group input:focus, .form-group select:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-primary { background: #667eea; color: white; }
-    .btn-primary:hover { background: #5568d3; }
-    .btn-secondary { background: #6c757d; color: white; }
-    .btn-secondary:hover { background: #5a6268; }
-    .btn-success { background: #28a745; color: white; }
-    .btn-success:hover { background: #218838; }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-danger:hover { background: #c82333; }
-    .btn-warning { background: #ffc107; color: #333; }
-    .btn-warning:hover { background: #e0a800; }
-    .btn-sm { padding: 6px 12px; font-size: 13px; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .table-container { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    thead { background: #f8f9fa; }
-    th {
-      padding: 12px 10px;
-      text-align: left;
-      font-weight: 600;
-      color: #495057;
-      border-bottom: 2px solid #dee2e6;
-    }
-    td {
-      padding: 10px;
-      border-bottom: 1px solid #e9ecef;
-      vertical-align: middle;
-    }
-    tbody tr:hover { background: #f8f9fa; }
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #6c757d;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .badge-success { background: #d4edda; color: #155724; }
-    .badge-warning { background: #fff3cd; color: #856404; }
-    .badge-danger { background: #f8d7da; color: #721c24; }
-    .badge-info { background: #d1ecf1; color: #0c5460; }
-
-    .alert {
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-    }
-    .alert-info { background: #d1ecf1; border-left: 4px solid #17a2b8; color: #0c5460; }
-    .alert-success { background: #d4edda; border-left: 4px solid #28a745; color: #155724; }
-    .alert-error { background: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; }
-
-    .search-bar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .search-bar input {
-      flex: 1;
-      min-width: 200px;
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FaceDevice PC Client</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Malgun Gothic,sans-serif;background:#f0f2f5;color:#333;font-size:13px}
+.header{background:linear-gradient(135deg,#2c3e50,#3498db);color:white;padding:11px 20px;display:flex;align-items:center;gap:12px}
+.header h1{font-size:19px;font-weight:600}
+.header .subtitle{font-size:11px;opacity:.85}
+.nav-tabs{background:#2c3e50;display:flex;padding:0 12px}
+.nav-tab{padding:11px 20px;cursor:pointer;border:none;background:none;font-size:13px;font-weight:500;color:#adb5bd;border-bottom:3px solid transparent;transition:all .2s}
+.nav-tab:hover{color:white}
+.nav-tab.active{color:white;border-bottom-color:#3498db;background:rgba(255,255,255,.08)}
+.container{max-width:1600px;margin:0 auto;padding:14px}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.panel{background:white;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px;overflow:hidden}
+.panel-header{padding:9px 14px;background:#f8f9fa;border-bottom:1px solid #e1e4e8;font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.panel-body{padding:12px 14px}
+.btn-group{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+button{padding:6px 13px;border:none;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-primary{background:#3498db;color:white}  .btn-primary:hover{background:#2980b9}
+.btn-secondary{background:#6c757d;color:white} .btn-secondary:hover{background:#5a6268}
+.btn-success{background:#27ae60;color:white}   .btn-success:hover{background:#219a52}
+.btn-danger{background:#e74c3c;color:white}    .btn-danger:hover{background:#c0392b}
+.btn-warning{background:#f39c12;color:white}   .btn-warning:hover{background:#d68910}
+.btn-info{background:#17a2b8;color:white}      .btn-info:hover{background:#138496}
+button:disabled{opacity:.55;cursor:not-allowed}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:3px}
+.form-group label{font-size:11px;font-weight:600;color:#555}
+.form-group input,.form-group select{padding:6px 9px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#3498db;box-shadow:0 0 0 2px rgba(52,152,219,.12)}
+.search-bar{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.search-bar input{flex:1;min-width:200px;padding:6px 9px;border:1px solid #d1d5db;border-radius:4px;font-size:13px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:#f8f9fa}
+th{padding:8px 7px;text-align:left;font-weight:600;color:#495057;border-bottom:2px solid #dee2e6;white-space:nowrap}
+td{padding:7px 7px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tbody tr:hover{background:#f5f8ff}
+.empty-state{text-align:center;padding:28px;color:#adb5bd;font-size:13px}
+.badge{display:inline-block;padding:2px 7px;border-radius:9px;font-size:11px;font-weight:600}
+.badge-success{background:#d4edda;color:#155724}
+.badge-danger{background:#f8d7da;color:#721c24}
+.badge-info{background:#d1ecf1;color:#0c5460}
+.badge-secondary{background:#e2e3e5;color:#383d41}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.stat-card{background:white;border-radius:6px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:3px solid #3498db}
+.stat-card .val{font-size:26px;font-weight:700;color:#2c3e50}
+.stat-card .lbl{font-size:11px;color:#888;margin-top:3px}
+.log-box{background:#1a1a2e;color:#a8d8ea;font-family:Consolas,monospace;font-size:11px;padding:9px;border-radius:4px;height:180px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;justify-content:center;align-items:flex-start;padding-top:60px}
+.modal-overlay.open{display:flex}
+.modal{background:white;border-radius:8px;padding:20px;min-width:460px;max-width:96vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal h2{font-size:16px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:9px}
+.photo-placeholder{width:72px;height:72px;background:#f0f0f0;border-radius:4px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:22px;color:#ccc;flex-shrink:0}
+.photo-preview{width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid #ddd;display:block;flex-shrink:0}
+.status-bar{position:fixed;bottom:0;left:0;right:0;background:#2c3e50;color:#adb5bd;font-size:11px;padding:4px 14px;z-index:1000;transition:background .3s}
+.status-bar.ok{background:#1a6b30;color:white}
+.status-bar.err{background:#9b1c24;color:white}
+input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
+</style>
 </head>
 <body>
-  <div class="header">
-    <h1>🔐 FaceDevice PC Client</h1>
-    <div class="subtitle">Face Recognition Terminal Management System</div>
+<div class="header">
+  <div>
+    <h1>FaceDevice PC Client</h1>
+    <div class="subtitle">얼굴인식 단말기 관리 시스템</div>
   </div>
+  <div style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.7)" id="headerTime"></div>
+</div>
+<div class="nav-tabs">
+  <button class="nav-tab active" data-tab="dashboard">대시보드</button>
+  <button class="nav-tab" data-tab="devices">단말기</button>
+  <button class="nav-tab" data-tab="personnel">사용자</button>
+  <button class="nav-tab" data-tab="attendance">출입기록</button>
+</div>
+<div class="container">
 
-  <div class="nav-tabs">
-    <button class="nav-tab active" data-tab="software">⚙️ Software Setting</button>
-    <button class="nav-tab" data-tab="device">📱 Device Install</button>
-    <button class="nav-tab" data-tab="corporate">🏢 Corporate</button>
-    <button class="nav-tab" data-tab="dooraccess">🚪 Door Access</button>
-    <button class="nav-tab" data-tab="attendance">📋 Attendance</button>
-    <button class="nav-tab" data-tab="record">📊 Record</button>
+<!-- 대시보드 -->
+<div id="dashboard-tab" class="tab-content active">
+  <div class="stat-cards">
+    <div class="stat-card"><div class="val" id="statDevices">-</div><div class="lbl">등록 단말기</div></div>
+    <div class="stat-card" style="border-top-color:#27ae60"><div class="val" id="statOnline">-</div><div class="lbl">온라인</div></div>
+    <div class="stat-card" style="border-top-color:#9b59b6"><div class="val" id="statPersonnel">-</div><div class="lbl">등록 사용자</div></div>
+    <div class="stat-card" style="border-top-color:#e74c3c"><div class="val" id="statRecords">-</div><div class="lbl">출입 기록</div></div>
   </div>
+  <div class="panel">
+    <div class="panel-header"><span>시스템 정보</span>
+      <button class="btn-secondary" onclick="refreshSystemInfo()" style="font-size:11px;padding:4px 9px">새로고침</button>
+    </div>
+    <div class="panel-body"><table>
+      <tr><th style="width:160px">서버 URL</th><td id="infoServerUrl">-</td></tr>
+      <tr><th>등록 단말기</th><td id="infoDevices">-</td></tr>
+      <tr><th>등록 사용자</th><td id="infoPersonnel">-</td></tr>
+      <tr><th>출입 기록</th><td id="infoRecords">-</td></tr>
+    </table></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span>시스템 로그</span>
+      <button class="btn-secondary" onclick="clearLog()" style="font-size:11px;padding:4px 9px">지우기</button>
+    </div>
+    <div class="panel-body"><div class="log-box" id="logBox"></div></div>
+  </div>
+</div>
 
-  <div class="container">
-    <div id="statusAlert" class="alert alert-info" style="display:none;"></div>
-
-    <!-- Software Setting Tab -->
-    <div id="software-tab" class="tab-content active">
-      <div class="panel">
-        <div class="panel-header">System Information</div>
-        <div class="panel-body">
-          <table>
-            <tr><th style="width:200px;">Server URL</th><td id="serverUrl">http://localhost:8100</td></tr>
-            <tr><th>Total Devices</th><td id="totalDevices">0</td></tr>
-            <tr><th>Total Personnel</th><td id="totalPersonnel">0</td></tr>
-            <tr><th>Total Records</th><td id="totalRecords">0</td></tr>
-            <tr><th>Total Departments</th><td id="totalDepartments">0</td></tr>
-          </table>
-        </div>
+<!-- 단말기 -->
+<div id="devices-tab" class="tab-content">
+  <div class="panel">
+    <div class="panel-header"><span>단말기 검색</span>
+      <div class="btn-group">
+        <button class="btn-success" onclick="autoSearchDevices()">자동 검색</button>
+        <button class="btn-primary" onclick="showNetworkScanDialog()">네트워크 스캔</button>
       </div>
     </div>
-
-    <!-- Device Install Tab -->
-    <div id="device-tab" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <span>Auto Search</span>
-          <div class="btn-group">
-            <button class="btn-success btn-sm" onclick="autoSearchDevices()">🔍 Broadcast Search</button>
-            <button class="btn-primary btn-sm" onclick="showNetworkScanDialog()">🌐 Network Scan</button>
-            <button class="btn-secondary btn-sm" onclick="refreshDevices()">🔄 Refresh</button>
-          </div>
-        </div>
-        <div class="panel-body">
-          <!-- Network Scan Dialog -->
-          <div id="networkScanDialog" style="display:none; margin-bottom:20px; padding:15px; background:#f8f9fa; border-radius:4px;">
-            <h4 style="margin-bottom:10px;">Network Scan Settings</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Subnet (e.g., 192.168.0)</label>
-                <input type="text" id="scanSubnet" value="192.168.0" placeholder="192.168.0">
-              </div>
-            </div>
-            <div class="btn-group" style="margin-top:10px;">
-              <button class="btn-success" onclick="startNetworkScan()">Start Scan</button>
-              <button class="btn-secondary" onclick="cancelNetworkScan()">Cancel</button>
-            </div>
-          </div>
-
-          <div id="discoveredDevicesContainer"></div>
-          <div id="connectedDevicesContainer"></div>
+    <div class="panel-body">
+      <div id="networkScanDialog" style="display:none;margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:4px">
+        <div class="form-group" style="max-width:300px"><label>서브넷 (예: 10.100.100)</label>
+          <input type="text" id="scanSubnet" value="10.100.100"></div>
+        <div class="btn-group" style="margin-top:8px">
+          <button class="btn-success" onclick="startNetworkScan()">스캔 시작</button>
+          <button class="btn-secondary" onclick="document.getElementById('networkScanDialog').style.display='none'">취소</button>
         </div>
       </div>
+      <div id="discoveredContainer"></div>
     </div>
-
-    <div id="corporate-tab" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <span>Department Management</span>
-          <button class="btn-primary btn-sm" onclick="showAddDepartmentForm()">➕ Add Department</button>
-        </div>
-        <div class="panel-body">
-          <div id="addDepartmentForm" style="display:none; margin-bottom:20px;">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Department ID *</label>
-                <input type="text" id="deptId" required>
-              </div>
-              <div class="form-group">
-                <label>Department Name *</label>
-                <input type="text" id="deptName" required>
-              </div>
-            </div>
-            <div class="btn-group">
-              <button class="btn-success" onclick="saveDepartment()">💾 Save</button>
-              <button class="btn-secondary" onclick="cancelAddDepartment()">❌ Cancel</button>
-            </div>
-          </div>
-          <div id="departmentsContainer"></div>
-        </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span>등록된 단말기</span>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="refreshDevices()">새로고침</button>
+        <button class="btn-primary"   onclick="pullSelectedDevicePeople()">사용자 가져오기</button>
+        <button class="btn-success"   onclick="distributeToDevices()">단말기로 배포</button>
+        <button class="btn-warning"   onclick="syncTimeSelected()">시간 동기화</button>
+        <button class="btn-danger"    onclick="removeSelectedDevices()">제거</button>
       </div>
     </div>
+    <div class="panel-body"><div class="table-wrap"><table>
+      <thead><tr>
+        <th style="width:38px"><input type="checkbox" id="chkAllDev" onclick="toggleAllDev(this)"></th>
+        <th style="width:42px">순번</th><th>단말기명</th><th>위치</th>
+        <th>시리얼넘버</th><th>IP</th><th>상태</th><th>제어</th>
+      </tr></thead>
+      <tbody id="devicesBody"><tr><td colspan="8" class="empty-state">로딩 중...</td></tr></tbody>
+    </table></div></div>
+  </div>
+</div>
 
-    <!-- Door Access Tab (Personnel Management) -->
-    <div id="dooraccess-tab" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <span>Personnel Management</span>
-          <button class="btn-primary btn-sm" onclick="showAddPersonForm()">➕ Add Personnel</button>
-        </div>
-        <div class="panel-body">
-          <div class="search-bar">
-            <input type="text" id="searchPerson" placeholder="🔍 Search by Name, UserID, or Card Number..." onkeyup="searchPersonnel()">
-            <button class="btn-primary" onclick="refreshPersonnel()">🔄 Refresh</button>
-          </div>
-          <div id="addPersonForm" style="display:none; margin-bottom:20px;">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>User ID *</label>
-                <input type="text" id="userId" required maxlength="32">
-              </div>
-              <div class="form-group">
-                <label>Name *</label>
-                <input type="text" id="userName" required maxlength="64">
-              </div>
-              <div class="form-group">
-                <label>Department</label>
-                <select id="userDepartment"></select>
-              </div>
-              <div class="form-group">
-                <label>Job Title</label>
-                <input type="text" id="userJob" maxlength="64">
-              </div>
-              <div class="form-group">
-                <label>Card Number</label>
-                <input type="text" id="userCardNum" maxlength="64">
-              </div>
-              <div class="form-group">
-                <label>Password</label>
-                <input type="text" id="userPassword" maxlength="16">
-              </div>
-              <div class="form-group">
-                <label>Access Type</label>
-                <select id="userAccessType">
-                  <option value="0">Normal User</option>
-                  <option value="1">Administrator</option>
-                  <option value="2">Blacklist</option>
-                </select>
-              </div>
-            </div>
-            <div class="btn-group">
-              <button class="btn-success" onclick="savePerson()">💾 Save</button>
-              <button class="btn-secondary" onclick="cancelAddPerson()">❌ Cancel</button>
-            </div>
-          </div>
-          <div id="personnelContainer"></div>
-        </div>
+<!-- 사용자 -->
+<div id="personnel-tab" class="tab-content">
+  <div class="panel">
+    <div class="panel-header"><span>사용자 목록</span>
+      <div class="btn-group">
+        <button class="btn-success"   onclick="showAddPersonModal()">추가</button>
+        <button class="btn-primary"   onclick="editSelectedPerson()">수정</button>
+        <button class="btn-danger"    onclick="deleteSelectedPersonnel()">제거</button>
+        <button class="btn-secondary" onclick="refreshPersonnel()">새로고침</button>
+        <button class="btn-info"      onclick="reloadFromFiles()">파일 불러오기</button>
+        <button class="btn-warning"   onclick="distributePersonnel()">단말기로 배포</button>
       </div>
     </div>
-
-    <!-- Attendance Tab -->
-    <div id="attendance-tab" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <span>Attendance Management</span>
-          <button class="btn-primary btn-sm" onclick="refreshAttendance()">🔄 Refresh</button>
-        </div>
-        <div class="panel-body">
-          <!-- Search Form -->
-          <div style="background:#f8f9fa; padding:15px; border-radius:4px; margin-bottom:20px;">
-            <h4 style="margin-bottom:15px; font-size:14px; color:#333;">📊 Attendance Search</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>User ID</label>
-                <input type="text" id="attendanceUserID" placeholder="Enter User ID">
-              </div>
-              <div class="form-group">
-                <label>User Name</label>
-                <input type="text" id="attendanceUserName" placeholder="Enter Name">
-              </div>
-              <div class="form-group">
-                <label>Department</label>
-                <select id="attendanceDepartment">
-                  <option value="">All Departments</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Start Date & Time</label>
-                <input type="datetime-local" id="attendanceStartTime">
-              </div>
-              <div class="form-group">
-                <label>End Date & Time</label>
-                <input type="datetime-local" id="attendanceEndTime">
-              </div>
-            </div>
-            <div class="btn-group" style="margin-top:15px;">
-              <button class="btn-success" onclick="searchAttendance()">🔍 Search</button>
-              <button class="btn-secondary" onclick="clearAttendanceSearch()">🔄 Clear</button>
-              <button class="btn-info" onclick="getAttendanceStatistics()">📈 Statistics</button>
-              <button class="btn-warning" onclick="exportAttendance()">📤 Export</button>
-            </div>
-          </div>
-
-          <!-- Statistics Panel -->
-          <div id="attendanceStatsPanel" style="display:none; background:#e7f3ff; padding:15px; border-radius:4px; margin-bottom:20px; border-left:4px solid #007bff;">
-            <h4 style="margin-bottom:10px; font-size:14px; color:#0056b3;">📈 Attendance Statistics</h4>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
-              <div>
-                <div style="font-size:12px; color:#666;">Total Records</div>
-                <div style="font-size:24px; font-weight:600; color:#007bff;" id="statsTotalRecords">0</div>
-              </div>
-              <div>
-                <div style="font-size:12px; color:#666;">Unique Users</div>
-                <div style="font-size:24px; font-weight:600; color:#28a745;" id="statsUniqueUsers">0</div>
-              </div>
-              <div>
-                <div style="font-size:12px; color:#666;">Departments</div>
-                <div style="font-size:24px; font-weight:600; color:#ffc107;" id="statsUniqueDepts">0</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Attendance Records Table -->
-          <div id="attendanceContainer"></div>
-        </div>
+    <div class="panel-body">
+      <div class="search-bar">
+        <input type="text" id="searchPerson" placeholder="이름, ID, 카드번호 검색..." oninput="filterPersonnel()">
       </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th style="width:38px"><input type="checkbox" id="chkAllPerson" onclick="toggleAllPerson(this)"></th>
+          <th>동</th><th>호</th><th>멤버</th><th>사용자명</th>
+          <th style="width:48px">카드</th><th style="width:58px">비밀번호</th>
+          <th style="width:48px">지문</th><th style="width:52px">손바닥</th><th style="width:48px">얼굴</th>
+        </tr></thead>
+        <tbody id="personnelBody"><tr><td colspan="10" class="empty-state">로딩 중...</td></tr></tbody>
+      </table></div>
     </div>
+  </div>
+</div>
 
-    <div id="record-tab" class="tab-content">
-      <div class="panel">
-        <div class="panel-header">
-          <span>Access Records</span>
-          <button class="btn-warning btn-sm" onclick="clearAllRecords()">🗑️ Clear All</button>
-        </div>
-        <div class="panel-body">
-          <div class="search-bar">
-            <input type="text" id="searchRecord" placeholder="🔍 Search by Name or UserID..." onkeyup="searchRecords()">
-            <button class="btn-primary" onclick="refreshRecords()">🔄 Refresh</button>
-          </div>
-          <div id="recordsContainer"></div>
-        </div>
+<!-- 출입기록 -->
+<div id="attendance-tab" class="tab-content">
+  <div class="panel">
+    <div class="panel-header">출입기록 검색</div>
+    <div class="panel-body">
+      <div class="form-grid">
+        <div class="form-group"><label>사용자 ID</label><input type="text" id="attUID" placeholder="사용자 ID"></div>
+        <div class="form-group"><label>이름</label><input type="text" id="attName" placeholder="이름"></div>
+        <div class="form-group"><label>단말기</label>
+          <select id="attDevice"><option value="">전체 단말기</option></select></div>
+        <div class="form-group"><label>시작일시</label><input type="datetime-local" id="attStart"></div>
+        <div class="form-group"><label>종료일시</label><input type="datetime-local" id="attEnd"></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn-success"   onclick="searchAttendance()">검색</button>
+        <button class="btn-secondary" onclick="clearAttSearch()">초기화</button>
+        <button class="btn-warning"   onclick="exportAttendance()">내보내기</button>
       </div>
     </div>
   </div>
+  <div class="panel">
+    <div class="panel-header" id="attHeader">출입 기록</div>
+    <div class="panel-body">
+      <div class="table-wrap"><table>
+        <thead><tr><th>시간</th><th>사용자 ID</th><th>이름</th>
+          <th>단말기 SN</th><th>기록 타입</th><th>체온</th><th>사진</th></tr></thead>
+        <tbody id="attBody"><tr><td colspan="7" class="empty-state">검색 조건을 입력하세요.</td></tr></tbody>
+      </table></div>
+      <div id="attPager" class="btn-group" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
 
-  <script src="app.js"></script>
+</div><!-- /container -->
+
+<!-- 사용자 모달 -->
+<div class="modal-overlay" id="personModal">
+  <div class="modal">
+    <h2 id="personModalTitle">사용자 추가</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>사용자 ID *</label><input type="text" id="mUid" maxlength="32"></div>
+      <div class="form-group"><label>이름 *</label><input type="text" id="mName" maxlength="64"></div>
+      <div class="form-group"><label>동 (Department)</label><input type="text" id="mDong" maxlength="64"></div>
+      <div class="form-group"><label>호 (Job)</label><input type="text" id="mHo" maxlength="64"></div>
+      <div class="form-group"><label>멤버 (IdentityCard)</label><input type="text" id="mMember" maxlength="64"></div>
+      <div class="form-group"><label>카드번호</label><input type="text" id="mCard" maxlength="64"></div>
+      <div class="form-group"><label>비밀번호</label><input type="password" id="mPass" maxlength="8"></div>
+      <div class="form-group"><label>출입 타입</label>
+        <select id="mAccess">
+          <option value="0">일반 사용자</option>
+          <option value="1">관리자</option>
+          <option value="2">블랙리스트</option>
+        </select>
+      </div>
+      <div class="form-group"><label>만료 일시</label><input type="datetime-local" id="mExpiry"></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:6px">얼굴 사진</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="mPhotoWrap" class="photo-placeholder">?</div>
+        <div>
+          <input type="file" id="mPhotoFile" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+          <div class="btn-group" style="flex-direction:column;gap:4px;align-items:flex-start">
+            <button class="btn-secondary" onclick="document.getElementById('mPhotoFile').click()">사진 선택</button>
+            <button class="btn-danger"    onclick="clearPhoto()">사진 제거</button>
+          </div>
+          <div id="mPhotoStatus" style="font-size:11px;color:#888;margin-top:5px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn-success"   onclick="savePerson()">저장</button>
+      <button class="btn-secondary" onclick="closePersonModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 단말기 설정 모달 -->
+<div class="modal-overlay" id="devSettingsModal">
+  <div class="modal" style="min-width:520px">
+    <h2 id="devSettingsTitle">단말기 설정</h2>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group"><label>단말기명</label><input type="text" id="dName"></div>
+      <div class="form-group"><label>위치</label><input type="text" id="dTag"></div>
+    </div>
+    <div class="btn-group" style="margin-bottom:14px">
+      <button class="btn-primary" onclick="saveDeviceInfo()">정보 저장</button>
+    </div>
+    <hr style="border:none;border-top:1px solid #eee;margin-bottom:12px">
+    <div class="btn-group" style="flex-wrap:wrap">
+      <button class="btn-secondary" onclick="devCmd('restart')">재시작</button>
+      <button class="btn-primary"   onclick="devCmd('opendoor')">문 열기</button>
+      <button class="btn-info"      onclick="openDeviceUserList()">사용자 정보</button>
+      <button class="btn-danger"    onclick="devCmd('deleteAllPeople')">사용자 전체삭제</button>
+      <button class="btn-danger"    onclick="devCmd('clearRecords')">로그 삭제</button>
+      <button class="btn-secondary" onclick="devCmd('repostRecord')">로그 가져오기</button>
+      <button class="btn-info"      onclick="devCmd('synctime')">시간 동기화</button>
+    </div>
+    <div class="log-box" id="deviceCmdLog" style="height:90px;margin-top:10px"></div>
+    <div class="btn-group" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn-secondary" onclick="closeDevSettings()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 단말기 사용자 목록 모달 -->
+<div class="modal-overlay" id="devUsersModal">
+  <div class="modal" style="min-width:640px">
+    <h2 id="devUsersTitle">단말기 사용자 정보</h2>
+    <div class="table-wrap" style="max-height:380px;overflow-y:auto"><table>
+      <thead><tr><th>UserID</th><th>이름</th><th>카드</th><th>얼굴</th><th>손바닥</th><th>만료일</th></tr></thead>
+      <tbody id="devUsersBody"><tr><td colspan="6" class="empty-state">로딩 중...</td></tr></tbody>
+    </table></div>
+    <div class="btn-group" style="justify-content:flex-end;margin-top:10px">
+      <button class="btn-secondary" onclick="closeDevUsers()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 배포 모달 -->
+<div class="modal-overlay" id="distributeModal">
+  <div class="modal" style="min-width:380px">
+    <h2>배포 대상 단말기 선택</h2>
+    <div id="distributeDevList" style="margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn-success"   onclick="executeDistribute()">배포</button>
+      <button class="btn-secondary" onclick="closeDistributeModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar">준비</div>
+<script src="app.js"></script>
 </body>
 </html>

@@ -1202,7 +1202,7 @@ public sealed class StateStore
         }
     }
 
-    public void QueueRemoteCommand(string deviceSn, bool restart = false, bool opendoor = false, 
+    public void QueueRemoteCommand(string deviceSn, bool restart = false, bool opendoor = false,
         bool closealarm = false, bool clearRecord = false, bool repostRecord = false, bool pushAllPeople = false)
     {
         lock (_sync)
@@ -1218,6 +1218,24 @@ public sealed class StateStore
                 PushAllPeople = pushAllPeople ? 1 : null
             };
             SaveState();
+        }
+    }
+
+    public void QueueSyncTime(string deviceSn, long unixTimestamp)
+    {
+        lock (_sync)
+        {
+            var device = GetOrCreateDevice(deviceSn);
+            device.PendingRemote = new PendingRemoteCommand { SetTime = unixTimestamp };
+            SaveState();
+        }
+    }
+
+    public List<string> GetAllDeviceSNs()
+    {
+        lock (_sync)
+        {
+            return _state.Devices.Keys.ToList();
         }
     }
 

@@ -1,869 +1,397 @@
-// Global state
-let currentTab = 'software';
-let devices = [];
-let discoveredDevices = [];
-let personnel = [];
-let departments = [];
-let records = [];
+﻿
+let devices=[],personnel=[],filteredPersonnel=[];
+let _devRowNumbers={},_devRowCounter=0;
+let _currentDeviceSN=null,_editingUserId=null,_photoBase64=null;
+let _attPage=1,_attTotal=0;
+const ATT_PAGE_SIZE=50;
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  setupTabSwitching();
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  setInterval(()=>{document.getElementById('headerTime').textContent=new Date().toLocaleString('ko-KR');},1000);
+  setInterval(refreshSystemInfo,15000);
   refreshSystemInfo();
+  setDefaultAttendanceDates();
 });
 
-// Tab switching
-function setupTabSwitching() {
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabName = tab.dataset.tab;
-      switchTab(tabName);
-    });
-  });
+function switchTab(n){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelector('[data-tab="'+n+'"']').classList.add('active');
+  document.getElementById(n+'-tab').classList.add('active');
+  if(n==='dashboard')refreshSystemInfo();
+  else if(n==='devices')refreshDevices();
+  else if(n==='personnel')refreshPersonnel();
+  else if(n==='attendance')populateAttDeviceCombo();
 }
 
-function switchTab(tabName) {
-  currentTab = tabName;
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-  document.getElementById(`${tabName}-tab`).classList.add('active');
+function setStatus(m,t=''){
+  const b=document.getElementById('statusBar');
+  b.textContent=m; b.className='status-bar'+(t?' '+t:'');
+  if(t==='ok')setTimeout(()=>{b.className='status-bar';b.textContent='준비';},4000);
+}
+function addLog(m){const b=document.getElementById('logBox');b.textContent+='['+new Date().toLocaleTimeString('ko-KR')+'] '+m+'\n';b.scrollTop=b.scrollHeight;}
+function clearLog(){document.getElementById('logBox').textContent='';}
 
-  if (tabName === 'software') refreshSystemInfo();
-  else if (tabName === 'device') refreshDevices();
-  else if (tabName === 'corporate') refreshDepartments();
-  else if (tabName === 'dooraccess') refreshPersonnel();
-  else if (tabName === 'attendance') refreshAttendance();
-  else if (tabName === 'record') refreshRecords();
+async function api(method,url,body){
+  const o={method,headers:{}};
+  if(body!=null){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
+  const r=await fetch(url,o);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+const apiGet=u=>api('GET',u);
+const apiPost=(u,b)=>api('POST',u,b??{});
+const apiDel=u=>api('DELETE',u);
+
+/* ── 대시보드 ── */
+async function refreshSystemInfo(){
+  try{
+    const d=await apiGet('/admin/system-info');
+    document.getElementById('statDevices').textContent=d.TotalDevices??'-';
+    document.getElementById('statOnline').textContent=d.OnlineDevices??'-';
+    document.getElementById('statPersonnel').textContent=d.TotalPeople??'-';
+    document.getElementById('statRecords').textContent=d.TotalRecords??'-';
+    document.getElementById('infoServerUrl').textContent=window.location.origin;
+    document.getElementById('infoDevices').textContent=d.TotalDevices??'-';
+    document.getElementById('infoPersonnel').textContent=d.TotalPeople??'-';
+    document.getElementById('infoRecords').textContent=d.TotalRecords??'-';
+  }catch(e){}
 }
 
-// Status message
-function showStatus(message, type = 'info') {
-  const alert = document.getElementById('statusAlert');
-  alert.className = `alert alert-${type}`;
-  alert.textContent = message;
-  alert.style.display = 'block';
-  setTimeout(() => alert.style.display = 'none', 5000);
-}
-
-// API helpers
-async function apiGet(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return await response.json();
-}
-
-async function apiPost(url, data) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return await response.json();
-}
-
-async function apiDelete(url) {
-  const response = await fetch(url, { method: 'DELETE' });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return await response.json();
-}
-
-// ===== DEVICE TAB =====
-async function autoSearchDevices() {
-  try {
-    showStatus('Searching for devices via broadcast...', 'info');
-    const response = await apiPost('/api/Device/Search', { SearchType: 'broadcast' });
-
-    if (response.result && response.content) {
-      discoveredDevices = response.content;
-      renderDiscoveredDevices();
-      showStatus(`Found ${discoveredDevices.length} device(s)`, 'success');
-    } else {
-      showStatus('No devices found', 'error');
-    }
-  } catch (error) {
-    showStatus('Search failed: ' + error.message, 'error');
-  }
-}
-
-function showNetworkScanDialog() {
-  document.getElementById('networkScanDialog').style.display = 'block';
-}
-
-function cancelNetworkScan() {
-  document.getElementById('networkScanDialog').style.display = 'none';
-}
-
-async function startNetworkScan() {
-  const subnet = document.getElementById('scanSubnet').value.trim();
-  if (!subnet) {
-    showStatus('Please enter subnet (e.g., 192.168.0)', 'error');
-    return;
-  }
-
-  try {
-    showStatus(`Scanning network ${subnet}.1-254...`, 'info');
-    cancelNetworkScan();
-
-    discoveredDevices = [];
-    renderDiscoveredDevices();
-
-    const response = await fetch('/api/Device/SearchStream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        SearchType: 'scan',
-        Subnet: subnet
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        break;
-      }
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split('\n\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const jsonStr = line.substring(6).trim();
-
-          if (jsonStr === '[DONE]') {
-            showStatus(`Scan complete: Found ${discoveredDevices.length} device(s)`, 'success');
-            continue;
-          }
-
-          try {
-            const device = JSON.parse(jsonStr);
-            discoveredDevices.push(device);
-            renderDiscoveredDevices();
-            showStatus(`Scanning... Found ${discoveredDevices.length} device(s) so far`, 'info');
-          } catch (e) {
-            console.error('Failed to parse device JSON:', jsonStr, e);
-          }
-        }
-      }
-    }
-
-    if (discoveredDevices.length === 0) {
-      showStatus('No devices found', 'error');
-    }
-  } catch (error) {
-    showStatus('Scan failed: ' + error.message, 'error');
-  }
-}
-
-function renderDiscoveredDevices() {
-  const container = document.getElementById('discoveredDevicesContainer');
-
-  if (!discoveredDevices.length) {
-    container.innerHTML = '<div class="empty-state">No devices discovered. Try Auto Search or Network Scan.</div>';
-    return;
-  }
-
-  const html = `
-    <h3 style="margin:20px 0 10px 0;">Discovered Devices</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>IP Address</th>
-          <th>Device SN</th>
-          <th>Device Name</th>
-          <th>Model</th>
-          <th>Firmware</th>
-          <th>HTTP Port</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${discoveredDevices.map(d => `
-          <tr>
-            <td><strong>${d.IpAddress}</strong></td>
-            <td>${d.DeviceSN}</td>
-            <td>${d.DeviceName}</td>
-            <td>${d.Model}</td>
-            <td>${d.FirmwareVersion}</td>
-            <td>${d.HttpPort}</td>
-            <td>
-              <button class="btn-success btn-sm" onclick="connectToDevice('${d.IpAddress}', ${d.HttpPort})">Connect</button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = html;
-}
-
-async function connectToDevice(ip, port) {
-  try {
-    showStatus(`Connecting to device at ${ip}:${port}...`, 'info');
-
-    // ������ ���Ͻø� ���� ����̽� ���� Ȯ��
-    const probeResponse = await apiPost('/api/Device/ProbeDevice', {
-      IpAddress: ip,
-      HttpPort: port
-    });
-
-    if (probeResponse.Code !== 0) {
-      throw new Error(probeResponse.Msg || 'Failed to probe device');
-    }
-
-    const deviceInfo = probeResponse.Data;
-    const deviceSN = deviceInfo.DeviceSN;
-    const deviceName = deviceInfo.DeviceName || 'Face Device';
-    const model = deviceInfo.Model || 'Unknown';
-    const firmware = deviceInfo.FirmwareVersion || 'Unknown';
-
-    // ������ ����̽� ���� ���� ����
-    const connectResponse = await apiPost('/api/Device/Connect', {
-      DeviceSN: deviceSN,
-      IpAddress: ip,
-      HttpPort: port,
-      DeviceName: deviceName,
-      Model: model,
-      FirmwareVersion: firmware
-    });
-
-    if (connectResponse.Code === 0) {
-      showStatus(`Successfully connected to ${deviceSN} at ${ip}:${port}`, 'success');
-      // ����� ����̽� ��� ���ΰ�ħ
-      await refreshDevices();
-    } else {
-      showStatus(`Connection failed: ${connectResponse.Msg}`, 'error');
-    }
-  } catch (error) {
-    showStatus(`Connection failed: ${error.message}`, 'error');
-  }
-}
-
-async function refreshDevices() {
-  try {
-    devices = await apiGet('/admin/devices');
+/* ── 단말기 ── */
+async function refreshDevices(){
+  try{
+    setStatus('단말기 목록 로딩 중...');
+    devices=await apiGet('/admin/devices')??[];
+    devices.forEach(d=>{if(!_devRowNumbers[d.SN])_devRowNumbers[d.SN]=++_devRowCounter;});
+    devices.sort((a,b)=>(_devRowNumbers[a.SN]||99)-(_devRowNumbers[b.SN]||99));
     renderDevices();
-    showStatus(`Loaded ${devices.length} connected device(s)`, 'success');
-  } catch (error) {
-    showStatus('Failed to load devices: ' + error.message, 'error');
-  }
+    setStatus('단말기 '+devices.length+'개 로드됨','ok');
+  }catch(e){setStatus('단말기 로드 실패: '+e.message,'err');addLog('ERROR: '+e.message);}
 }
+function renderDevices(){
+  const tb=document.getElementById('devicesBody');
+  if(!devices.length){tb.innerHTML='<tr><td colspan="8" class="empty-state">등록된 단말기가 없습니다.</td></tr>';return;}
+  const cut=new Date(Date.now()-5*60*1000);
+  tb.innerHTML=devices.map(d=>{
+    const no=_devRowNumbers[d.SN]??'-';
+    const on=d.LastKeepaliveAtUtc&&new Date(d.LastKeepaliveAtUtc)>=cut;
+    const bg=on?'<span class="badge badge-success">온라인</span>':'<span class="badge badge-danger">오프라인</span>';
+    return '<tr><td><input type="checkbox" class="chkDev" data-sn="'+esc(d.SN)+'">'+'</td>'
+      +'<td style="text-align:center">'+no+'</td>'
+      +'<td>'+esc(d.DeviceName??'')+'</td><td>'+esc(d.TagName??'')+'</td>'
+      +'<td style="font-size:11px">'+esc(d.SN)+'</td><td>'+esc(d.IpAddress??'')+'</td>'
+      +'<td>'+bg+'</td>'
+      +'<td><button onclick="openDevSettings(\''+esc(d.SN)+'\')" style="font-size:11px;padding:3px 8px" class="btn-primary">설정</button></td>'
+      +'</tr>';
+  }).join('');
+}
+function toggleAllDev(c){document.querySelectorAll('.chkDev').forEach(x=>x.checked=c.checked);}
+function getCheckedDevSNs(){return[...document.querySelectorAll('.chkDev:checked')].map(c=>c.dataset.sn);}
 
-function renderDevices() {
-  const container = document.getElementById('connectedDevicesContainer');
-  if (!devices.length) {
-    if (discoveredDevices.length === 0) {
-      container.innerHTML = '<div class="empty-state">No devices connected yet. Use Auto Search to discover devices.</div>';
-    } else {
-      container.innerHTML = '';
+async function autoSearchDevices(){
+  try{
+    setStatus('브로드캐스트 검색 중...');addLog('단말기 자동 검색 시작...');
+    const r=await apiPost('/api/Device/Search',{SearchType:'broadcast'});
+    const f=r.content??r.Data??[];
+    renderDiscovered(f);setStatus(f.length+'개 발견됨','ok');addLog('자동 검색 완료: '+f.length+'개');
+  }catch(e){setStatus('검색 실패: '+e.message,'err');addLog('검색 실패: '+e.message);}
+}
+function showNetworkScanDialog(){document.getElementById('networkScanDialog').style.display='block';}
+async function startNetworkScan(){
+  const s=document.getElementById('scanSubnet').value.trim();
+  if(!s){setStatus('서브넷을 입력하세요','err');return;}
+  document.getElementById('networkScanDialog').style.display='none';
+  setStatus(s+'.x 스캔 중...');addLog('네트워크 스캔 시작: '+s+'.1-254');
+  let found=[];renderDiscovered(found);
+  try{
+    const resp=await fetch('/api/Device/SearchStream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({SearchType:'scan',Subnet:s})});
+    const reader=resp.body.getReader();const dec=new TextDecoder();let buf='';
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n\n');buf=lines.pop()??'';
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        const sv=line.slice(6).trim();
+        if(sv==='[DONE]'){setStatus('스캔 완료: '+found.length+'개','ok');addLog('스캔 완료: '+found.length+'개');continue;}
+        try{found.push(JSON.parse(sv));renderDiscovered(found);}catch{}
+      }
     }
-    return;
-  }
-
-  const html = `
-    <h3 style="margin:20px 0 10px 0;">Connected Devices</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Device SN</th>
-          <th>IP Address</th>
-          <th>Device Name</th>
-          <th>Model</th>
-          <th>Last Keepalive</th>
-          <th>Add Pending</th>
-          <th>Delete Pending</th>
-          <th>Records</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${devices.map(d => `
-          <tr>
-            <td><strong>${d.SN}</strong></td>
-            <td>${d.IpAddress || '-'}:${d.HttpPort || 80}</td>
-            <td>${d.DeviceName || '-'}</td>
-            <td>${d.Model || '-'}</td>
-            <td>${d.LastKeepaliveAtUtc ? new Date(d.LastKeepaliveAtUtc).toLocaleString() : '-'}</td>
-            <td><span class="badge badge-info">${d.PendingAddPeopleCount || 0}</span></td>
-            <td><span class="badge badge-warning">${d.PendingDeletePeopleCount || 0}</span></td>
-            <td><span class="badge badge-success">${d.RecordCount || 0}</span></td>
-            <td>
-              <button class="btn-primary btn-sm" onclick="requestAddPeople('${d.SN}')">Sync People</button>
-              <button class="btn-secondary btn-sm" onclick="requestDeletePeople('${d.SN}')">Sync Delete</button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = html;
+  }catch(e){setStatus('스캔 실패: '+e.message,'err');}
+}
+function renderDiscovered(l){
+  const c=document.getElementById('discoveredContainer');
+  if(!l.length){c.innerHTML='<div class="empty-state">검색된 단말기가 없습니다.</div>';return;}
+  c.innerHTML='<h4 style="margin-bottom:8px;font-size:13px">발견된 단말기 ('+l.length+'개)</h4>'
+    +'<div class="table-wrap"><table>'
+    +'<thead><tr><th>IP</th><th>SN</th><th>단말기명</th><th>모델</th><th>펌웨어</th><th>포트</th><th></th></tr></thead>'
+    +'<tbody>'+l.map(d=>'<tr><td><b>'+d.IpAddress+'</b></td><td>'+(d.DeviceSN??'')+'</td><td>'+(d.DeviceName??'')+'</td>'
+      +'<td>'+(d.Model??'')+'</td><td>'+(d.FirmwareVersion??'')+'</td><td>'+(d.HttpPort??80)+'</td>'
+      +'<td><button class="btn-success" style="font-size:11px;padding:3px 8px" onclick="connectDevice(\''+d.IpAddress+'\',\''+(d.HttpPort??80)+'\')">연결</button></td></tr>').join('')
+    +'</tbody></table></div>';
+}
+async function connectDevice(ip,port){
+  try{
+    setStatus(ip+':'+port+' 연결 중...');
+    const p=await apiPost('/api/Device/ProbeDevice',{IpAddress:ip,HttpPort:parseInt(port)});
+    if(p.Code!==0)throw new Error(p.Msg||'탐색 실패');
+    const di=p.Data;
+    const r=await apiPost('/api/Device/Connect',{DeviceSN:di.DeviceSN,IpAddress:ip,HttpPort:parseInt(port),DeviceName:di.DeviceName??'Face Device',Model:di.Model,FirmwareVersion:di.FirmwareVersion});
+    if(r.Code!==0)throw new Error(r.Msg||'연결 실패');
+    setStatus(di.DeviceSN+' 연결 완료','ok');addLog('단말기 연결: '+di.DeviceSN+' ('+ip+')');
+    await refreshDevices();
+  }catch(e){setStatus('연결 실패: '+e.message,'err');addLog('연결 실패: '+e.message);}
+}
+async function pullSelectedDevicePeople(){
+  const sns=getCheckedDevSNs();if(!sns.length){setStatus('단말기를 선택하세요','err');return;}
+  for(const sn of sns){try{await apiPost('/admin/devices/'+sn+'/pull-all-people',{});addLog('['+sn+'] 사용자 가져오기 명령 예약');}catch(e){addLog('['+sn+'] 실패: '+e.message);}}
+  setStatus('사용자 가져오기 명령 예약 완료','ok');
+}
+async function distributeToDevices(){
+  const u=getCheckedPersonUIDs();if(!u.length){setStatus('배포할 사용자를 사용자 탭에서 선택하세요','err');return;}
+  if(!devices.length)await refreshDevices();showDistributeModal(u);
+}
+function showDistributeModal(u){
+  if(!devices.length){setStatus('단말기 목록을 먼저 로드하세요','err');return;}
+  const l=document.getElementById('distributeDevList');
+  l.innerHTML=devices.map(d=>'<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0">'
+    +'<input type="checkbox" class="chkDistDev" value="'+esc(d.SN)+'" checked>'
+    +'<span><b>'+esc(d.DeviceName??d.SN)+'</b> <span style="color:#999;font-size:11px">('+esc(d.SN)+')</span></span></label>').join('');
+  l.dataset.uids=JSON.stringify(u);
+  document.getElementById('distributeModal').classList.add('open');
+}
+async function executeDistribute(){
+  const sns=[...document.querySelectorAll('.chkDistDev:checked')].map(c=>c.value);
+  const u=JSON.parse(document.getElementById('distributeDevList').dataset.uids||'[]');
+  if(!sns.length){setStatus('대상 단말기를 선택하세요','err');return;}
+  closeDistributeModal();
+  try{await apiPost('/admin/people/distribute-to-devices',{PersonIds:u,TargetSNs:sns});setStatus('배포 완료','ok');addLog('배포: '+u.length+'명 -> '+sns.length+'개 단말기');}
+  catch(e){setStatus('배포 실패: '+e.message,'err');}
+}
+function closeDistributeModal(){document.getElementById('distributeModal').classList.remove('open');}
+async function syncTimeSelected(){
+  const sns=getCheckedDevSNs();if(!sns.length){setStatus('단말기를 선택하세요','err');return;}
+  for(const sn of sns){try{await apiPost('/admin/devices/'+sn+'/remote-command',{SN:sn,CommandType:'synctime'});addLog('['+sn+'] 시간 동기화 명령 예약');}catch(e){addLog('['+sn+'] 실패: '+e.message);}}
+  setStatus('시간 동기화 명령 예약 완료','ok');
+}
+async function removeSelectedDevices(){
+  const sns=getCheckedDevSNs();if(!sns.length){setStatus('제거할 단말기를 선택하세요','err');return;}
+  if(!confirm('선택한 '+sns.length+'개 단말기를 제거하시겠습니까?'))return;
+  for(const sn of sns){try{await apiDel('/admin/devices/'+sn);addLog('['+sn+'] 단말기 제거');}catch(e){addLog('['+sn+'] 제거 실패: '+e.message);}}
+  await refreshDevices();setStatus('제거 완료','ok');
 }
 
-async function requestAddPeople(sn) {
-  try {
-    await apiPost(`/admin/devices/${encodeURIComponent(sn)}/request-add-people`, {});
-    showStatus(`Add People request queued for ${sn}`, 'success');
-    refreshDevices();
-  } catch (error) {
-    showStatus('Failed: ' + error.message, 'error');
-  }
+/* ── 단말기 설정 모달 ── */
+function openDevSettings(sn){
+  _currentDeviceSN=sn;const d=devices.find(x=>x.SN===sn)??{SN:sn};
+  document.getElementById('devSettingsTitle').textContent='단말기 설정 - '+(d.DeviceName??sn);
+  document.getElementById('dName').value=d.DeviceName??'';
+  document.getElementById('dTag').value=d.TagName??'';
+  document.getElementById('deviceCmdLog').textContent='';
+  document.getElementById('devSettingsModal').classList.add('open');
 }
-
-async function requestDeletePeople(sn) {
-  try {
-    await apiPost(`/admin/devices/${encodeURIComponent(sn)}/request-delete-people`, {});
-    showStatus(`Delete People request queued for ${sn}`, 'success');
-    refreshDevices();
-  } catch (error) {
-    showStatus('Failed: ' + error.message, 'error');
-  }
+function closeDevSettings(){document.getElementById('devSettingsModal').classList.remove('open');}
+async function saveDeviceInfo(){
+  const sn=_currentDeviceSN;
+  try{await apiPost('/admin/devices/'+sn+'/update-info',{SN:sn,DeviceName:document.getElementById('dName').value,TagName:document.getElementById('dTag').value});appendDevLog('저장 완료');await refreshDevices();}
+  catch(e){appendDevLog('저장 실패: '+e.message);}
 }
-
-// ===== CORPORATE TAB =====
-async function refreshDepartments() {
-  try {
-    departments = await apiGet('/admin/departments');
-    renderDepartments();
-    updateDepartmentDropdown();
-    showStatus(`Loaded ${departments.length} department(s)`, 'success');
-  } catch (error) {
-    showStatus('Failed to load departments: ' + error.message, 'error');
-  }
+async function devCmd(cmd){
+  const sn=_currentDeviceSN;
+  try{appendDevLog(cmd+' 명령 전송 중...');await apiPost('/admin/devices/'+sn+'/remote-command',{SN:sn,CommandType:cmd});appendDevLog(cmd+' 명령 예약 완료');addLog('['+sn+'] '+cmd);}
+  catch(e){appendDevLog('실패: '+e.message);}
 }
-
-function renderDepartments() {
-  const container = document.getElementById('departmentsContainer');
-  if (!departments.length) {
-    container.innerHTML = '<div class="empty-state">No departments created yet.</div>';
-    return;
-  }
-
-  const table = `
-    <table>
-      <thead>
-        <tr>
-          <th>Department ID</th>
-          <th>Department Name</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${departments.map(d => `
-          <tr>
-            <td><strong>${d.DepartmentID}</strong></td>
-            <td>${d.Name}</td>
-            <td>
-              <button class="btn-danger btn-sm" onclick="deleteDepartment('${d.DepartmentID}')">Delete</button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = table;
+function appendDevLog(m){const b=document.getElementById('deviceCmdLog');b.textContent+='['+new Date().toLocaleTimeString('ko-KR')+'] '+m+'\n';b.scrollTop=b.scrollHeight;}
+async function openDeviceUserList(){
+  const sn=_currentDeviceSN;
+  document.getElementById('devUsersTitle').textContent='단말기 사용자 정보 - '+sn;
+  document.getElementById('devUsersModal').classList.add('open');
+  document.getElementById('devUsersBody').innerHTML='<tr><td colspan="6" class="empty-state">로딩 중...</td></tr>';
+  try{
+    const l=await apiGet('/admin/devices/'+sn+'/people');
+    const arr=Array.isArray(l)?l:(l.Data??[]);
+    if(!arr.length){document.getElementById('devUsersBody').innerHTML='<tr><td colspan="6" class="empty-state">사용자 없음</td></tr>';return;}
+    document.getElementById('devUsersBody').innerHTML=arr.map(p=>{
+      const exp=p.ExpirationDate>0?new Date(p.ExpirationDate*1000).toLocaleDateString('ko-KR'):'무제한';
+      return '<tr><td>'+esc(p.UserID)+'</td><td>'+esc(p.Name)+'</td>'
+        +'<td>'+(p.CardNum&&p.CardNum!=='0'?'O':'-')+'</td>'
+        +'<td>'+(p.Photo?'O':'-')+'</td>'
+        +'<td>'+((p.Palmveins&&p.Palmveins.length>0)?'O':'-')+'</td>'
+        +'<td>'+exp+'</td></tr>';
+    }).join('');
+  }catch(e){document.getElementById('devUsersBody').innerHTML='<tr><td colspan="6" class="empty-state">로드 실패: '+e.message+'</td></tr>';}
 }
+function closeDevUsers(){document.getElementById('devUsersModal').classList.remove('open');}
 
-function showAddDepartmentForm() {
-  document.getElementById('addDepartmentForm').style.display = 'block';
-  document.getElementById('deptId').value = '';
-  document.getElementById('deptName').value = '';
+/* ── 사용자 ── */
+async function refreshPersonnel(){
+  try{
+    setStatus('사용자 목록 로딩 중...');
+    personnel=await apiGet('/admin/people')??[];
+    filteredPersonnel=[...personnel];
+    renderPersonnel();setStatus('사용자 '+personnel.length+'명 로드됨','ok');
+  }catch(e){setStatus('사용자 로드 실패: '+e.message,'err');}
 }
-
-function cancelAddDepartment() {
-  document.getElementById('addDepartmentForm').style.display = 'none';
-}
-
-async function saveDepartment() {
-  const deptId = document.getElementById('deptId').value.trim();
-  const deptName = document.getElementById('deptName').value.trim();
-
-  if (!deptId || !deptName) {
-    showStatus('Please fill in all required fields', 'error');
-    return;
-  }
-
-  try {
-    await apiPost('/admin/departments', {
-      DepartmentID: deptId,
-      Name: deptName
-    });
-    showStatus('Department saved successfully', 'success');
-    cancelAddDepartment();
-    refreshDepartments();
-  } catch (error) {
-    showStatus('Failed to save department: ' + error.message, 'error');
-  }
-}
-
-async function deleteDepartment(id) {
-  if (!confirm(`Delete department ${id}?`)) return;
-
-  try {
-    await apiDelete(`/admin/departments/${encodeURIComponent(id)}`);
-    showStatus('Department deleted successfully', 'success');
-    refreshDepartments();
-  } catch (error) {
-    showStatus('Failed to delete department: ' + error.message, 'error');
-  }
-}
-
-function updateDepartmentDropdown() {
-  const select = document.getElementById('userDepartment');
-  select.innerHTML = '<option value="">-- Select Department --</option>' +
-    departments.map(d => `<option value="${d.Name}">${d.Name}</option>`).join('');
-}
-
-// ===== PERSONNEL TAB =====
-async function refreshPersonnel() {
-  try {
-    personnel = await apiGet('/admin/people');
-    renderPersonnel();
-    showStatus(`Loaded ${personnel.length} personnel`, 'success');
-  } catch (error) {
-    showStatus('Failed to load personnel: ' + error.message, 'error');
-  }
-}
-
-function renderPersonnel() {
-  const container = document.getElementById('personnelContainer');
-  const searchTerm = document.getElementById('searchPerson')?.value.toLowerCase() || '';
-
-  const filtered = searchTerm ? personnel.filter(p => 
-    p.UserID.toLowerCase().includes(searchTerm) ||
-    p.Name.toLowerCase().includes(searchTerm) ||
-    (p.CardNum && p.CardNum.toLowerCase().includes(searchTerm))
-  ) : personnel;
-
-  if (!filtered.length) {
-    container.innerHTML = '<div class="empty-state">No personnel found.</div>';
-    return;
-  }
-
-  const accessTypeLabel = (type) => {
-    switch(type) {
-      case 1: return '<span class="badge badge-warning">Admin</span>';
-      case 2: return '<span class="badge badge-danger">Blacklist</span>';
-      default: return '<span class="badge badge-success">Normal</span>';
-    }
-  };
-
-  const table = `
-    <table>
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Name</th>
-          <th>Department</th>
-          <th>Job</th>
-          <th>Card Number</th>
-          <th>Access Type</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${filtered.map(p => `
-          <tr>
-            <td><strong>${p.UserID}</strong></td>
-            <td>${p.Name || '-'}</td>
-            <td>${p.Department || '-'}</td>
-            <td>${p.Job || '-'}</td>
-            <td>${p.CardNum || '-'}</td>
-            <td>${accessTypeLabel(p.AccessType)}</td>
-            <td>
-              <button class="btn-danger btn-sm" onclick="deletePerson('${p.UserID}')">Delete</button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = table;
-}
-
-function searchPersonnel() {
+function filterPersonnel(){
+  const q=document.getElementById('searchPerson').value.trim().toLowerCase();
+  filteredPersonnel=q?personnel.filter(p=>(p.Name||'').toLowerCase().includes(q)||(p.UserID||'').toLowerCase().includes(q)||(p.CardNum||'').toLowerCase().includes(q)):[...personnel];
   renderPersonnel();
 }
-
-function showAddPersonForm() {
-  document.getElementById('addPersonForm').style.display = 'block';
-  document.getElementById('userId').value = '';
-  document.getElementById('userName').value = '';
-  document.getElementById('userDepartment').value = '';
-  document.getElementById('userJob').value = '';
-  document.getElementById('userCardNum').value = '';
-  document.getElementById('userPassword').value = '';
-  document.getElementById('userAccessType').value = '0';
-
-  if (departments.length === 0) {
-    refreshDepartments();
-  }
+function renderPersonnel(){
+  const tb=document.getElementById('personnelBody');
+  if(!filteredPersonnel.length){tb.innerHTML='<tr><td colspan="10" class="empty-state">사용자가 없습니다.</td></tr>';return;}
+  tb.innerHTML=filteredPersonnel.map(p=>{
+    const card=(p.CardNum&&p.CardNum!=='0')?'O':'-';
+    const pass=p.Password?'****':'-';
+    const fp=(p.Fingerprints&&p.Fingerprints.length>0)?'O':'-';
+    const palm=(p.Palmveins&&p.Palmveins.length>0)?'O':'-';
+    const face=p.Photo?'O':'-';
+    return '<tr data-uid="'+esc(p.UserID)+'"><td><input type="checkbox" class="chkPerson" data-uid="'+esc(p.UserID)+'">'+'</td>'
+      +'<td>'+esc(p.Department??'')+'</td><td>'+esc(p.Job??'')+'</td><td>'+esc(p.IdentityCard??'')+'</td>'
+      +'<td><b>'+esc(p.Name)+'</b> <span style="color:#999;font-size:11px">('+esc(p.UserID)+')</span></td>'
+      +'<td style="text-align:center">'+card+'</td><td style="text-align:center">'+pass+'</td>'
+      +'<td style="text-align:center">'+fp+'</td><td style="text-align:center">'+palm+'</td>'
+      +'<td style="text-align:center">'+face+'</td></tr>';
+  }).join('');
+  document.querySelectorAll('#personnelBody tr[data-uid]').forEach(r=>r.addEventListener('dblclick',()=>openEditPerson(r.dataset.uid)));
+}
+function toggleAllPerson(c){document.querySelectorAll('.chkPerson').forEach(x=>x.checked=c.checked);}
+function getCheckedPersonUIDs(){return[...document.querySelectorAll('.chkPerson:checked')].map(c=>c.dataset.uid);}
+async function reloadFromFiles(){
+  try{const r=await apiPost('/admin/people/reload-from-files',{});setStatus('파일에서 불러오기 완료','ok');addLog('파일 불러오기: '+(r.Message??JSON.stringify(r)));await refreshPersonnel();}
+  catch(e){setStatus('불러오기 실패: '+e.message,'err');}
+}
+async function distributePersonnel(){
+  const u=getCheckedPersonUIDs();if(!u.length){setStatus('배포할 사용자를 선택하세요','err');return;}
+  if(!devices.length)await refreshDevices();showDistributeModal(u);
+}
+function showAddPersonModal(){_editingUserId=null;_photoBase64=null;clearPersonModal();document.getElementById('personModalTitle').textContent='사용자 추가';document.getElementById('mUid').disabled=false;document.getElementById('personModal').classList.add('open');}
+async function openEditPerson(uid){
+  if(!uid){const u=getCheckedPersonUIDs();if(u.length!==1){setStatus('수정할 사용자를 1명 선택하세요','err');return;}uid=u[0];}
+  _editingUserId=uid;_photoBase64=null;clearPersonModal();
+  document.getElementById('personModalTitle').textContent='사용자 수정';
+  document.getElementById('mUid').disabled=true;
+  try{
+    const r=await apiPost('/api/People/GetDetail',{UserID:uid});const p=r.Data??r;
+    document.getElementById('mUid').value=p.UserID??'';
+    document.getElementById('mName').value=p.Name??'';
+    document.getElementById('mDong').value=p.Department??'';
+    document.getElementById('mHo').value=p.Job??'';
+    document.getElementById('mMember').value=p.IdentityCard??'';
+    document.getElementById('mCard').value=(p.CardNum&&p.CardNum!=='0')?p.CardNum:'';
+    document.getElementById('mPass').value=p.Password??'';
+    document.getElementById('mAccess').value=p.AccessType??0;
+    if(p.ExpirationDate>0)document.getElementById('mExpiry').value=new Date(p.ExpirationDate*1000).toISOString().slice(0,16);
+    if(p.Photo){_photoBase64=p.Photo;const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src='data:image/jpeg;base64,'+p.Photo;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent='기존 사진 있음';}
+  }catch(e){setStatus('사용자 정보 로드 실패: '+e.message,'err');return;}
+  document.getElementById('personModal').classList.add('open');
+}
+function editSelectedPerson(){openEditPerson(null);}
+function clearPersonModal(){
+  ['mUid','mName','mDong','mHo','mMember','mCard','mPass','mExpiry'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('mAccess').value='0';document.getElementById('mPhotoStatus').textContent='';document.getElementById('mPhotoFile').value='';_photoBase64=null;
+  const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}
+}
+function closePersonModal(){document.getElementById('personModal').classList.remove('open');}
+function previewPhoto(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{const data=e.target.result;_photoBase64=data.split(',')[1];const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src=data;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent=f.name+' ('+(f.size/1024).toFixed(1)+'KB)';};r.readAsDataURL(f);
+}
+function clearPhoto(){_photoBase64=null;document.getElementById('mPhotoFile').value='';document.getElementById('mPhotoStatus').textContent='';const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}}
+async function savePerson(){
+  const uid=document.getElementById('mUid').value.trim();const name=document.getElementById('mName').value.trim();
+  if(!uid||!name){setStatus('사용자 ID와 이름은 필수입니다','err');return;}
+  let exp=0;const ev=document.getElementById('mExpiry').value;if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
+  const p={UserID:uid,Name:name,Department:document.getElementById('mDong').value.trim(),Job:document.getElementById('mHo').value.trim(),IdentityCard:document.getElementById('mMember').value.trim(),CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:parseInt(document.getElementById('mAccess').value)||0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??''};
+  try{
+    if(_editingUserId){const r=await apiPost('/api/People/Update',p);if(r.Code!==0&&r.Success!==1)throw new Error(r.Msg??'수정 실패');setStatus('사용자 수정 완료','ok');addLog('사용자 수정: '+uid);}
+    else{const r=await apiPost('/api/People/New',p);if(r.Code!==0&&r.Success!==1)throw new Error(r.Msg??'추가 실패');setStatus('사용자 추가 완료','ok');addLog('사용자 추가: '+uid);}
+    closePersonModal();await refreshPersonnel();
+  }catch(e){setStatus('저장 실패: '+e.message,'err');addLog('저장 실패: '+e.message);}
+}
+async function deleteSelectedPersonnel(){
+  const u=getCheckedPersonUIDs();if(!u.length){setStatus('삭제할 사용자를 선택하세요','err');return;}
+  const names=u.map(id=>personnel.find(x=>x.UserID===id)?.Name??id);
+  if(!confirm(names.join(', ')+' ('+u.length+'명)을 삭제하시겠습니까?'))return;
+  let ok=0,fail=0;
+  for(const id of u){try{const r=await apiPost('/api/People/Delete',{UserID:id});if(r.Code===0||r.Success===1)ok++;else fail++;}catch{fail++;}}
+  setStatus('삭제: '+ok+'명 성공'+(fail>0?', '+fail+'명 실패':''),ok>0?'ok':'err');addLog('삭제: 성공='+ok+', 실패='+fail);
+  await refreshPersonnel();
 }
 
-function cancelAddPerson() {
-  document.getElementById('addPersonForm').style.display = 'none';
+/* ── 출입기록 ── */
+function setDefaultAttendanceDates(){
+  const n=new Date();const s=new Date(n);s.setHours(0,0,0,0);
+  const pad=x=>String(x).padStart(2,'0');
+  const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+  document.getElementById('attEnd').value=fmt(n);document.getElementById('attStart').value=fmt(s);
+}
+async function populateAttDeviceCombo(){
+  const sel=document.getElementById('attDevice');const prev=sel.value;
+  sel.innerHTML='<option value="">전체 단말기</option>';
+  try{const devs=await apiGet('/admin/devices')??[];devs.forEach(d=>{const o=document.createElement('option');o.value=d.SN;o.textContent=(d.DeviceName??d.SN)+' ('+d.SN+')';sel.appendChild(o);});if(prev)sel.value=prev;}catch{}
+}
+async function searchAttendance(page=1){
+  _attPage=page;
+  const req={PageIndex:page,PageSize:ATT_PAGE_SIZE};
+  const uid=document.getElementById('attUID').value.trim();const name=document.getElementById('attName').value.trim();
+  const sn=document.getElementById('attDevice').value;const st=document.getElementById('attStart').value;const et=document.getElementById('attEnd').value;
+  if(uid)req.UserID=uid;if(name)req.UserName=name;if(sn)req.DeviceSN=sn;
+  if(st)req.StartTime=new Date(st).toISOString();if(et)req.EndTime=new Date(et).toISOString();
+  try{
+    setStatus('출입기록 검색 중...');
+    const r=await apiPost('/api/Attendance/Search',req);
+    const recs=r.Data?.Records??r.Records??[];
+    _attTotal=r.Data?.TotalCount??r.TotalCount??recs.length;
+    document.getElementById('attHeader').textContent='출입 기록 (총 '+_attTotal+'건)';
+    renderAttendance(recs);renderAttPager();setStatus(_attTotal+'건 검색됨','ok');
+  }catch(e){setStatus('검색 실패: '+e.message,'err');}
+}
+function renderAttendance(recs){
+  const tb=document.getElementById('attBody');
+  if(!recs.length){tb.innerHTML='<tr><td colspan="7" class="empty-state">기록 없음</td></tr>';return;}
+  tb.innerHTML=recs.map(r=>{
+    const ph=r.PhotoUrl?'<img src="'+r.PhotoUrl+'" style="height:36px;border-radius:3px" onerror="this.style.display=\'none\'">'  :'-';
+    const tl=r.RecordType===1?'<span class="badge badge-success">인식</span>':r.RecordType===2?'<span class="badge badge-info">도어센서</span>':'<span class="badge badge-secondary">시스템</span>';
+    return '<tr><td>'+esc(r.RecordTime??'')+'</td><td>'+esc(r.UserID??'')+'</td><td>'+esc(r.UserName??'')+'</td>'
+      +'<td style="font-size:11px">'+esc(r.DeviceSN??'')+'</td><td>'+tl+'</td>'
+      +'<td>'+(r.Temperature?r.Temperature+'℃':'-')+'</td><td>'+ph+'</td></tr>';
+  }).join('');
+}
+function renderAttPager(){
+  const tp=Math.ceil(_attTotal/ATT_PAGE_SIZE);const pg=document.getElementById('attPager');
+  if(tp<=1){pg.innerHTML='';return;}
+  let h='';
+  if(_attPage>1)h+='<button class="btn-secondary" onclick="searchAttendance('+(_attPage-1)+')">이전</button>';
+  h+='<span style="font-size:12px;color:#666">'+_attPage+' / '+tp+' 페이지</span>';
+  if(_attPage<tp)h+='<button class="btn-secondary" onclick="searchAttendance('+(_attPage+1)+')">다음</button>';
+  pg.innerHTML=h;
+}
+function clearAttSearch(){
+  document.getElementById('attUID').value='';document.getElementById('attName').value='';document.getElementById('attDevice').value='';
+  setDefaultAttendanceDates();
+  document.getElementById('attBody').innerHTML='<tr><td colspan="7" class="empty-state">검색 조건을 입력하세요.</td></tr>';
+  document.getElementById('attHeader').textContent='출입 기록';document.getElementById('attPager').innerHTML='';
+}
+async function exportAttendance(){
+  try{
+    const req={PageIndex:1,PageSize:9999};
+    const uid=document.getElementById('attUID').value.trim();const name=document.getElementById('attName').value.trim();
+    const sn=document.getElementById('attDevice').value;const st=document.getElementById('attStart').value;const et=document.getElementById('attEnd').value;
+    if(uid)req.UserID=uid;if(name)req.UserName=name;if(sn)req.DeviceSN=sn;
+    if(st)req.StartTime=new Date(st).toISOString();if(et)req.EndTime=new Date(et).toISOString();
+    const r=await apiPost('/api/Attendance/Search',req);
+    const recs=r.Data?.Records??r.Records??[];
+    const hdr=['시간','사용자ID','이름','단말기SN','기록타입','체온'];
+    const rows=recs.map(x=>[x.RecordTime,x.UserID,x.UserName,x.DeviceSN,x.RecordType,x.Temperature??''].join('\t'));
+    const text=[hdr.join('\t'),...rows].join('\n');
+    const blob=new Blob(['\uFEFF'+text],{type:'text/tab-separated-values;charset=utf-8'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    a.href=url;a.download='attendance_'+new Date().toISOString().slice(0,10)+'.tsv';a.click();URL.revokeObjectURL(url);
+    setStatus(recs.length+'건 내보내기 완료','ok');
+  }catch(e){setStatus('내보내기 실패: '+e.message,'err');}
 }
 
-async function savePerson() {
-  const userId = document.getElementById('userId').value.trim();
-  const userName = document.getElementById('userName').value.trim();
-
-  if (!userId || !userName) {
-    showStatus('User ID and Name are required', 'error');
-    return;
-  }
-
-  const personData = {
-    UserID: userId,
-    Name: userName,
-    Department: document.getElementById('userDepartment').value,
-    Job: document.getElementById('userJob').value.trim(),
-    CardNum: document.getElementById('userCardNum').value.trim(),
-    Password: document.getElementById('userPassword').value.trim(),
-    AccessType: parseInt(document.getElementById('userAccessType').value)
-  };
-
-  try {
-    await apiPost('/admin/people', personData);
-    showStatus('Personnel saved successfully', 'success');
-    cancelAddPerson();
-    refreshPersonnel();
-  } catch (error) {
-    showStatus('Failed to save personnel: ' + error.message, 'error');
-  }
-}
-
-async function deletePerson(userId) {
-  if (!confirm(`Delete personnel ${userId}?`)) return;
-
-  try {
-    await apiDelete(`/admin/people/${encodeURIComponent(userId)}`);
-    showStatus('Personnel deleted successfully', 'success');
-    refreshPersonnel();
-  } catch (error) {
-    showStatus('Failed to delete personnel: ' + error.message, 'error');
-  }
-}
-
-// ===== RECORD TAB =====
-async function refreshRecords() {
-  try {
-    // Get all devices and extract records
-    const devicesData = await apiGet('/admin/devices');
-    records = [];
-    for (const device of devicesData) {
-      const details = await apiGet(`/admin/devices/${encodeURIComponent(device.SN)}`);
-      if (details.Records) {
-        records.push(...details.Records.map(r => ({...r, DeviceSN: device.SN})));
-      }
-    }
-    renderRecords();
-    showStatus(`Loaded ${records.length} record(s)`, 'success');
-  } catch (error) {
-    showStatus('Failed to load records: ' + error.message, 'error');
-  }
-}
-
-function renderRecords() {
-  const container = document.getElementById('recordsContainer');
-  const searchTerm = document.getElementById('searchRecord')?.value.toLowerCase() || '';
-
-  const filtered = searchTerm ? records.filter(r => {
-    const detail = r.RecordDetail;
-    if (!detail) return false;
-    return (detail.UserID && detail.UserID.toLowerCase().includes(searchTerm)) ||
-           (detail.Name && detail.Name.toLowerCase().includes(searchTerm));
-  }) : records;
-
-  if (!filtered.length) {
-    container.innerHTML = '<div class="empty-state">No records found.</div>';
-    return;
-  }
-
-  const table = `
-    <table>
-      <thead>
-        <tr>
-          <th>Device SN</th>
-          <th>User ID</th>
-          <th>Name</th>
-          <th>Record Type</th>
-          <th>Record Date</th>
-          <th>Received At</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${filtered.map(r => {
-          const detail = r.RecordDetail || {};
-          const recordDate = detail.RecordDate ? new Date(detail.RecordDate * 1000).toLocaleString() : '-';
-          return `
-            <tr>
-              <td>${r.DeviceSN}</td>
-              <td>${detail.UserID || '-'}</td>
-              <td>${detail.Name || '-'}</td>
-              <td><span class="badge badge-info">${detail.RecordType || '-'}</span></td>
-              <td>${recordDate}</td>
-              <td>${new Date(r.ReceivedAtUtc).toLocaleString()}</td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = table;
-}
-
-function searchRecords() {
-  renderRecords();
-}
-
-async function clearAllRecords() {
-  if (!confirm('Are you sure you want to clear all records?')) return;
-
-  showStatus('Clear all records feature not yet implemented', 'error');
-}
-
-// ===== SYSTEM TAB =====
-async function refreshSystemInfo() {
-  try {
-    const devicesData = await apiGet('/admin/devices');
-    const peopleData = await apiGet('/admin/people');
-    const deptData = await apiGet('/admin/departments');
-
-    document.getElementById('totalDevices').textContent = devicesData.length;
-    document.getElementById('totalPersonnel').textContent = peopleData.length;
-    document.getElementById('totalDepartments').textContent = deptData.length;
-
-    let totalRecords = 0;
-    for (const device of devicesData) {
-      totalRecords += device.RecordCount || 0;
-    }
-    document.getElementById('totalRecords').textContent = totalRecords;
-
-    showStatus('System information refreshed', 'success');
-  } catch (error) {
-    showStatus('Failed to load system info: ' + error.message, 'error');
-  }
-}
-
-// ===== ATTENDANCE TAB =====
-let attendanceRecords = [];
-
-async function refreshAttendance() {
-  // Refresh departments dropdown
-  try {
-    const deptData = await apiGet('/admin/departments');
-    const select = document.getElementById('attendanceDepartment');
-    select.innerHTML = '<option value="">All Departments</option>';
-    deptData.forEach(dept => {
-      const option = document.createElement('option');
-      option.value = dept.DepartmentID;
-      option.textContent = dept.DepartmentName;
-      select.appendChild(option);
-    });
-  } catch (error) {
-    console.error('Failed to load departments:', error);
-  }
-
-  // Load today's attendance by default
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-  document.getElementById('attendanceStartTime').value = formatDateTimeLocal(startOfDay);
-  document.getElementById('attendanceEndTime').value = formatDateTimeLocal(endOfDay);
-
-  await searchAttendance();
-}
-
-async function searchAttendance() {
-  try {
-    const userID = document.getElementById('attendanceUserID').value.trim();
-    const userName = document.getElementById('attendanceUserName').value.trim();
-    const departmentID = document.getElementById('attendanceDepartment').value;
-    const startTime = document.getElementById('attendanceStartTime').value;
-    const endTime = document.getElementById('attendanceEndTime').value;
-
-    const request = {
-      UserID: userID || undefined,
-      UserName: userName || undefined,
-      DepartmentID: departmentID || undefined,
-      StartTime: startTime ? new Date(startTime).toISOString() : undefined,
-      EndTime: endTime ? new Date(endTime).toISOString() : undefined,
-      PageIndex: 1,
-      PageSize: 1000
-    };
-
-    const response = await apiPost('/api/Attendance/Search', request);
-    if (response.Code === 0) {
-      attendanceRecords = response.Data.DataList || [];
-      renderAttendanceRecords();
-      showStatus(`Found ${attendanceRecords.length} attendance record(s)`, 'success');
-    } else {
-      showStatus('Search failed: ' + response.Msg, 'error');
-    }
-  } catch (error) {
-    showStatus('Failed to search attendance: ' + error.message, 'error');
-  }
-}
-
-function renderAttendanceRecords() {
-  const container = document.getElementById('attendanceContainer');
-
-  if (attendanceRecords.length === 0) {
-    container.innerHTML = '<div class="empty-state">No attendance records found</div>';
-    return;
-  }
-
-  const html = `
-    <table>
-      <thead>
-        <tr>
-          <th>User ID</th>
-          <th>Name</th>
-          <th>Department</th>
-          <th>Record Time</th>
-          <th>Device SN</th>
-          <th>Type</th>
-          <th>Temperature</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${attendanceRecords.map(record => `
-          <tr>
-            <td>${escapeHtml(record.UserID || '-')}</td>
-            <td>${escapeHtml(record.UserName || '-')}</td>
-            <td>${escapeHtml(record.DepartmentName || '-')}</td>
-            <td>${escapeHtml(record.RecordTime || '-')}</td>
-            <td>${escapeHtml(record.DeviceSN || '-')}</td>
-            <td>${getRecordTypeLabel(record.RecordType)}</td>
-            <td>${record.Temperature ? escapeHtml(record.Temperature) + '��C' : '-'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = html;
-}
-
-async function getAttendanceStatistics() {
-  try {
-    const startTime = document.getElementById('attendanceStartTime').value;
-    const endTime = document.getElementById('attendanceEndTime').value;
-
-    const request = {
-      StartTime: startTime ? new Date(startTime).toISOString() : undefined,
-      EndTime: endTime ? new Date(endTime).toISOString() : undefined,
-      PageIndex: 1,
-      PageSize: 1
-    };
-
-    const response = await apiPost('/api/Attendance/Statistics', request);
-    if (response.Code === 0) {
-      const stats = response.Data;
-      document.getElementById('statsTotalRecords').textContent = stats.TotalRecords || 0;
-      document.getElementById('statsUniqueUsers').textContent = stats.UniqueUsers || 0;
-      document.getElementById('statsUniqueDepts').textContent = stats.UniqueDepartments || 0;
-      document.getElementById('attendanceStatsPanel').style.display = 'block';
-      showStatus('Statistics loaded', 'success');
-    } else {
-      showStatus('Failed to load statistics: ' + response.Msg, 'error');
-    }
-  } catch (error) {
-    showStatus('Failed to load statistics: ' + error.message, 'error');
-  }
-}
-
-function clearAttendanceSearch() {
-  document.getElementById('attendanceUserID').value = '';
-  document.getElementById('attendanceUserName').value = '';
-  document.getElementById('attendanceDepartment').value = '';
-
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-  document.getElementById('attendanceStartTime').value = formatDateTimeLocal(startOfDay);
-  document.getElementById('attendanceEndTime').value = formatDateTimeLocal(endOfDay);
-
-  document.getElementById('attendanceStatsPanel').style.display = 'none';
-  attendanceRecords = [];
-  renderAttendanceRecords();
-  showStatus('Search cleared', 'info');
-}
-
-function exportAttendance() {
-  if (attendanceRecords.length === 0) {
-    showStatus('No records to export', 'warning');
-    return;
-  }
-
-  // Create CSV content
-  const headers = ['User ID', 'Name', 'Department ID', 'Department Name', 'Record Time', 'Device SN', 'Type', 'Temperature'];
-  const csvContent = [
-    headers.join(','),
-    ...attendanceRecords.map(record => [
-      record.UserID || '',
-      record.UserName || '',
-      record.DepartmentID || '',
-      record.DepartmentName || '',
-      record.RecordTime || '',
-      record.DeviceSN || '',
-      getRecordTypeLabel(record.RecordType),
-      record.Temperature || ''
-    ].map(field => `"${field}"`).join(','))
-  ].join('\n');
-
-  // Download CSV
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `attendance_${formatDateForFilename(new Date())}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  showStatus('Attendance data exported', 'success');
-}
-
-function getRecordTypeLabel(type) {
-  const labels = {
-    0: 'Face',
-    1: 'Card',
-    2: 'Password',
-    3: 'Face+Card',
-    4: 'Face+Password'
-  };
-  return labels[type] || 'Unknown';
-}
-
-function formatDateTimeLocal(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function formatDateForFilename(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}${month}${day}_${hours}${minutes}`;
-}
+/* ── 유틸 ── */
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}

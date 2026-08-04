@@ -305,6 +305,7 @@ public sealed class RemoteCommandResponse
     public int? PushAllPeople { get; set; }
     public List<uint>? QueryPeople { get; set; }
     public int? ClearRecord { get; set; }
+    public long? SetTime { get; set; }  // Unix timestamp (seconds) for device time sync
 }
 
 // 式式式 HTTP-Docking: People push from device 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
@@ -384,6 +385,7 @@ public sealed class PendingRemoteCommand
     public int? PushAllPeople { get; set; }
     public List<uint>? QueryPeople { get; set; }
     public int? ClearRecord { get; set; }
+    public long? SetTime { get; set; }  // Unix timestamp for time sync
 }
 
 // 式式式 Attendance Management 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
