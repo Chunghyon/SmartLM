@@ -86,6 +86,9 @@ public class PersonInfo
     public string? Password { get; set; }
     public int AccessType { get; set; }
 
+    // 유효기간 (Unix timestamp, 0=무제한)
+    public uint ExpirationDate { get; set; }
+
     // Backend uses Photo field, client uses PhotoUrl for display
     public string? Photo { get; set; }
 

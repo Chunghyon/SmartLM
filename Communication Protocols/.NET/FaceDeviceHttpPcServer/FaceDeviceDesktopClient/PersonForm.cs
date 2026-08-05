@@ -31,11 +31,18 @@ public partial class PersonForm : Form
     // 지문 / 정맥 (읽기 전용 표시)
     private Label lblFingerprintCount = null!;
     private Label lblPalmveinCount    = null!;
+    private Button btnClearFingerprint = null!;
+    private Button btnClearPalmvein    = null!;
+    private Button btnClearPhoto       = null!;
 
     // 사진
     private TextBox    txtPhotoUrl     = null!;
     private Button     btnBrowsePhoto  = null!;
     private PictureBox picPhotoPreview = null!;
+
+    // 유효기간
+    private CheckBox       chkNoExpiry     = null!;
+    private DateTimePicker dtpExpiry       = null!;
 
     private Button         btnOK              = null!;
     private Button         btnCancel          = null!;
@@ -93,10 +100,28 @@ public partial class PersonForm : Form
         lblPalmveinCount.Text         = pvCount > 0 ? $"등록됨 ({pvCount}개)" : "미등록";
         lblFingerprintCount.ForeColor = fpCount > 0 ? Color.Green : Color.Gray;
         lblPalmveinCount.ForeColor    = pvCount > 0 ? Color.Green : Color.Gray;
+        btnClearFingerprint.Enabled   = fpCount > 0;
+        btnClearPalmvein.Enabled      = pvCount > 0;
 
         // Person 객체에 지문/정맥 데이터 보존 (저장 시 그대로 전달)
         Person.Fingerprints = person.Fingerprints ?? new();
         Person.Palmveins    = person.Palmveins    ?? new();
+
+        // 유효기간 복원
+        Person.ExpirationDate = person.ExpirationDate;
+        if (person.ExpirationDate == 0 || person.ExpirationDate >= 4102412399u)
+        {
+            chkNoExpiry.Checked = true;
+            dtpExpiry.Enabled   = false;
+        }
+        else
+        {
+            chkNoExpiry.Checked = false;
+            dtpExpiry.Enabled   = true;
+            dtpExpiry.Value     = DateTimeOffset
+                .FromUnixTimeSeconds(person.ExpirationDate)
+                .LocalDateTime;
+        }
 
         // 사진 로드 (비동기 - 단말기 경로인 경우 서버 프록시를 통해 다운로드)
         _ = LoadPhotoAsync(person.UserID, person.Photo);
@@ -182,6 +207,7 @@ public partial class PersonForm : Form
             using var ms = new MemoryStream(bytes);
             picPhotoPreview.Image = new Bitmap(Image.FromStream(ms));
             txtPhotoUrl.Text = "얼굴 등록됨";
+            btnClearPhoto.Enabled = true;
         }
         catch
         {
@@ -206,7 +232,7 @@ public partial class PersonForm : Form
     private void InitializeComponent()
     {
         this.Text            = "사용자 추가/수정";
-        this.Size            = new Size(680, 700);
+        this.Size            = new Size(680, 740);
         this.StartPosition   = FormStartPosition.CenterParent;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox     = false;
@@ -277,6 +303,24 @@ public partial class PersonForm : Form
             ForeColor = Color.Gray,
             Font      = new System.Drawing.Font(this.Font.FontFamily, 8f)
         });
+        btnClearFingerprint = new Button
+        {
+            Text      = "제거",
+            Location  = new Point(ctrlX + 395, y - 1),
+            Size      = new Size(50, 24),
+            ForeColor = Color.DarkRed,
+            Enabled   = false
+        };
+        btnClearFingerprint.Click += (s, e) =>
+        {
+            if (MessageBox.Show("지문 데이터를 제거하시겠습니까?", "지문 제거",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            Person.Fingerprints = new();
+            lblFingerprintCount.Text      = "미등록";
+            lblFingerprintCount.ForeColor = Color.Gray;
+            btnClearFingerprint.Enabled   = false;
+        };
+        mainPanel.Controls.Add(btnClearFingerprint);
         y += 30;
 
         // ── 정맥 (읽기 전용) ──────────────────────────────────────────────────
@@ -291,6 +335,24 @@ public partial class PersonForm : Form
             ForeColor = Color.Gray,
             Font      = new System.Drawing.Font(this.Font.FontFamily, 8f)
         });
+        btnClearPalmvein = new Button
+        {
+            Text      = "제거",
+            Location  = new Point(ctrlX + 395, y - 1),
+            Size      = new Size(50, 24),
+            ForeColor = Color.DarkRed,
+            Enabled   = false
+        };
+        btnClearPalmvein.Click += (s, e) =>
+        {
+            if (MessageBox.Show("정맥 데이터를 제거하시겠습니까?", "정맥 제거",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            Person.Palmveins = new();
+            lblPalmveinCount.Text      = "미등록";
+            lblPalmveinCount.ForeColor = Color.Gray;
+            btnClearPalmvein.Enabled   = false;
+        };
+        mainPanel.Controls.Add(btnClearPalmvein);
         y += 38;
 
         // ── 사진 ──────────────────────────────────────────────────────────────
@@ -312,6 +374,27 @@ public partial class PersonForm : Form
         };
         btnBrowsePhoto.Click += BtnBrowsePhoto_Click;
         mainPanel.Controls.Add(btnBrowsePhoto);
+
+        btnClearPhoto = new Button
+        {
+            Text      = "제거",
+            Location  = new Point(ctrlX + 388, y - 2),
+            Size      = new Size(50, 28),
+            ForeColor = Color.DarkRed,
+            Enabled   = false
+        };
+        btnClearPhoto.Click += (s, e) =>
+        {
+            if (MessageBox.Show("사진 데이터를 제거하시겠습니까?", "사진 제거",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            Person.PhotoData = null;
+            Person.Photo     = null;
+            picPhotoPreview.Image?.Dispose();
+            picPhotoPreview.Image = null;
+            txtPhotoUrl.Text      = "";
+            btnClearPhoto.Enabled = false;
+        };
+        mainPanel.Controls.Add(btnClearPhoto);
         y += 34;
 
         // 사진 미리보기
@@ -325,6 +408,32 @@ public partial class PersonForm : Form
         };
         mainPanel.Controls.Add(picPhotoPreview);
         y += 140;
+
+        // ── 유효기간 ──────────────────────────────────────────────────────────
+        mainPanel.Controls.Add(MkLabel("유효기간:"));
+        chkNoExpiry = new CheckBox
+        {
+            Text     = "무제한",
+            Location = new Point(ctrlX, y + 1),
+            Width    = 70,
+            Checked  = true
+        };
+        mainPanel.Controls.Add(chkNoExpiry);
+
+        dtpExpiry = new DateTimePicker
+        {
+            Location     = new Point(ctrlX + 78, y),
+            Width        = 200,
+            Format       = DateTimePickerFormat.Custom,
+            CustomFormat = "yyyy-MM-dd HH:mm",
+            ShowUpDown   = false,
+            Value        = new DateTime(2099, 12, 31, 23, 59, 0),
+            Enabled      = false
+        };
+        mainPanel.Controls.Add(dtpExpiry);
+
+        chkNoExpiry.CheckedChanged += (s, e) => dtpExpiry.Enabled = !chkNoExpiry.Checked;
+        y += 38;
 
         // ── 하단 버튼 ─────────────────────────────────────────────────────────
         btnOK = new Button { Text = "저장", Location = new Point(10, y), Size = new Size(100, 35) };
@@ -372,6 +481,7 @@ public partial class PersonForm : Form
             // PhotoData에 저장
             Person.PhotoData = imageBytes;
             txtPhotoUrl.Text  = "얼굴 등록됨";
+            btnClearPhoto.Enabled = true;
 
             // 미리보기
             picPhotoPreview.Image?.Dispose();
@@ -417,14 +527,20 @@ public partial class PersonForm : Form
     // ── 공통: PersonInfo 빌드 ─────────────────────────────────────────────────
     private PersonInfo BuildPersonInfo(string userId)
     {
+        // 유효기간: 무제한이면 2145916799(2037-12-31 23:59:59 UTC, int32-safe), 아니면 선택 시각을 Unix timestamp로 변환
+        uint expDate = chkNoExpiry.Checked
+            ? 4102412399u   // 2099-12-31 23:59:59 KST ? 단말기 실제 최대값
+            : (uint)new DateTimeOffset(dtpExpiry.Value, TimeZoneInfo.Local.GetUtcOffset(dtpExpiry.Value)).ToUnixTimeSeconds();
+
         var p = new PersonInfo
         {
-            UserID       = userId,
-            Name         = txtName.Text.Trim(),
-            CardNum      = string.IsNullOrWhiteSpace(txtCard.Text) ? "0" : txtCard.Text.Trim(),
-            Password     = txtPassword.Text.Trim(),
-            Fingerprints = Person.Fingerprints,
-            Palmveins    = Person.Palmveins
+            UserID         = userId,
+            Name           = txtName.Text.Trim(),
+            CardNum        = string.IsNullOrWhiteSpace(txtCard.Text) ? "0" : txtCard.Text.Trim(),
+            Password       = txtPassword.Text.Trim(),
+            ExpirationDate = expDate,
+            Fingerprints   = Person.Fingerprints,
+            Palmveins      = Person.Palmveins
         };
 
         if (Person.PhotoData != null && Person.PhotoData.Length > 0)

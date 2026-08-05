@@ -92,10 +92,10 @@ public partial class FacePhotoEditorForm : Form
         {
             Location = new Point(120, CANVAS_SIZE + 75),
             Width = 300,
-            Minimum = 50,
-            Maximum = 300,
+            Minimum = 10,
+            Maximum = 150,
             Value = 100,
-            TickFrequency = 25
+            TickFrequency = 10
         };
         zoomTrackBar.ValueChanged += (s, e) =>
         {
@@ -291,12 +291,13 @@ public partial class FacePhotoEditorForm : Form
                 }
             }
 
-            // 최종 출력: OUTPUT_SIZE×OUTPUT_SIZE 업스케일 (SV 모델 고해상도 요구 대응)
+            // 최종 출력: OUTPUT_SIZE×OUTPUT_SIZE (기본 32bpp ARGB → JPEG 저장 시 GDI+가 올바른 YCbCr로 변환)
             var finalImage = new Bitmap(OUTPUT_SIZE, OUTPUT_SIZE);
             using (var g = Graphics.FromImage(finalImage))
             {
                 g.SmoothingMode = SmoothingMode.HighQuality;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.Clear(Color.White);   // 배경 흰색 (알파 없음)
                 g.DrawImage(guideImage, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
             }
             guideImage.Dispose();
@@ -308,7 +309,7 @@ public partial class FacePhotoEditorForm : Form
                     .First(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
                 var encoderParams = new System.Drawing.Imaging.EncoderParameters(1);
                 encoderParams.Param[0] = new System.Drawing.Imaging.EncoderParameter(
-                    System.Drawing.Imaging.Encoder.Quality, 90L);
+                    System.Drawing.Imaging.Encoder.Quality, 85L);  // quality=85, Baseline JPEG, 4:2:0 (GDI+ 기본값)
                 finalImage.Save(ms, jpegEncoder, encoderParams);
                 ProcessedImageData = ms.ToArray();
             }

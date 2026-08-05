@@ -230,6 +230,22 @@ public partial class MainForm : Form
             if (e.RowIndex >= 0)
                 btnEditPerson_Click(sender, EventArgs.Empty);
         };
+
+        // 동 입력 시 호 활성화/비활성화
+        txtFilterDong.TextChanged += (s, e) =>
+        {
+            bool hasDong = !string.IsNullOrWhiteSpace(txtFilterDong.Text);
+            txtFilterHo.Enabled = hasDong;
+            lblFilterHo.Enabled = hasDong;
+            if (!hasDong)
+                txtFilterHo.Text = "";
+            btnSelectByFilter.Text = "선택";
+        };
+
+        txtFilterHo.TextChanged += (s, e) =>
+        {
+            btnSelectByFilter.Text = "선택";
+        };
     }
 
     private void SetupAttendanceGrid()
@@ -1931,6 +1947,57 @@ public partial class MainForm : Form
     private async void btnRefreshPersonnel_Click(object sender, EventArgs e)
     {
         await RefreshPersonnel();
+    }
+
+    private void btnSelectByFilter_Click(object sender, EventArgs e)
+    {
+        string dong = txtFilterDong.Text.Trim();
+        string ho   = txtFilterHo.Text.Trim();
+
+        if (string.IsNullOrEmpty(dong))
+        {
+            MessageBox.Show("동을 입력해주세요.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        int colDong   = dgvPersonnel.Columns["ColDong"]?.Index ?? -1;
+        int colHo     = dgvPersonnel.Columns["ColHo"]?.Index ?? -1;
+        int colSelect = dgvPersonnel.Columns["ColSelect"]?.Index ?? -1;
+        if (colDong < 0) return;
+
+        bool useHo = !string.IsNullOrEmpty(ho) && colHo >= 0;
+
+        // 해당 필터에 매칭되는 행들 수집
+        var matched = new List<DataGridViewRow>();
+        foreach (DataGridViewRow row in dgvPersonnel.Rows)
+        {
+            if (row.IsNewRow) continue;
+            var cellDong = row.Cells[colDong].Value?.ToString()?.Trim() ?? "";
+            if (cellDong != dong) continue;
+            if (useHo)
+            {
+                var cellHo = colHo >= 0 ? row.Cells[colHo].Value?.ToString()?.Trim() ?? "" : "";
+                if (cellHo != ho) continue;
+            }
+            matched.Add(row);
+        }
+
+        if (matched.Count == 0) return;
+
+        // 이미 모두 선택된 상태이면 → 해제, 아니면 → 선택 (토글)
+        bool allSelected = matched.All(r => r.Selected);
+        bool deselect = allSelected;
+
+        dgvPersonnel.ClearSelection();
+        foreach (var row in matched)
+        {
+            bool check = !deselect;
+            if (colSelect >= 0 && dgvPersonnel.Columns["ColSelect"] is DataGridViewCheckBoxColumn)
+                row.Cells[colSelect].Value = check;
+            row.Selected = check;
+        }
+
+        btnSelectByFilter.Text = deselect ? "선택" : "해제";
     }
 
     private async void btnReloadFromFiles_Click(object sender, EventArgs e)

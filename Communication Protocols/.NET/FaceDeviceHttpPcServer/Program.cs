@@ -2118,7 +2118,11 @@ static PersonInfo NormalizePerson(PersonInfo person)
         CardNum = string.IsNullOrWhiteSpace(person.CardNum?.Trim()) ? "0" : person.CardNum.Trim(),
         QRCode = person.QRCode?.Trim() ?? string.Empty,
         AccessType = Math.Clamp(person.AccessType, 0, 2),
-        ExpirationDate = person.ExpirationDate,
+        // ExpirationDate: 0이거나 int32 범위 초과 값이면 2037-12-31 23:59:59 UTC(=2145916799)로 설정
+        // 단말기 펜웨어가 int32로 처리하므로 2^31-1을 쓴음
+        ExpirationDate = (person.ExpirationDate == 0 || person.ExpirationDate > 4102412399u)
+            ? 4102412399u   // 2099-12-31 23:59:59 KST(UTC+9) ? 단말기 실제 최대값
+            : person.ExpirationDate,
         OpenTimes = person.OpenTimes <= 0 ? 65535 : person.OpenTimes,
         KeepOpen = person.KeepOpen,
         Timegroup = person.Timegroup <= 0 ? 1 : person.Timegroup,  // Default to 1 if 0 or negative

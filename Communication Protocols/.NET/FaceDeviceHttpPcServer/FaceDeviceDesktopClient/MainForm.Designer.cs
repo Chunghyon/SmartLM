@@ -61,6 +61,11 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshPersonnel = new System.Windows.Forms.Button();
             this.btnDistributePeople = new System.Windows.Forms.Button();
             this.btnReloadFromFiles  = new System.Windows.Forms.Button();
+            this.lblFilterDong = new System.Windows.Forms.Label();
+            this.txtFilterDong = new System.Windows.Forms.TextBox();
+            this.lblFilterHo   = new System.Windows.Forms.Label();
+            this.txtFilterHo   = new System.Windows.Forms.TextBox();
+            this.btnSelectByFilter = new System.Windows.Forms.Button();
             this.dgvPersonnel = new System.Windows.Forms.DataGridView();
             this.cmbDepartment = new System.Windows.Forms.ComboBox();
 
@@ -374,6 +379,11 @@ namespace FaceDeviceDesktopClient
             this.tabPersonnel.Controls.Add(this.btnRefreshPersonnel);
             this.tabPersonnel.Controls.Add(this.btnDistributePeople);
             this.tabPersonnel.Controls.Add(this.btnReloadFromFiles);
+            this.tabPersonnel.Controls.Add(this.lblFilterDong);
+            this.tabPersonnel.Controls.Add(this.txtFilterDong);
+            this.tabPersonnel.Controls.Add(this.lblFilterHo);
+            this.tabPersonnel.Controls.Add(this.txtFilterHo);
+            this.tabPersonnel.Controls.Add(this.btnSelectByFilter);
             this.tabPersonnel.Controls.Add(this.dgvPersonnel);
             this.tabPersonnel.Location = new System.Drawing.Point(4, 24);
             this.tabPersonnel.Name = "tabPersonnel";
@@ -432,7 +442,36 @@ namespace FaceDeviceDesktopClient
             this.btnReloadFromFiles.UseVisualStyleBackColor = true;
             this.btnReloadFromFiles.Click += new System.EventHandler(this.btnReloadFromFiles_Click);
 
-            this.dgvPersonnel.AllowUserToAddRows = false;
+            this.lblFilterDong.AutoSize = true;
+            this.lblFilterDong.Location = new System.Drawing.Point(800, 17);
+            this.lblFilterDong.Name = "lblFilterDong";
+            this.lblFilterDong.Text = "동";
+
+            this.txtFilterDong.Location = new System.Drawing.Point(825, 12);
+            this.txtFilterDong.Name = "txtFilterDong";
+            this.txtFilterDong.Size = new System.Drawing.Size(60, 23);
+            this.txtFilterDong.TabIndex = 6;
+
+            this.lblFilterHo.AutoSize = true;
+            this.lblFilterHo.Location = new System.Drawing.Point(895, 17);
+            this.lblFilterHo.Name = "lblFilterHo";
+            this.lblFilterHo.Text = "호";
+            this.lblFilterHo.Enabled = false;
+
+            this.txtFilterHo.Location = new System.Drawing.Point(920, 12);
+            this.txtFilterHo.Name = "txtFilterHo";
+            this.txtFilterHo.Size = new System.Drawing.Size(60, 23);
+            this.txtFilterHo.TabIndex = 7;
+            this.txtFilterHo.Enabled = false;
+
+            this.btnSelectByFilter.Location = new System.Drawing.Point(990, 10);
+            this.btnSelectByFilter.Name = "btnSelectByFilter";
+            this.btnSelectByFilter.Size = new System.Drawing.Size(75, 30);
+            this.btnSelectByFilter.TabIndex = 8;
+            this.btnSelectByFilter.Text = "선택";
+            this.btnSelectByFilter.UseVisualStyleBackColor = true;
+            this.btnSelectByFilter.Click += new System.EventHandler(this.btnSelectByFilter_Click);
+
             this.dgvPersonnel.AllowUserToDeleteRows = false;
             this.dgvPersonnel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
@@ -705,6 +744,11 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.Button btnRefreshPersonnel;
         private System.Windows.Forms.Button btnDistributePeople;
         private System.Windows.Forms.Button btnReloadFromFiles;
+        private System.Windows.Forms.Label lblFilterDong;
+        private System.Windows.Forms.TextBox txtFilterDong;
+        private System.Windows.Forms.Label lblFilterHo;
+        private System.Windows.Forms.TextBox txtFilterHo;
+        private System.Windows.Forms.Button btnSelectByFilter;
         private System.Windows.Forms.DataGridView dgvPersonnel;
         private System.Windows.Forms.ComboBox cmbDepartment;
         private System.Windows.Forms.GroupBox grpAttendanceSearch;
