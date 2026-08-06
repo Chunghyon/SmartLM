@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 function switchTab(n){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.querySelector('[data-tab="'+n+'"']').classList.add('active');
+  document.querySelector('[data-tab="'+n+'"]').classList.add('active');
   document.getElementById(n+'-tab').classList.add('active');
   if(n==='dashboard')refreshSystemInfo();
   else if(n==='devices')refreshDevices();
@@ -32,12 +32,21 @@ function setStatus(m,t=''){
 function addLog(m){const b=document.getElementById('logBox');b.textContent+='['+new Date().toLocaleTimeString('ko-KR')+'] '+m+'\n';b.scrollTop=b.scrollHeight;}
 function clearLog(){document.getElementById('logBox').textContent='';}
 
-async function api(method,url,body){
-  const o={method,headers:{}};
-  if(body!=null){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
-  const r=await fetch(url,o);
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  return r.json();
+async function api(method,url,body,timeoutMs=15000){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),timeoutMs);
+  try{
+    const o={method,headers:{},signal:ctrl.signal};
+    if(body!=null){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
+    const r=await fetch(url,o);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('타임아웃(응답 없음): '+url);
+    throw e;
+  }finally{
+    clearTimeout(tid);
+  }
 }
 const apiGet=u=>api('GET',u);
 const apiPost=(u,b)=>api('POST',u,b??{});
@@ -233,22 +242,40 @@ async function refreshPersonnel(){
     renderPersonnel();setStatus('사용자 '+personnel.length+'명 로드됨','ok');
   }catch(e){setStatus('사용자 로드 실패: '+e.message,'err');}
 }
+function parseDongHoMember(uid){
+  const n=parseInt(uid,10);
+  if(isNaN(n)||String(uid).length<3)return{dong:uid,ho:'',member:''};
+  return{dong:String(Math.floor(n/1000000)),ho:String(Math.floor((n/100)%10000)),member:String(n%100)};
+}
 function filterPersonnel(){
   const q=document.getElementById('searchPerson').value.trim().toLowerCase();
-  filteredPersonnel=q?personnel.filter(p=>(p.Name||'').toLowerCase().includes(q)||(p.UserID||'').toLowerCase().includes(q)||(p.CardNum||'').toLowerCase().includes(q)):[...personnel];
+  const fd=(document.getElementById('filterDong')?.value||'').trim();
+  const fh=(document.getElementById('filterHo')?.value||'').trim();
+  const fm=(document.getElementById('filterMember')?.value||'').trim();
+  filteredPersonnel=personnel.filter(p=>{
+    if(q&&!(p.Name||'').toLowerCase().includes(q)&&!(p.UserID||'').toLowerCase().includes(q)&&!(p.CardNum||'').toLowerCase().includes(q))return false;
+    if(fd||fh||fm){
+      const{dong,ho,member}=parseDongHoMember(p.UserID);
+      if(fd&&dong!==fd)return false;
+      if(fh&&ho!==fh)return false;
+      if(fm&&member!==fm)return false;
+    }
+    return true;
+  });
   renderPersonnel();
 }
 function renderPersonnel(){
   const tb=document.getElementById('personnelBody');
   if(!filteredPersonnel.length){tb.innerHTML='<tr><td colspan="10" class="empty-state">사용자가 없습니다.</td></tr>';return;}
   tb.innerHTML=filteredPersonnel.map(p=>{
+    const{dong,ho,member}=parseDongHoMember(p.UserID);
     const card=(p.CardNum&&p.CardNum!=='0')?'O':'-';
     const pass=p.Password?'****':'-';
     const fp=(p.Fingerprints&&p.Fingerprints.length>0)?'O':'-';
     const palm=(p.Palmveins&&p.Palmveins.length>0)?'O':'-';
     const face=p.Photo?'O':'-';
     return '<tr data-uid="'+esc(p.UserID)+'"><td><input type="checkbox" class="chkPerson" data-uid="'+esc(p.UserID)+'">'+'</td>'
-      +'<td>'+esc(p.Department??'')+'</td><td>'+esc(p.Job??'')+'</td><td>'+esc(p.IdentityCard??'')+'</td>'
+      +'<td>'+esc(dong)+'</td><td>'+esc(ho)+'</td><td>'+esc(member)+'</td>'
       +'<td><b>'+esc(p.Name)+'</b> <span style="color:#999;font-size:11px">('+esc(p.UserID)+')</span></td>'
       +'<td style="text-align:center">'+card+'</td><td style="text-align:center">'+pass+'</td>'
       +'<td style="text-align:center">'+fp+'</td><td style="text-align:center">'+palm+'</td>'
@@ -273,16 +300,18 @@ async function openEditPerson(uid){
   document.getElementById('personModalTitle').textContent='사용자 수정';
   document.getElementById('mUid').disabled=true;
   try{
-    const r=await apiPost('/api/People/GetDetail',{UserID:uid});const p=r.Data??r;
+    const r=await apiPost('/api/People/GetDetail',{UserID:uid});
+    if(!r.result)throw new Error(r.error??'사용자 조회 실패');
+    const p=r.content??r.Data??r;
     document.getElementById('mUid').value=p.UserID??'';
     document.getElementById('mName').value=p.Name??'';
     document.getElementById('mDong').value=p.Department??'';
     document.getElementById('mHo').value=p.Job??'';
     document.getElementById('mMember').value=p.IdentityCard??'';
     document.getElementById('mCard').value=(p.CardNum&&p.CardNum!=='0')?p.CardNum:'';
-    document.getElementById('mPass').value=p.Password??'';
+    document.getElementById('mPass').value=(p.Password&&p.Password!=='0000')?p.Password:'';
     document.getElementById('mAccess').value=p.AccessType??0;
-    if(p.ExpirationDate>0)document.getElementById('mExpiry').value=new Date(p.ExpirationDate*1000).toISOString().slice(0,16);
+    if(p.ExpirationDate>0&&p.ExpirationDate<4102412399)document.getElementById('mExpiry').value=new Date(p.ExpirationDate*1000).toISOString().slice(0,16);
     if(p.Photo){_photoBase64=p.Photo;const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src='data:image/jpeg;base64,'+p.Photo;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent='기존 사진 있음';}
   }catch(e){setStatus('사용자 정보 로드 실패: '+e.message,'err');return;}
   document.getElementById('personModal').classList.add('open');
@@ -305,8 +334,8 @@ async function savePerson(){
   let exp=0;const ev=document.getElementById('mExpiry').value;if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
   const p={UserID:uid,Name:name,Department:document.getElementById('mDong').value.trim(),Job:document.getElementById('mHo').value.trim(),IdentityCard:document.getElementById('mMember').value.trim(),CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:parseInt(document.getElementById('mAccess').value)||0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??''};
   try{
-    if(_editingUserId){const r=await apiPost('/api/People/Update',p);if(r.Code!==0&&r.Success!==1)throw new Error(r.Msg??'수정 실패');setStatus('사용자 수정 완료','ok');addLog('사용자 수정: '+uid);}
-    else{const r=await apiPost('/api/People/New',p);if(r.Code!==0&&r.Success!==1)throw new Error(r.Msg??'추가 실패');setStatus('사용자 추가 완료','ok');addLog('사용자 추가: '+uid);}
+    if(_editingUserId){const r=await apiPost('/api/People/Update',p);if(!r.result)throw new Error(r.error??'수정 실패');setStatus('사용자 수정 완료','ok');addLog('사용자 수정: '+uid);}
+    else{const r=await apiPost('/api/People/New',p);if(!r.result)throw new Error(r.error??'추가 실패');setStatus('사용자 추가 완료','ok');addLog('사용자 추가: '+uid);}
     closePersonModal();await refreshPersonnel();
   }catch(e){setStatus('저장 실패: '+e.message,'err');addLog('저장 실패: '+e.message);}
 }
@@ -315,7 +344,7 @@ async function deleteSelectedPersonnel(){
   const names=u.map(id=>personnel.find(x=>x.UserID===id)?.Name??id);
   if(!confirm(names.join(', ')+' ('+u.length+'명)을 삭제하시겠습니까?'))return;
   let ok=0,fail=0;
-  for(const id of u){try{const r=await apiPost('/api/People/Delete',{UserID:id});if(r.Code===0||r.Success===1)ok++;else fail++;}catch{fail++;}}
+  for(const id of u){try{const r=await apiPost('/api/People/Delete',{UserID:id});if(r.result===true)ok++;else fail++;}catch{fail++;}}
   setStatus('삭제: '+ok+'명 성공'+(fail>0?', '+fail+'명 실패':''),ok>0?'ok':'err');addLog('삭제: 성공='+ok+', 실패='+fail);
   await refreshPersonnel();
 }
@@ -335,26 +364,42 @@ async function populateAttDeviceCombo(){
 async function searchAttendance(page=1){
   _attPage=page;
   const req={PageIndex:page,PageSize:ATT_PAGE_SIZE};
-  const uid=document.getElementById('attUID').value.trim();const name=document.getElementById('attName').value.trim();
-  const sn=document.getElementById('attDevice').value;const st=document.getElementById('attStart').value;const et=document.getElementById('attEnd').value;
-  if(uid)req.UserID=uid;if(name)req.UserName=name;if(sn)req.DeviceSN=sn;
-  if(st)req.StartTime=new Date(st).toISOString();if(et)req.EndTime=new Date(et).toISOString();
+  const dong=(document.getElementById('attDong')?.value||'').trim();
+  const ho=(document.getElementById('attHo')?.value||'').trim();
+  const member=(document.getElementById('attMember')?.value||'').trim();
+  const name=(document.getElementById('attName')?.value||'').trim();
+  const sn=document.getElementById('attDevice').value;
+  const st=document.getElementById('attStart').value;
+  const et=document.getElementById('attEnd').value;
+  if(dong||ho||member){
+    const dN=parseInt(dong)||0,hN=parseInt(ho)||0,mN=parseInt(member)||0;
+    if(dong&&ho&&member)req.UserID=String(dN*1000000+hN*100+mN);
+    else if(dong&&ho){req.UserIDMin=dN*1000000+hN*100;req.UserIDMax=dN*1000000+hN*100+100;}
+    else if(dong){req.UserIDMin=dN*1000000;req.UserIDMax=(dN+1)*1000000;}
+  }
+  if(name)req.UserName=name;
+  if(sn)req.DeviceSN=sn;
+  if(st)req.StartTime=new Date(st).toISOString();
+  if(et)req.EndTime=new Date(et).toISOString();
   try{
     setStatus('출입기록 검색 중...');
-    const r=await apiPost('/api/Attendance/Search',req);
-    const recs=r.Data?.Records??r.Records??[];
-    _attTotal=r.Data?.TotalCount??r.TotalCount??recs.length;
+    const r=await api('POST','/api/Attendance/Search',req,20000);
+    const data=r.content??r.Data??{};
+    const recs=data.DataList??data.Records??[];
+    _attTotal=data.TotalCount??recs.length;
     document.getElementById('attHeader').textContent='출입 기록 (총 '+_attTotal+'건)';
     renderAttendance(recs);renderAttPager();setStatus(_attTotal+'건 검색됨','ok');
   }catch(e){setStatus('검색 실패: '+e.message,'err');}
 }
 function renderAttendance(recs){
   const tb=document.getElementById('attBody');
-  if(!recs.length){tb.innerHTML='<tr><td colspan="7" class="empty-state">기록 없음</td></tr>';return;}
+  if(!recs.length){tb.innerHTML='<tr><td colspan="9" class="empty-state">기록 없음</td></tr>';return;}
   tb.innerHTML=recs.map(r=>{
     const ph=r.PhotoUrl?'<img src="'+r.PhotoUrl+'" style="height:36px;border-radius:3px" onerror="this.style.display=\'none\'">'  :'-';
-    const tl=r.RecordType===1?'<span class="badge badge-success">인식</span>':r.RecordType===2?'<span class="badge badge-info">도어센서</span>':'<span class="badge badge-secondary">시스템</span>';
-    return '<tr><td>'+esc(r.RecordTime??'')+'</td><td>'+esc(r.UserID??'')+'</td><td>'+esc(r.UserName??'')+'</td>'
+    const tl='<span class="badge '+rtBadge(r.RecordType)+'">'+rtLabel(r.RecordType)+'</span>';
+    const{dong,ho,member}=parseDongHoMember(r.UserID??'');
+    return '<tr><td>'+esc(r.RecordTime??'')+'</td><td>'+esc(dong)+'</td><td>'+esc(ho)+'</td><td>'+esc(member)+'</td>'
+      +'<td>'+esc(r.UserName??'')+'</td>'
       +'<td style="font-size:11px">'+esc(r.DeviceSN??'')+'</td><td>'+tl+'</td>'
       +'<td>'+(r.Temperature?r.Temperature+'℃':'-')+'</td><td>'+ph+'</td></tr>';
   }).join('');
@@ -369,22 +414,36 @@ function renderAttPager(){
   pg.innerHTML=h;
 }
 function clearAttSearch(){
-  document.getElementById('attUID').value='';document.getElementById('attName').value='';document.getElementById('attDevice').value='';
+  ['attDong','attHo','attMember','attName'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('attDevice').value='';
   setDefaultAttendanceDates();
-  document.getElementById('attBody').innerHTML='<tr><td colspan="7" class="empty-state">검색 조건을 입력하세요.</td></tr>';
+  document.getElementById('attBody').innerHTML='<tr><td colspan="9" class="empty-state">검색 조건을 입력하세요.</td></tr>';
   document.getElementById('attHeader').textContent='출입 기록';document.getElementById('attPager').innerHTML='';
 }
 async function exportAttendance(){
   try{
     const req={PageIndex:1,PageSize:9999};
-    const uid=document.getElementById('attUID').value.trim();const name=document.getElementById('attName').value.trim();
+    const dong=document.getElementById('attDong').value.trim();
+    const ho=document.getElementById('attHo').value.trim();
+    const member=document.getElementById('attMember').value.trim();
+    const name=document.getElementById('attName').value.trim();
     const sn=document.getElementById('attDevice').value;const st=document.getElementById('attStart').value;const et=document.getElementById('attEnd').value;
-    if(uid)req.UserID=uid;if(name)req.UserName=name;if(sn)req.DeviceSN=sn;
+    if(dong||ho||member){
+      const dongN=parseInt(dong)||0;const hoN=parseInt(ho)||0;const memberN=parseInt(member)||0;
+      if(dong&&!ho&&!member){req.UserIDMin=dongN*1000000;req.UserIDMax=(dongN+1)*1000000;}
+      else if(dong&&ho&&!member){req.UserIDMin=dongN*1000000+hoN*100;req.UserIDMax=dongN*1000000+hoN*100+100;}
+      else if(dong&&ho&&member){req.UserID=String(dongN*1000000+hoN*100+memberN);}
+    }
+    if(name)req.UserName=name;if(sn)req.DeviceSN=sn;
     if(st)req.StartTime=new Date(st).toISOString();if(et)req.EndTime=new Date(et).toISOString();
-    const r=await apiPost('/api/Attendance/Search',req);
-    const recs=r.Data?.Records??r.Records??[];
-    const hdr=['시간','사용자ID','이름','단말기SN','기록타입','체온'];
-    const rows=recs.map(x=>[x.RecordTime,x.UserID,x.UserName,x.DeviceSN,x.RecordType,x.Temperature??''].join('\t'));
+    const r=await api('POST','/api/Attendance/Search',req,30000);
+    const data2=r.content??r.Data??{};
+    const recs=data2.DataList??data2.Records??[];
+    const hdr=['시간','동','호','멤버','사용자ID','이름','단말기SN','기록타입','체온'];
+    const rows=recs.map(x=>{
+      const{dong,ho,member}=parseDongHoMember(x.UserID??'');
+      return[x.RecordTime,dong,ho,member,x.UserID,x.UserName,x.DeviceSN,x.RecordType,x.Temperature??''].join('\t');
+    });
     const text=[hdr.join('\t'),...rows].join('\n');
     const blob=new Blob(['\uFEFF'+text],{type:'text/tab-separated-values;charset=utf-8'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
@@ -395,3 +454,5 @@ async function exportAttendance(){
 
 /* ── 유틸 ── */
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function rtLabel(t){const m={1:'카드',2:'얼굴',3:'지문',4:'카드+얼굴',5:'얼굴+얼굴',6:'카드+얼굴',7:'카드+비밀번호',8:'얼굴+비밀번호',9:'지문+비밀번호',10:'비밀번호',11:'카드+지문+비밀번호',12:'카드+얼굴+비밀번호',13:'지문+얼굴+비밀번호',14:'카드+지문+얼굴',15:'중복입력',16:'유효기간만료',17:'시간대만료',18:'구역진입불가',19:'이미등록',20:'강제개방',21:'입력횟수초과',22:'위협감지차단',23:'분실신고카드',24:'게스트카드',25:'원격문열기',26:'카드원격문열기',27:'얼굴원격문열기',28:'컨트롤러원격열기',29:'유효기간임박',30:'체온이상차단',31:'방문자비밀번호',32:'QR코드개방',33:'메뉴관리자추가',34:'메뉴관리자조회',35:'메뉴관리자삭제',36:'손바닥정맥',37:'카드+손바닥+얼굴',38:'손바닥+비밀번호',39:'카드+손바닥',40:'얼굴+손바닥',41:'카드+손바닥+비밀번호',42:'손바닥+얼굴+비밀번호',43:'지문+손바닥+얼굴',44:'원격문열기출입',45:'손바닥원격열기',46:'얼굴원격열기',47:'차단차단',48:'이동카드',49:'이동QR'};return m[t]??'(타입'+t+')';}
+function rtBadge(t){if(t>=1&&t<=14||t===36||t>=37&&t<=43)return'badge-success';if(t===15||t===16||t===17||t===18||t===22||t===30||t===47)return'badge-danger';if(t===20||t===25||t===26||t===27||t===28||t===44||t===45||t===46)return'badge-info';return'badge-secondary';}

@@ -1,9 +1,9 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-08-06T09:18:14.5305240+09:00
+# Generated: 2026-08-06T10:58:08.9085139+09:00
 # Root: D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer
 Architecture:
   Type: Backend (C#/.NET)
-  Scale: 321 relevant source files
+  Scale: 388 relevant source files
   Components: 0
   Controllers: 0
   Models: 1
@@ -18,6 +18,7 @@ Architecture:
 - File: FaceDeviceDesktopClient\FaceDeviceDesktopClient.csproj
   Preview: "<Project Sdk='Microsoft.NET.Sdk'>  <PropertyGroup>   <OutputType>WinExe</OutputType>   <TargetFramework>net9.0-windows</TargetFramework>   <Nullable>e..."
 - File: AdminUiWriter.cs
+  Symbols: [AdminUiWriter, EnsureFiles]
   Preview: "using System.Text; internal static class AdminUiWriter {   public static void EnsureFiles(string? webRootPath) { } } "
 - File: appsettings.Development.json
   Preview: "{  'Logging': {   'LogLevel': {    'Default': 'Information',    'Microsoft.AspNetCore': 'Warning'   }  } } "
@@ -100,30 +101,41 @@ Architecture:
 - File: App_Data\state.json
   Preview: "{  'Devices': {   'FC-8190H25061293': {    'SN': 'FC-8190H25061293',    'IpAddress': '10.100.100.11',    'HttpPort': 80,    'DeviceName': '555B_B1F', ..."
 - File: FaceDevice.Shared\Class1.cs
+  Symbols: [Class1]
   Preview: "namespace FaceDevice.Shared; public class Class1 { } "
 - File: FaceDeviceDesktopClient\DebugLogForm.cs
+  Symbols: [DebugLogForm]
   Preview: "namespace FaceDeviceDesktopClient; public class DebugLogForm : Form {   private static DebugLogForm? _instance;   private readonly RichTextBox _logTex..."
 - File: FaceDeviceDesktopClient\DepartmentForm.cs
+  Symbols: [DepartmentForm, DepartmentForm]
   Preview: "namespace FaceDeviceDesktopClient; public partial class DepartmentForm : Form {   public DepartmentInfo Department { get; private set; }   public Depa..."
 - File: FaceDeviceDesktopClient\DepartmentForm.Designer.cs
+  Symbols: [Dispose, DepartmentForm]
   Preview: "namespace FaceDeviceDesktopClient {   partial class DepartmentForm   {     private System.ComponentModel.IContainer components = null;     protected o..."
 - File: FaceDeviceDesktopClient\MainForm.cs
+  Symbols: [MainForm]
   Preview: "using System.Net.Http.Json; using System.ComponentModel; using System.Text.Json; using FaceDeviceDesktopClient.Forms; namespace FaceDeviceDesktopClien..."
 - File: FaceDeviceDesktopClient\MainForm.Designer.cs
+  Symbols: [MainForm, Dispose]
   Preview: "namespace FaceDeviceDesktopClient {   partial class MainForm   {     private System.ComponentModel.IContainer components = null;     protected overrid..."
 - File: FaceDeviceDesktopClient\Models.cs
+  Symbols: [BrowserApiResponse]
   Preview: "using System.Text.Json.Serialization; using System.Text.Json.Serialization; namespace FaceDeviceDesktopClient; // API Response wrappers - matching ser..."
 - File: FaceDeviceDesktopClient\PersonForm.cs
+  Symbols: [PersonForm]
   Preview: "using FaceDeviceDesktopClient.Forms; using System.ComponentModel; using System.Net.Http.Json; namespace FaceDeviceDesktopClient; public partial class ..."
 - File: FaceDeviceDesktopClient\Program.cs
+  Symbols: [Program, Main]
   Preview: "namespace FaceDeviceDesktopClient; static class Program {   [STAThread]   static void Main()   {     ApplicationConfiguration.Initialize();     Applic..."
 - File: FaceDeviceDesktopClient\README.md
   Preview: "# Face Device Management System �� �ַ���� �� �ν� �ܸ��⸦ �����ϱ� ���� �� ���� ���ø����̼��� �����մϴ�. ## ������Ʈ ���� ### 1. FaceDeviceHttpPcServer HTTP ..."
 - File: FaceDeviceDesktopClient\한글메뉴.txt
   Preview: "���� : ��ȣ ���� ������ ���� �̸� 1. Main Tab ���� ȯ�漳��, �ܸ���, �����, ������ȸ (1) ȯ�漳�� (Dashboard) �ý�����Ȳ : �ܸ��� ��, ����� �� �� �̺�Ʈ �� ��� (2) �..."
 - File: Forms\MainForm.cs
+  Symbols: [MainForm]
   Preview: "using FaceDeviceHttpPcServer.Services; using FaceDeviceLogLevel = FaceDeviceHttpPcServer.Services.LogLevel; namespace FaceDeviceHttpPcServer.Forms; pu..."
 - File: Middleware\HttpLoggingMiddleware.cs
+  Symbols: [HttpLoggingMiddleware]
   Preview: "using FaceDeviceHttpPcServer.Services; using System.Text; namespace FaceDeviceHttpPcServer.Middleware; /// <summary> /// ��� HTTP ��û/���� ������ ĸó�Ͽ..."
 - File: Models\Models.cs
   Preview: "using System.Text.Json.Nodes; namespace FaceDeviceHttpPcServer.Models; // ������ Common response formats ���������������������������������������������..."
@@ -132,12 +144,16 @@ Architecture:
 - File: Services\DeviceDiscoveryService.cs
   Preview: "using System.Net; using System.Net.Sockets; using System.Net.NetworkInformation; using System.Runtime.CompilerServices; using System.Text; using Syste..."
 - File: Services\FirewallHelper.cs
+  Symbols: [FirewallHelper]
   Preview: "using System.Diagnostics; namespace FaceDeviceHttpPcServer.Services; /// <summary> /// Windows ��ȭ�� ��Ģ�� �����ϴ� ���� /// </summary> public static c..."
 - File: Services\LogHub.cs
+  Symbols: [LogHub]
   Preview: "namespace FaceDeviceHttpPcServer.Services; /// <summary> /// �̱��� �̺�Ʈ ���Ŀ. HTTP �̵���� �� WinForms UI �α� â���� �޽����� �����մϴ�. /// </summary> pu..."
 - File: Services\StateStore.cs
+  Symbols: [StateStore]
   Preview: "using System.Text.Json; using System.Text.Json.Nodes; using FaceDeviceHttpPcServer.Models; namespace FaceDeviceHttpPcServer.Services; public sealed cl..."
 - File: Services\UdpPacketSniffer.cs
+  Symbols: [UdpPacketSniffer]
   Preview: "using System.Net; using System.Net.Sockets; namespace FaceDeviceHttpPcServer.Services; /// <summary> /// ���� ������ ����Ͽ� ��� UDP ��Ŷ�� ĸó�ϴ� ���� �..."
 - File: App_Data\people\555020450.json
   Preview: "{  'UserID': '555020450',  'Code': '',  'Name': 'cch50',  'Job': '',  'Department': '',  'IdentityCard': '',  'Attachment': '',  'Photo': '/9j/4AAQSkZ..."
@@ -258,6 +274,118 @@ Architecture:
 - File: App_Data\records\FC-8190H25061293_20260804073027191_55.json
   Preview: "{  'RecordID': 55,  'RecordType': 3,  'RecordDate': 1785828601,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
 - File: App_Data\records\FC-8190H25061293_20260804225356397_56.json
+  Preview: "{  'RecordID': 56,  'RecordType': 3,  'RecordDate': 1785834072,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340006_1.json
+  Preview: "{  'RecordID': 1,  'RecordType': 36,  'RecordDate': 1785731386,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340099_2.json
+  Preview: "{  'RecordID': 2,  'RecordType': 36,  'RecordDate': 1785732518,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340193_3.json
+  Preview: "{  'RecordID': 3,  'RecordType': 1,  'RecordDate': 1785732683,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  '..."
+- File: App_Data\records\FC-8190H25061293_20260806012340256_4.json
+  Preview: "{  'RecordID': 4,  'RecordType': 1,  'RecordDate': 1785732688,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  '..."
+- File: App_Data\records\FC-8190H25061293_20260806012340344_5.json
+  Preview: "{  'RecordID': 5,  'RecordType': 1,  'RecordDate': 1785732696,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  '..."
+- File: App_Data\records\FC-8190H25061293_20260806012340401_6.json
+  Preview: "{  'RecordID': 6,  'RecordType': 36,  'RecordDate': 1785733514,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340456_7.json
+  Preview: "{  'RecordID': 7,  'RecordType': 36,  'RecordDate': 1785734253,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340512_8.json
+  Preview: "{  'RecordID': 8,  'RecordType': 36,  'RecordDate': 1785734803,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340568_9.json
+  Preview: "{  'RecordID': 9,  'RecordType': 36,  'RecordDate': 1785734817,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340628_10.json
+  Preview: "{  'RecordID': 10,  'RecordType': 1,  'RecordDate': 1785734937,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340688_11.json
+  Preview: "{  'RecordID': 11,  'RecordType': 1,  'RecordDate': 1785734938,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340754_12.json
+  Preview: "{  'RecordID': 12,  'RecordType': 1,  'RecordDate': 1785734950,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340840_13.json
+  Preview: "{  'RecordID': 13,  'RecordType': 1,  'RecordDate': 1785734954,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012340931_14.json
+  Preview: "{  'RecordID': 14,  'RecordType': 1,  'RecordDate': 1785734959,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341008_15.json
+  Preview: "{  'RecordID': 15,  'RecordType': 1,  'RecordDate': 1785734961,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341071_16.json
+  Preview: "{  'RecordID': 16,  'RecordType': 1,  'RecordDate': 1785734968,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341169_17.json
+  Preview: "{  'RecordID': 17,  'RecordType': 36,  'RecordDate': 1785735203,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341235_18.json
+  Preview: "{  'RecordID': 18,  'RecordType': 1,  'RecordDate': 1785735209,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341304_19.json
+  Preview: "{  'RecordID': 19,  'RecordType': 1,  'RecordDate': 1785735217,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341373_20.json
+  Preview: "{  'RecordID': 20,  'RecordType': 3,  'RecordDate': 1785736372,  'UserID': '555020410',  'Code': '555020410',  'Name': 'cch10',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341458_21.json
+  Preview: "{  'RecordID': 21,  'RecordType': 36,  'RecordDate': 1785743831,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341521_22.json
+  Preview: "{  'RecordID': 22,  'RecordType': 36,  'RecordDate': 1785745981,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341590_23.json
+  Preview: "{  'RecordID': 23,  'RecordType': 36,  'RecordDate': 1785746106,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341654_24.json
+  Preview: "{  'RecordID': 24,  'RecordType': 36,  'RecordDate': 1785749661,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341719_25.json
+  Preview: "{  'RecordID': 25,  'RecordType': 3,  'RecordDate': 1785749825,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341784_26.json
+  Preview: "{  'RecordID': 26,  'RecordType': 3,  'RecordDate': 1785749831,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341855_27.json
+  Preview: "{  'RecordID': 27,  'RecordType': 3,  'RecordDate': 1785749836,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012341944_28.json
+  Preview: "{  'RecordID': 28,  'RecordType': 36,  'RecordDate': 1785749840,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342031_29.json
+  Preview: "{  'RecordID': 29,  'RecordType': 3,  'RecordDate': 1785754306,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342120_30.json
+  Preview: "{  'RecordID': 30,  'RecordType': 3,  'RecordDate': 1785754309,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342214_31.json
+  Preview: "{  'RecordID': 31,  'RecordType': 3,  'RecordDate': 1785754314,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342282_32.json
+  Preview: "{  'RecordID': 32,  'RecordType': 3,  'RecordDate': 1785754318,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342348_33.json
+  Preview: "{  'RecordID': 33,  'RecordType': 3,  'RecordDate': 1785754322,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342441_34.json
+  Preview: "{  'RecordID': 34,  'RecordType': 3,  'RecordDate': 1785797094,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342502_35.json
+  Preview: "{  'RecordID': 35,  'RecordType': 3,  'RecordDate': 1785797485,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342569_36.json
+  Preview: "{  'RecordID': 36,  'RecordType': 3,  'RecordDate': 1785797488,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342652_37.json
+  Preview: "{  'RecordID': 37,  'RecordType': 3,  'RecordDate': 1785797496,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342736_38.json
+  Preview: "{  'RecordID': 38,  'RecordType': 3,  'RecordDate': 1785797499,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342793_39.json
+  Preview: "{  'RecordID': 39,  'RecordType': 3,  'RecordDate': 1785797508,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342853_40.json
+  Preview: "{  'RecordID': 40,  'RecordType': 3,  'RecordDate': 1785797510,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012342944_41.json
+  Preview: "{  'RecordID': 41,  'RecordType': 3,  'RecordDate': 1785797515,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343014_42.json
+  Preview: "{  'RecordID': 42,  'RecordType': 3,  'RecordDate': 1785797752,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343111_43.json
+  Preview: "{  'RecordID': 43,  'RecordType': 3,  'RecordDate': 1785798030,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343209_44.json
+  Preview: "{  'RecordID': 44,  'RecordType': 3,  'RecordDate': 1785798062,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343273_45.json
+  Preview: "{  'RecordID': 45,  'RecordType': 3,  'RecordDate': 1785798104,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343338_46.json
+  Preview: "{  'RecordID': 46,  'RecordType': 3,  'RecordDate': 1785810556,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343407_47.json
+  Preview: "{  'RecordID': 47,  'RecordType': 3,  'RecordDate': 1785810569,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343497_48.json
+  Preview: "{  'RecordID': 48,  'RecordType': 3,  'RecordDate': 1785824513,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343586_49.json
+  Preview: "{  'RecordID': 49,  'RecordType': 3,  'RecordDate': 1785825072,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343650_50.json
+  Preview: "{  'RecordID': 50,  'RecordType': 3,  'RecordDate': 1785826781,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343740_51.json
+  Preview: "{  'RecordID': 51,  'RecordType': 36,  'RecordDate': 1785828141,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343833_52.json
+  Preview: "{  'RecordID': 52,  'RecordType': 36,  'RecordDate': 1785828142,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '', ..."
+- File: App_Data\records\FC-8190H25061293_20260806012343931_53.json
+  Preview: "{  'RecordID': 53,  'RecordType': 3,  'RecordDate': 1785828244,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012344023_54.json
+  Preview: "{  'RecordID': 54,  'RecordType': 3,  'RecordDate': 1785828249,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012344115_55.json
+  Preview: "{  'RecordID': 55,  'RecordType': 3,  'RecordDate': 1785828601,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
+- File: App_Data\records\FC-8190H25061293_20260806012344207_56.json
   Preview: "{  'RecordID': 56,  'RecordType': 3,  'RecordDate': 1785834072,  'UserID': '555020450',  'Code': '555020450',  'Name': 'cch50',  'IdentityCard': '',  ..."
 - File: App_Data\records\SV-8396H26031028_20260803043859547_6.json
   Preview: "{  'RecordID': 6,  'RecordType': 36,  'RecordDate': 1785735483,  'UserID': '555020411',  'Name': 'cch11',  'IdentityCard': '',  'Job': '',  'Departmen..."
@@ -469,6 +597,28 @@ Architecture:
   Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 8,  'RecordDate': 1785798049 }"
 - File: App_Data\records\sys_FC-8190H25061293_20260804072338142_9.json
   Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 9,  'RecordDate': 1785828177 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012203817_10.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 10,  'RecordDate': 1785958195 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344289_1.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 1,  'RecordDate': 1785722982 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344292_2.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 2,  'RecordDate': 1785722987 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344293_3.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 3,  'RecordDate': 1785732571 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344294_4.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 4,  'RecordDate': 1785733285 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344295_5.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 5,  'RecordDate': 1785734096 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344296_6.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 6,  'RecordDate': 1785734330 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344298_7.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 7,  'RecordDate': 1785749803 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344298_8.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 8,  'RecordDate': 1785798049 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344299_9.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 9,  'RecordDate': 1785828177 }"
+- File: App_Data\records\sys_FC-8190H25061293_20260806012344300_10.json
+  Preview: "{  'DeviceSN': 'FC-8190H25061293',  'RecordType': 2,  'RecordID': 10,  'RecordDate': 1785958195 }"
 - File: App_Data\records\sys_SV-8396H26031028_20260803072736567_4.json
   Preview: "{  'DeviceSN': 'SV-8396H26031028',  'RecordType': 2,  'RecordID': 4,  'RecordDate': 1785745 }"
 - File: App_Data\records\sys_SV-8396H26031028_20260803073416540_5.json
@@ -494,22 +644,30 @@ Architecture:
 - File: App_Data\records\sys_SV-8396H26031028_20260805001232567_12.json
   Preview: "{  'DeviceSN': 'SV-8396H26031028',  'RecordType': 2,  'RecordID': 12,  'RecordDate': 1785888 }"
 - File: FaceDeviceDesktopClient\Forms\AccessControlSettingsForm.cs
+  Symbols: [AccessControlSettingsForm]
   Preview: "using System.Net.Http.Json; using System.Net.Http.Json; using System.Text.Json.Nodes; namespace FaceDeviceDesktopClient.Forms; /// <summary> /// HTTPv..."
 - File: FaceDeviceDesktopClient\Forms\AlarmSettingsForm.cs
+  Symbols: [AlarmSettingsForm]
   Preview: "using System.Net.Http.Json; using System.Text.Json.Nodes; namespace FaceDeviceDesktopClient.Forms; /// <summary> /// HTTPv2 �������� - �˶� ���� �� ///..."
 - File: FaceDeviceDesktopClient\Forms\DeviceDetailForm.cs
+  Symbols: [DeviceDetailForm]
   Preview: "using System.Net.Http.Json; using System.Text.Json; namespace FaceDeviceDesktopClient.Forms; public partial class DeviceDetailForm : Form {   private ..."
 - File: FaceDeviceDesktopClient\Forms\DeviceInstallForm.cs
+  Symbols: [DeviceInstallForm]
   Preview: "using System; using System.ComponentModel; using System.Windows.Forms; namespace FaceDeviceDesktopClient.Forms; public class DeviceInstallForm : Form ..."
 - File: FaceDeviceDesktopClient\Forms\DeviceRemoteControlForm.cs
+  Symbols: [DeviceRemoteControlForm]
   Preview: "using System; using System.ComponentModel; using System.Net.Http.Json; using System.Windows.Forms; namespace FaceDeviceDesktopClient.Forms; public cla..."
 - File: FaceDeviceDesktopClient\Forms\DeviceSettingsForm.cs
+  Symbols: [DeviceSettingsForm]
   Preview: "using System.Net.Http.Json; using System.Text.Json.Nodes; namespace FaceDeviceDesktopClient.Forms; public class DeviceSettingsForm : Form {   private ..."
 - File: FaceDeviceDesktopClient\Forms\DeviceUserListForm.cs
   Preview: "using System.Net.Http.Json; using System.Text.Json; namespace FaceDeviceDesktopClient.Forms; /// <summary> /// �ܸ��⿡ ��ϵ� ����� ����� �����ְ� �߰�/����..."
 - File: FaceDeviceDesktopClient\Forms\FacePhotoEditorForm.cs
+  Symbols: [FacePhotoEditorForm]
   Preview: "using System.Drawing.Drawing2D; namespace FaceDeviceDesktopClient.Forms; public partial class FacePhotoEditorForm : Form {   private PictureBox pictur..."
 - File: FaceDeviceDesktopClient\Forms\NetworkSettingsForm.cs
+  Symbols: [NetworkSettingsForm]
   Preview: "using System.Net.Http.Json; using System.Text.Json.Nodes; namespace FaceDeviceDesktopClient.Forms; /// <summary> /// HTTPv2 �������� - ��Ʈ��ũ ���� �� ..."
 - File: FaceDeviceDesktopClient\Services\DevicePhotoService.cs
   Preview: "using System.Security.Cryptography; using System.Text; namespace FaceDeviceDesktopClient; /// <summary> /// �ܸ��� �� UI�� �����Ͽ� ����� ������ �������..."

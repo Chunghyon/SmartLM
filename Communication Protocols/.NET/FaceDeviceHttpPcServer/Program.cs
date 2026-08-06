@@ -82,9 +82,17 @@ app.UseMiddleware<HttpLoggingMiddleware>();
 // admin UI 파일을 런타임에 자동 생성 (wwwroot/admin 폴더가 비어있거나 없을 때)
 AdminUiWriter.EnsureFiles(app.Environment.WebRootPath);
 
+// charset=utf-8 포함 Content-Type 설정 (JS/HTML 한글 깨짐 방지)
+var utf8ContentTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+utf8ContentTypes.Mappings[".js"]   = "application/javascript; charset=utf-8";
+utf8ContentTypes.Mappings[".mjs"]  = "application/javascript; charset=utf-8";
+utf8ContentTypes.Mappings[".html"] = "text/html; charset=utf-8";
+utf8ContentTypes.Mappings[".css"]  = "text/css; charset=utf-8";
+utf8ContentTypes.Mappings[".json"] = "application/json; charset=utf-8";
+
 // 정적 파일 서비스 구성
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = utf8ContentTypes });
 
 // 소스 wwwroot/admin 폴더를 추가 경로로 등록 (빌드 출력에 없는 경우 대비)
 var extraAdminPaths = new[]
@@ -99,7 +107,8 @@ foreach (var adminPath in extraAdminPaths)
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(adminPath),
-            RequestPath = "/admin"
+            RequestPath = "/admin",
+            ContentTypeProvider = utf8ContentTypes
         });
         LogHub.Instance.Info($"Admin static files served from: {adminPath}");
         break;
