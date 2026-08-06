@@ -89,6 +89,9 @@ public class PersonInfo
     // 유효기간 (Unix timestamp, 0=무제한)
     public uint ExpirationDate { get; set; }
 
+    // 개방 가능 횟수 (65535 = 무제한)
+    public int OpenTimes { get; set; } = 65535;
+
     // Backend uses Photo field, client uses PhotoUrl for display
     public string? Photo { get; set; }
 

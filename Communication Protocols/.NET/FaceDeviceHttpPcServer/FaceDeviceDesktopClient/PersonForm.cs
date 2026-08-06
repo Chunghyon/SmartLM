@@ -539,6 +539,7 @@ public partial class PersonForm : Form
             CardNum        = string.IsNullOrWhiteSpace(txtCard.Text) ? "0" : txtCard.Text.Trim(),
             Password       = txtPassword.Text.Trim(),
             ExpirationDate = expDate,
+            OpenTimes      = 65535,
             Fingerprints   = Person.Fingerprints,
             Palmveins      = Person.Palmveins
         };
