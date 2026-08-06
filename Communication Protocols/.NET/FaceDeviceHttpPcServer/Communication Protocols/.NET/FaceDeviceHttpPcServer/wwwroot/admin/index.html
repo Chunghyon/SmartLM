@@ -7,7 +7,7 @@
   <title>FaceDevice PC Client</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Segoe UI", "¸¼Àº °íµñ", Malgun Gothic, sans-serif; background: #f0f2f5; color: #333; font-size: 13px; }
+    body { font-family: "Segoe UI", "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½", Malgun Gothic, sans-serif; background: #f0f2f5; color: #333; font-size: 13px; }
 
     .header { background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 11px 20px; display: flex; align-items: center; gap: 12px; }
     .header h1 { font-size: 19px; font-weight: 600; }
@@ -90,46 +90,46 @@
   <span style="font-size:26px;">&#128274;</span>
   <div>
     <h1>FaceDevice PC Client</h1>
-    <div class="subtitle">¾ó±¼ÀÎ½Ä ´Ü¸»±â °ü¸® ½Ã½ºÅÛ</div>
+    <div class="subtitle">ï¿½ï¿½ï¿½Î½ï¿½ ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½</div>
   </div>
   <div style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.7);" id="headerTime"></div>
 </div>
 
 <div class="nav-tabs">
-  <button class="nav-tab active" data-tab="dashboard">&#128202; ´ë½Ãº¸µå</button>
-  <button class="nav-tab" data-tab="devices">&#128241; ´Ü¸»±â</button>
-  <button class="nav-tab" data-tab="personnel">&#128100; »ç¿ëÀÚ</button>
-  <button class="nav-tab" data-tab="attendance">&#128203; ÃâÀÔ±â·Ï</button>
+  <button class="nav-tab active" data-tab="dashboard">&#128202; ï¿½ï¿½Ãºï¿½ï¿½ï¿½</button>
+  <button class="nav-tab" data-tab="devices">&#128241; ï¿½Ü¸ï¿½ï¿½ï¿½</button>
+  <button class="nav-tab" data-tab="personnel">&#128100; ï¿½ï¿½ï¿½ï¿½ï¿½</button>
+  <button class="nav-tab" data-tab="attendance">&#128203; ï¿½ï¿½ï¿½Ô±ï¿½ï¿½</button>
 </div>
 
 <div class="container">
 
-  <!-- ===== ´ë½Ãº¸µå ===== -->
+  <!-- ===== ï¿½ï¿½Ãºï¿½ï¿½ï¿½ ===== -->
   <div id="dashboard-tab" class="tab-content active">
     <div class="stat-cards">
-      <div class="stat-card"><div class="val" id="statDevices">-</div><div class="lbl">µî·Ï ´Ü¸»±â</div></div>
-      <div class="stat-card" style="border-top-color:#27ae60"><div class="val" id="statOnline">-</div><div class="lbl">¿Â¶óÀÎ</div></div>
-      <div class="stat-card" style="border-top-color:#9b59b6"><div class="val" id="statPersonnel">-</div><div class="lbl">µî·Ï »ç¿ëÀÚ</div></div>
-      <div class="stat-card" style="border-top-color:#e74c3c"><div class="val" id="statRecords">-</div><div class="lbl">ÃâÀÔ ±â·Ï</div></div>
+      <div class="stat-card"><div class="val" id="statDevices">-</div><div class="lbl">ï¿½ï¿½ï¿½ ï¿½Ü¸ï¿½ï¿½ï¿½</div></div>
+      <div class="stat-card" style="border-top-color:#27ae60"><div class="val" id="statOnline">-</div><div class="lbl">ï¿½Â¶ï¿½ï¿½ï¿½</div></div>
+      <div class="stat-card" style="border-top-color:#9b59b6"><div class="val" id="statPersonnel">-</div><div class="lbl">ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½</div></div>
+      <div class="stat-card" style="border-top-color:#e74c3c"><div class="val" id="statRecords">-</div><div class="lbl">ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½</div></div>
     </div>
     <div class="panel">
       <div class="panel-header">
-        <span>½Ã½ºÅÛ Á¤º¸</span>
-        <button class="btn-secondary" onclick="refreshSystemInfo()" style="font-size:11px;padding:4px 9px;">&#128260; »õ·Î°íÄ§</button>
+        <span>ï¿½Ã½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</span>
+        <button class="btn-secondary" onclick="refreshSystemInfo()" style="font-size:11px;padding:4px 9px;">&#128260; ï¿½ï¿½ï¿½Î°ï¿½Ä§</button>
       </div>
       <div class="panel-body">
         <table>
-          <tr><th style="width:160px;">¼­¹ö URL</th><td id="infoServerUrl">-</td></tr>
-          <tr><th>µî·Ï ´Ü¸»±â</th><td id="infoDevices">-</td></tr>
-          <tr><th>µî·Ï »ç¿ëÀÚ</th><td id="infoPersonnel">-</td></tr>
-          <tr><th>ÃâÀÔ ±â·Ï</th><td id="infoRecords">-</td></tr>
+          <tr><th style="width:160px;">ï¿½ï¿½ï¿½ï¿½ URL</th><td id="infoServerUrl">-</td></tr>
+          <tr><th>ï¿½ï¿½ï¿½ ï¿½Ü¸ï¿½ï¿½ï¿½</th><td id="infoDevices">-</td></tr>
+          <tr><th>ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½</th><td id="infoPersonnel">-</td></tr>
+          <tr><th>ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½</th><td id="infoRecords">-</td></tr>
         </table>
       </div>
     </div>
     <div class="panel">
       <div class="panel-header">
-        <span>½Ã½ºÅÛ ·Î±×</span>
-        <button class="btn-secondary" onclick="clearLog()" style="font-size:11px;padding:4px 9px;">&#128465; Áö¿ì±â</button>
+        <span>ï¿½Ã½ï¿½ï¿½ï¿½ ï¿½Î±ï¿½</span>
+        <button class="btn-secondary" onclick="clearLog()" style="font-size:11px;padding:4px 9px;">&#128465; ï¿½ï¿½ï¿½ï¿½ï¿½</button>
       </div>
       <div class="panel-body">
         <div class="log-box" id="logBox"></div>
@@ -137,24 +137,24 @@
     </div>
   </div>
 
-  <!-- ===== ´Ü¸»±â ===== -->
+  <!-- ===== ï¿½Ü¸ï¿½ï¿½ï¿½ ===== -->
   <div id="devices-tab" class="tab-content">
     <div class="panel">
       <div class="panel-header">
-        <span>´Ü¸»±â °Ë»ö</span>
+        <span>ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½</span>
         <div class="btn-group">
-          <button class="btn-success" onclick="autoSearchDevices()">&#128269; ÀÚµ¿ °Ë»ö</button>
-          <button class="btn-primary" onclick="showNetworkScanDialog()">&#127760; ³×Æ®¿öÅ© ½ºÄµ</button>
+          <button class="btn-success" onclick="autoSearchDevices()">&#128269; ï¿½Úµï¿½ ï¿½Ë»ï¿½</button>
+          <button class="btn-primary" onclick="showNetworkScanDialog()">&#127760; ï¿½ï¿½Æ®ï¿½ï¿½Å© ï¿½ï¿½Äµ</button>
         </div>
       </div>
       <div class="panel-body">
         <div id="networkScanDialog" style="display:none;margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:4px;">
           <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px;">
-            <div class="form-group"><label>¼­ºê³Ý (¿¹: 10.100.100)</label><input type="text" id="scanSubnet" value="10.100.100"></div>
+            <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½: 10.100.100)</label><input type="text" id="scanSubnet" value="10.100.100"></div>
           </div>
           <div class="btn-group" style="margin-top:8px;">
-            <button class="btn-success" onclick="startNetworkScan()">½ºÄµ ½ÃÀÛ</button>
-            <button class="btn-secondary" onclick="document.getElementById('networkScanDialog').style.display='none'">Ãë¼Ò</button>
+            <button class="btn-success" onclick="startNetworkScan()">ï¿½ï¿½Äµ ï¿½ï¿½ï¿½ï¿½</button>
+            <button class="btn-secondary" onclick="document.getElementById('networkScanDialog').style.display='none'">ï¿½ï¿½ï¿½</button>
           </div>
         </div>
         <div id="discoveredContainer"></div>
@@ -163,13 +163,13 @@
 
     <div class="panel">
       <div class="panel-header">
-        <span>µî·ÏµÈ ´Ü¸»±â</span>
+        <span>ï¿½ï¿½Ïµï¿½ ï¿½Ü¸ï¿½ï¿½ï¿½</span>
         <div class="btn-group">
-          <button class="btn-secondary" onclick="refreshDevices()">&#128260; »õ·Î°íÄ§</button>
-          <button class="btn-primary"   onclick="pullSelectedDevicePeople()">&#11015; »ç¿ëÀÚ °¡Á®¿À±â</button>
-          <button class="btn-success"   onclick="distributeToDevices()">&#128228; ´Ü¸»±â·Î ¹èÆ÷</button>
-          <button class="btn-warning"   onclick="syncTimeSelected()">&#128336; ½Ã°£ µ¿±âÈ­</button>
-          <button class="btn-danger"    onclick="removeSelectedDevices()">&#128465; Á¦°Å</button>
+          <button class="btn-secondary" onclick="refreshDevices()">&#128260; ï¿½ï¿½ï¿½Î°ï¿½Ä§</button>
+          <button class="btn-primary"   onclick="pullSelectedDevicePeople()">&#11015; ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</button>
+          <button class="btn-success"   onclick="distributeToDevices()">&#128228; ï¿½Ü¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
+          <button class="btn-warning"   onclick="syncTimeSelected()">&#128336; ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½È­</button>
+          <button class="btn-danger"    onclick="removeSelectedDevices()">&#128465; ï¿½ï¿½ï¿½ï¿½</button>
         </div>
       </div>
       <div class="panel-body">
@@ -177,83 +177,83 @@
           <table>
             <thead><tr>
               <th style="width:38px"><input type="checkbox" id="chkAllDev" onclick="toggleAllDev(this)"></th>
-              <th style="width:42px">¼ø¹ø</th>
-              <th>´Ü¸»±â¸í</th>
-              <th>À§Ä¡</th>
-              <th>½Ã¸®¾ó³Ñ¹ö</th>
+              <th style="width:42px">ï¿½ï¿½ï¿½ï¿½</th>
+              <th>ï¿½Ü¸ï¿½ï¿½ï¿½ï¿½</th>
+              <th>ï¿½ï¿½Ä¡</th>
+              <th>ï¿½Ã¸ï¿½ï¿½ï¿½Ñ¹ï¿½</th>
               <th>IP</th>
-              <th>»óÅÂ</th>
-              <th>Á¦¾î</th>
+              <th>ï¿½ï¿½ï¿½ï¿½</th>
+              <th>ï¿½ï¿½ï¿½ï¿½</th>
             </tr></thead>
-            <tbody id="devicesBody"><tr><td colspan="8" class="empty-state">·Îµù Áß...</td></tr></tbody>
+            <tbody id="devicesBody"><tr><td colspan="8" class="empty-state">ï¿½Îµï¿½ ï¿½ï¿½...</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== »ç¿ëÀÚ ===== -->
+  <!-- ===== ï¿½ï¿½ï¿½ï¿½ï¿½ ===== -->
   <div id="personnel-tab" class="tab-content">
     <div class="panel">
       <div class="panel-header">
-        <span>»ç¿ëÀÚ ¸ñ·Ï</span>
+        <span>ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½</span>
         <div class="btn-group">
-          <button class="btn-success"   onclick="showAddPersonModal()">&#10133; Ãß°¡</button>
-          <button class="btn-primary"   onclick="editSelectedPerson()">&#9998; ¼öÁ¤</button>
-          <button class="btn-danger"    onclick="deleteSelectedPersonnel()">&#128465; Á¦°Å</button>
-          <button class="btn-secondary" onclick="refreshPersonnel()">&#128260; »õ·Î°íÄ§</button>
-          <button class="btn-info"      onclick="reloadFromFiles()">&#128194; ÆÄÀÏ ºÒ·¯¿À±â</button>
-          <button class="btn-warning"   onclick="distributePersonnel()">&#128228; ´Ü¸»±â·Î ¹èÆ÷</button>
+          <button class="btn-success"   onclick="showAddPersonModal()">&#10133; ï¿½ß°ï¿½</button>
+          <button class="btn-primary"   onclick="editSelectedPerson()">&#9998; ï¿½ï¿½ï¿½ï¿½</button>
+          <button class="btn-danger"    onclick="deleteSelectedPersonnel()">&#128465; ï¿½ï¿½ï¿½ï¿½</button>
+          <button class="btn-secondary" onclick="refreshPersonnel()">&#128260; ï¿½ï¿½ï¿½Î°ï¿½Ä§</button>
+          <button class="btn-info"      onclick="reloadFromFiles()">&#128194; ï¿½ï¿½ï¿½ï¿½ ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½</button>
+          <button class="btn-warning"   onclick="distributePersonnel()">&#128228; ï¿½Ü¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
         </div>
       </div>
       <div class="panel-body">
         <div class="search-bar">
-          <input type="text" id="searchPerson" placeholder="&#128269; ÀÌ¸§, ID, Ä«µå¹øÈ£ °Ë»ö..." oninput="filterPersonnel()">
+          <input type="text" id="searchPerson" placeholder="&#128269; ï¿½Ì¸ï¿½, ID, Ä«ï¿½ï¿½ï¿½È£ ï¿½Ë»ï¿½..." oninput="filterPersonnel()">
         </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
               <th style="width:38px"><input type="checkbox" id="chkAllPerson" onclick="toggleAllPerson(this)"></th>
-              <th>µ¿</th><th>È£</th><th>¸â¹ö</th><th>»ç¿ëÀÚ¸í</th>
-              <th style="width:48px">Ä«µå</th>
-              <th style="width:58px">ºñ¹Ð¹øÈ£</th>
-              <th style="width:48px">Áö¹®</th>
-              <th style="width:52px">¼Õ¹Ù´Ú</th>
-              <th style="width:48px">¾ó±¼</th>
+              <th>ï¿½ï¿½</th><th>È£</th><th>ï¿½ï¿½ï¿½</th><th>ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½</th>
+              <th style="width:48px">Ä«ï¿½ï¿½</th>
+              <th style="width:58px">ï¿½ï¿½Ð¹ï¿½È£</th>
+              <th style="width:48px">ï¿½ï¿½ï¿½ï¿½</th>
+              <th style="width:52px">ï¿½Õ¹Ù´ï¿½</th>
+              <th style="width:48px">ï¿½ï¿½</th>
             </tr></thead>
-            <tbody id="personnelBody"><tr><td colspan="10" class="empty-state">·Îµù Áß...</td></tr></tbody>
+            <tbody id="personnelBody"><tr><td colspan="10" class="empty-state">ï¿½Îµï¿½ ï¿½ï¿½...</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== ÃâÀÔ±â·Ï ===== -->
+  <!-- ===== ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ ===== -->
   <div id="attendance-tab" class="tab-content">
     <div class="panel">
-      <div class="panel-header">ÃâÀÔ±â·Ï °Ë»ö</div>
+      <div class="panel-header">ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ ï¿½Ë»ï¿½</div>
       <div class="panel-body">
         <div class="form-grid">
-          <div class="form-group"><label>»ç¿ëÀÚ ID</label><input type="text" id="attUID" placeholder="»ç¿ëÀÚ ID"></div>
-          <div class="form-group"><label>ÀÌ¸§</label><input type="text" id="attName" placeholder="ÀÌ¸§"></div>
-          <div class="form-group"><label>´Ü¸»±â</label><select id="attDevice"><option value="">ÀüÃ¼ ´Ü¸»±â</option></select></div>
-          <div class="form-group"><label>½ÃÀÛÀÏ½Ã</label><input type="datetime-local" id="attStart"></div>
-          <div class="form-group"><label>Á¾·áÀÏ½Ã</label><input type="datetime-local" id="attEnd"></div>
+          <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ï¿½ ID</label><input type="text" id="attUID" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ ID"></div>
+          <div class="form-group"><label>ï¿½Ì¸ï¿½</label><input type="text" id="attName" placeholder="ï¿½Ì¸ï¿½"></div>
+          <div class="form-group"><label>ï¿½Ü¸ï¿½ï¿½ï¿½</label><select id="attDevice"><option value="">ï¿½ï¿½Ã¼ ï¿½Ü¸ï¿½ï¿½ï¿½</option></select></div>
+          <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ï¿½Ï½ï¿½</label><input type="datetime-local" id="attStart"></div>
+          <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ï¿½Ï½ï¿½</label><input type="datetime-local" id="attEnd"></div>
         </div>
         <div class="btn-group">
-          <button class="btn-success" onclick="searchAttendance()">&#128269; °Ë»ö</button>
-          <button class="btn-secondary" onclick="clearAttSearch()">&#8617; ÃÊ±âÈ­</button>
-          <button class="btn-warning" onclick="exportAttendance()">&#128229; ³»º¸³»±â</button>
+          <button class="btn-success" onclick="searchAttendance()">&#128269; ï¿½Ë»ï¿½</button>
+          <button class="btn-secondary" onclick="clearAttSearch()">&#8617; ï¿½Ê±ï¿½È­</button>
+          <button class="btn-warning" onclick="exportAttendance()">&#128229; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</button>
         </div>
       </div>
     </div>
     <div class="panel">
-      <div class="panel-header" id="attHeader">ÃâÀÔ ±â·Ï</div>
+      <div class="panel-header" id="attHeader">ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½</div>
       <div class="panel-body">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>½Ã°£</th><th>»ç¿ëÀÚ ID</th><th>ÀÌ¸§</th><th>´Ü¸»±â SN</th><th>±â·Ï Å¸ÀÔ</th><th>Ã¼¿Â</th><th>»çÁø</th></tr></thead>
-            <tbody id="attBody"><tr><td colspan="7" class="empty-state">°Ë»ö Á¶°ÇÀ» ÀÔ·ÂÇÏ¼¼¿ä.</td></tr></tbody>
+            <thead><tr><th>ï¿½Ã°ï¿½</th><th>ï¿½ï¿½ï¿½ï¿½ï¿½ ID</th><th>ï¿½Ì¸ï¿½</th><th>ï¿½Ü¸ï¿½ï¿½ï¿½ SN</th><th>ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½</th><th>Ã¼ï¿½ï¿½</th><th>ï¿½ï¿½ï¿½ï¿½</th></tr></thead>
+            <tbody id="attBody"><tr><td colspan="7" class="empty-state">ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½.</td></tr></tbody>
           </table>
         </div>
         <div id="attPager" class="btn-group" style="margin-top:8px;"></div>
@@ -263,101 +263,101 @@
 
 </div><!-- /container -->
 
-<!-- »ç¿ëÀÚ Ãß°¡/¼öÁ¤ ¸ð´Þ -->
+<!-- ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ -->
 <div class="modal-overlay" id="personModal">
   <div class="modal">
-    <h2 id="personModalTitle">»ç¿ëÀÚ Ãß°¡</h2>
+    <h2 id="personModalTitle">ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½</h2>
     <div class="form-grid">
-      <div class="form-group"><label>»ç¿ëÀÚ ID *</label><input type="text" id="mUid" maxlength="32"></div>
-      <div class="form-group"><label>ÀÌ¸§ *</label><input type="text" id="mName" maxlength="64"></div>
-      <div class="form-group"><label>µ¿ (Department)</label><input type="text" id="mDong" maxlength="64"></div>
+      <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ï¿½ ID *</label><input type="text" id="mUid" maxlength="32"></div>
+      <div class="form-group"><label>ï¿½Ì¸ï¿½ *</label><input type="text" id="mName" maxlength="64"></div>
+      <div class="form-group"><label>ï¿½ï¿½ (Department)</label><input type="text" id="mDong" maxlength="64"></div>
       <div class="form-group"><label>È£ (Job)</label><input type="text" id="mHo" maxlength="64"></div>
-      <div class="form-group"><label>¸â¹ö (IdentityCard)</label><input type="text" id="mMember" maxlength="64"></div>
-      <div class="form-group"><label>Ä«µå¹øÈ£</label><input type="text" id="mCard" maxlength="64"></div>
-      <div class="form-group"><label>ºñ¹Ð¹øÈ£ (4-8ÀÚ¸®)</label><input type="password" id="mPass" maxlength="8"></div>
-      <div class="form-group"><label>ÃâÀÔ Å¸ÀÔ</label>
-        <select id="mAccess"><option value="0">ÀÏ¹Ý »ç¿ëÀÚ</option><option value="1">°ü¸®ÀÚ</option><option value="2">ºí·¢¸®½ºÆ®</option></select>
+      <div class="form-group"><label>ï¿½ï¿½ï¿½ (IdentityCard)</label><input type="text" id="mMember" maxlength="64"></div>
+      <div class="form-group"><label>Ä«ï¿½ï¿½ï¿½È£</label><input type="text" id="mCard" maxlength="64"></div>
+      <div class="form-group"><label>ï¿½ï¿½Ð¹ï¿½È£ (4-8ï¿½Ú¸ï¿½)</label><input type="password" id="mPass" maxlength="8"></div>
+      <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½</label>
+        <select id="mAccess"><option value="0">ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½</option><option value="1">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</option><option value="2">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®</option></select>
       </div>
-      <div class="form-group"><label>¸¸·á ÀÏ½Ã (0=¹«Á¦ÇÑ)</label><input type="datetime-local" id="mExpiry"></div>
+      <div class="form-group"><label>ï¿½ï¿½ï¿½ï¿½ ï¿½Ï½ï¿½ (0=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)</label><input type="datetime-local" id="mExpiry"></div>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:6px;">¾ó±¼ »çÁø</label>
+      <label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:6px;">ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</label>
       <div style="display:flex;align-items:center;gap:12px;">
         <div id="mPhotoWrap" class="photo-placeholder">&#128566;</div>
         <div>
           <input type="file" id="mPhotoFile" accept="image/*" style="display:none" onchange="previewPhoto(event)">
           <div class="btn-group" style="flex-direction:column;gap:4px;align-items:flex-start;">
-            <button class="btn-secondary" onclick="document.getElementById('mPhotoFile').click()">&#128247; »çÁø ¼±ÅÃ</button>
-            <button class="btn-danger" onclick="clearPhoto()">&#10005; »çÁø Á¦°Å</button>
+            <button class="btn-secondary" onclick="document.getElementById('mPhotoFile').click()">&#128247; ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
+            <button class="btn-danger" onclick="clearPhoto()">&#10005; ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
           </div>
           <div id="mPhotoStatus" style="font-size:11px;color:#888;margin-top:5px;"></div>
         </div>
       </div>
     </div>
     <div class="btn-group" style="justify-content:flex-end;">
-      <button class="btn-success" onclick="savePerson()">&#128190; ÀúÀå</button>
-      <button class="btn-secondary" onclick="closePersonModal()">&#10005; Ãë¼Ò</button>
+      <button class="btn-success" onclick="savePerson()">&#128190; ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-secondary" onclick="closePersonModal()">&#10005; ï¿½ï¿½ï¿½</button>
     </div>
   </div>
 </div>
 
-<!-- ´Ü¸»±â ¼³Á¤ ¸ð´Þ -->
+<!-- ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ -->
 <div class="modal-overlay" id="devSettingsModal">
   <div class="modal" style="min-width:520px;">
-    <h2 id="devSettingsTitle">´Ü¸»±â ¼³Á¤</h2>
+    <h2 id="devSettingsTitle">ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</h2>
     <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-      <div class="form-group"><label>´Ü¸»±â¸í</label><input type="text" id="dName"></div>
-      <div class="form-group"><label>À§Ä¡</label><input type="text" id="dTag"></div>
+      <div class="form-group"><label>ï¿½Ü¸ï¿½ï¿½ï¿½ï¿½</label><input type="text" id="dName"></div>
+      <div class="form-group"><label>ï¿½ï¿½Ä¡</label><input type="text" id="dTag"></div>
     </div>
     <div class="btn-group" style="margin-bottom:14px;">
-      <button class="btn-primary" onclick="saveDeviceInfo()">&#128190; Á¤º¸ ÀúÀå</button>
+      <button class="btn-primary" onclick="saveDeviceInfo()">&#128190; ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
     </div>
     <hr style="border:none;border-top:1px solid #eee;margin-bottom:12px;">
     <div class="btn-group" style="flex-wrap:wrap;">
-      <button class="btn-secondary" onclick="devCmd('restart')">&#128260; Àç½ÃÀÛ</button>
-      <button class="btn-primary"   onclick="devCmd('opendoor')">&#128682; ¹® ¿­±â</button>
-      <button class="btn-info"      onclick="openDeviceUserList()">&#128101; »ç¿ëÀÚ Á¤º¸</button>
-      <button class="btn-danger"    onclick="devCmd('deleteAllPeople')">&#128465; »ç¿ëÀÚ ÀüÃ¼»èÁ¦</button>
-      <button class="btn-danger"    onclick="devCmd('clearRecords')">&#128203; ·Î±× »èÁ¦</button>
-      <button class="btn-secondary" onclick="devCmd('repostRecord')">&#128228; ·Î±× °¡Á®¿À±â</button>
-      <button class="btn-info"      onclick="devCmd('synctime')">&#128336; ½Ã°£ µ¿±âÈ­</button>
+      <button class="btn-secondary" onclick="devCmd('restart')">&#128260; ï¿½ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-primary"   onclick="devCmd('opendoor')">&#128682; ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-info"      onclick="openDeviceUserList()">&#128101; ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-danger"    onclick="devCmd('deleteAllPeople')">&#128465; ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-danger"    onclick="devCmd('clearRecords')">&#128203; ï¿½Î±ï¿½ ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-secondary" onclick="devCmd('repostRecord')">&#128228; ï¿½Î±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-info"      onclick="devCmd('synctime')">&#128336; ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½È­</button>
     </div>
     <div class="log-box" id="deviceCmdLog" style="height:90px;margin-top:10px;"></div>
     <div class="btn-group" style="justify-content:flex-end;margin-top:8px;">
-      <button class="btn-secondary" onclick="closeDevSettings()">´Ý±â</button>
+      <button class="btn-secondary" onclick="closeDevSettings()">ï¿½Ý±ï¿½</button>
     </div>
   </div>
 </div>
 
-<!-- ´Ü¸»±â »ç¿ëÀÚ ¸ñ·Ï ¸ð´Þ -->
+<!-- ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ -->
 <div class="modal-overlay" id="devUsersModal">
   <div class="modal" style="min-width:640px;">
-    <h2 id="devUsersTitle">´Ü¸»±â »ç¿ëÀÚ Á¤º¸</h2>
+    <h2 id="devUsersTitle">ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</h2>
     <div class="table-wrap" style="max-height:380px;overflow-y:auto;">
       <table>
-        <thead><tr><th>UserID</th><th>ÀÌ¸§</th><th>Ä«µå</th><th>¾ó±¼</th><th>¼Õ¹Ù´Ú</th><th>¸¸·áÀÏ</th></tr></thead>
-        <tbody id="devUsersBody"><tr><td colspan="6" class="empty-state">·Îµù Áß...</td></tr></tbody>
+        <thead><tr><th>UserID</th><th>ï¿½Ì¸ï¿½</th><th>Ä«ï¿½ï¿½</th><th>ï¿½ï¿½</th><th>ï¿½Õ¹Ù´ï¿½</th><th>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</th></tr></thead>
+        <tbody id="devUsersBody"><tr><td colspan="6" class="empty-state">ï¿½Îµï¿½ ï¿½ï¿½...</td></tr></tbody>
       </table>
     </div>
     <div class="btn-group" style="justify-content:flex-end;margin-top:10px;">
-      <button class="btn-secondary" onclick="closeDevUsers()">´Ý±â</button>
+      <button class="btn-secondary" onclick="closeDevUsers()">ï¿½Ý±ï¿½</button>
     </div>
   </div>
 </div>
 
-<!-- ¹èÆ÷ ´ë»ó ´Ü¸»±â ¼±ÅÃ ¸ð´Þ -->
+<!-- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ -->
 <div class="modal-overlay" id="distributeModal">
   <div class="modal" style="min-width:380px;">
-    <h2>¹èÆ÷ ´ë»ó ´Ü¸»±â ¼±ÅÃ</h2>
+    <h2>ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ü¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</h2>
     <div id="distributeDevList" style="margin-bottom:14px;max-height:300px;overflow-y:auto;"></div>
     <div class="btn-group" style="justify-content:flex-end;">
-      <button class="btn-success" onclick="executeDistribute()">&#128228; ¹èÆ÷</button>
-      <button class="btn-secondary" onclick="closeDistributeModal()">Ãë¼Ò</button>
+      <button class="btn-success" onclick="executeDistribute()">&#128228; ï¿½ï¿½ï¿½ï¿½</button>
+      <button class="btn-secondary" onclick="closeDistributeModal()">ï¿½ï¿½ï¿½</button>
     </div>
   </div>
 </div>
 
-<div class="status-bar" id="statusBar">ÁØºñ</div>
+<div class="status-bar" id="statusBar">ï¿½Øºï¿½</div>
 <script src="app.js"></script>
 </body>
 </html>

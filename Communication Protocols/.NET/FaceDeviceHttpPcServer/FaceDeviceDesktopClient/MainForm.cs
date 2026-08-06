@@ -182,7 +182,7 @@ public partial class MainForm : Form
         dgvPersonnel.Columns.Add(new DataGridViewCheckBoxColumn { Name = "ColSelect",      HeaderText = "선택",         Width = 55,  SortMode = DataGridViewColumnSortMode.NotSortable, ReadOnly = false });
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",        HeaderText = "동",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",          HeaderText = "호",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "멤버",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "멤버#",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",        HeaderText = "사용자명",     Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",        HeaderText = "카드",         Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
         dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword",    HeaderText = "비밀번호",     Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
@@ -260,7 +260,7 @@ public partial class MainForm : Form
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttTime",   HeaderText = "시간",     DataPropertyName = "RecordTime",  Width = 160 });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDong",   HeaderText = "동",     DataPropertyName = "UserID",      Width = 65  });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttHo",     HeaderText = "호",       DataPropertyName = "UserID",      Width = 65  });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttMember", HeaderText = "멤버",   DataPropertyName = "UserID",      Width = 55  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttMember", HeaderText = "멤버#",   DataPropertyName = "UserID",      Width = 55  });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttName",   HeaderText = "사용자명", DataPropertyName = "UserName",    Width = 130 });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDevice", HeaderText = "단말기",   DataPropertyName = "DeviceSN",    Width = 130 });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttEvent",  HeaderText = "이벤트",    DataPropertyName = "RecordType",  Width = 100 });
@@ -1610,7 +1610,7 @@ public partial class MainForm : Form
             dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Time",   HeaderText = "시간",     Width = 160 });
             dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Dong",   HeaderText = "동",       Width = 65  });
             dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Ho",     HeaderText = "호",       Width = 65  });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Member", HeaderText = "멤버",     Width = 55  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Member", HeaderText = "멤버#",     Width = 55  });
             dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Name",   HeaderText = "사용자명", Width = 130 });
             dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Device", HeaderText = "단말기",   Width = 130 });
             dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Event",  HeaderText = "이벤트",   Width = 100 });

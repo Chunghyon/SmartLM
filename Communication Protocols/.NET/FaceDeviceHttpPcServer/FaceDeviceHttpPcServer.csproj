@@ -13,8 +13,4 @@
     <Content Update="wwwroot\**\*" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Communication Protocols\.NET\FaceDeviceHttpPcServer\" />
-  </ItemGroup>
-
 </Project>

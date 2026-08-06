@@ -1,5 +1,5 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-08-06T11:53:10.5757258+09:00
+# Generated: 2026-08-12T14:52:24.2282327+09:00
 # Root: D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer
 Architecture:
   Type: Backend (C#/.NET)
@@ -162,7 +162,7 @@ Architecture:
 - File: App_Data\people\555020452.json
   Preview: "{  'UserID': '555020452',  'Code': '',  'Name': '\uAE40\uAC74\uD76C',  'Job': '',  'Department': '',  'IdentityCard': '',  'Attachment': '',  'Photo':..."
 - File: App_Data\people\556000101.json
-  Preview: "{  'UserID': '556000101',  'Code': '',  'Name': '\uD14C\uC2A4\uD2B8',  'Job': '',  'Department': '',  'IdentityCard': '',  'Attachment': '',  'Photo':..."
+  Preview: "{  'UserID': '556000101',  'Code': '556000101',  'Name': '\uD14C\uC2A4\uD2B8',  'Job': '',  'Department': '',  'IdentityCard': '',  'Attachment': '', ..."
 - File: App_Data\records\FC-8190H25061293_20260803043856580_1.json
   Preview: "{  'RecordID': 1,  'RecordType': 36,  'RecordDate': 1785731386,  'UserID': '555020411',  'Code': '555020411',  'Name': 'cch11',  'IdentityCard': '',  ..."
 - File: App_Data\records\FC-8190H25061293_20260803045817784_2.json
@@ -672,4 +672,4 @@ Architecture:
 - File: FaceDeviceDesktopClient\Services\DevicePhotoService.cs
   Preview: "using System.Security.Cryptography; using System.Text; namespace FaceDeviceDesktopClient; /// <summary> /// �ܸ��� �� UI�� �����Ͽ� ����� ������ �������..."
 - File: Communication Protocols\.NET\FaceDeviceHttpPcServer\write_admin.py
-  Preview: "import os d = r'D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer\wwwroot\admin' os.makedirs(d, exist_ok=True) # ── inde..."
+  Preview: "import os d = r'D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer\wwwroot\admin' os.makedirs(d, exist_ok=True) # ���� in..."

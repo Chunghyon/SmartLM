@@ -552,7 +552,7 @@ namespace FaceDeviceDesktopClient
             this.lblAttMember.AutoSize = true;
             this.lblAttMember.Location = new System.Drawing.Point(196, 27);
             this.lblAttMember.Name = "lblAttMember";
-            this.lblAttMember.Text = "¸â¹ö:";
+            this.lblAttMember.Text = "¸â¹ö#:";
 
             this.txtAttMember.Location = new System.Drawing.Point(230, 23);
             this.txtAttMember.Name = "txtAttMember";

@@ -268,7 +268,7 @@ public partial class PersonForm : Form
         txtHo = new TextBox { Location = new Point(166, y), Width = 75, MaxLength = 10 };
         mainPanel.Controls.Add(txtHo);
 
-        mainPanel.Controls.Add(new Label { Text = "¸â¹ö:", Location = new Point(253, y + 2), Width = 43 });
+        mainPanel.Controls.Add(new Label { Text = "¸â¹ö#:", Location = new Point(253, y + 2), Width = 43 });
         txtMember = new TextBox { Location = new Point(299, y), Width = 60, MaxLength = 5 };
         mainPanel.Controls.Add(txtMember);
         y += 38;
