@@ -1,5 +1,5 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-08-06T10:58:08.9085139+09:00
+# Generated: 2026-08-06T11:53:10.5757258+09:00
 # Root: D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer
 Architecture:
   Type: Backend (C#/.NET)
@@ -672,4 +672,4 @@ Architecture:
 - File: FaceDeviceDesktopClient\Services\DevicePhotoService.cs
   Preview: "using System.Security.Cryptography; using System.Text; namespace FaceDeviceDesktopClient; /// <summary> /// �ܸ��� �� UI�� �����Ͽ� ����� ������ �������..."
 - File: Communication Protocols\.NET\FaceDeviceHttpPcServer\write_admin.py
-  Preview: "import os d = r'D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer\wwwroot\admin' os.makedirs(d, exist_ok=True) # ���� in..."
+  Preview: "import os d = r'D:\Documents\Smart_LM_China\Communication Protocols\.NET\FaceDeviceHttpPcServer\wwwroot\admin' os.makedirs(d, exist_ok=True) # ── inde..."

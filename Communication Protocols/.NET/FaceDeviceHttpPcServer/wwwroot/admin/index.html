@@ -168,12 +168,12 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
         <input type="text" id="searchPerson" placeholder="이름, ID, 카드번호 검색..." oninput="filterPersonnel()">
         <input type="text" id="filterDong" placeholder="동" style="max-width:80px" oninput="filterPersonnel()">
         <input type="text" id="filterHo" placeholder="호" style="max-width:80px" oninput="filterPersonnel()">
-        <input type="text" id="filterMember" placeholder="멤버" style="max-width:80px" oninput="filterPersonnel()">
+        <input type="text" id="filterMember" placeholder="멤버#" style="max-width:80px" oninput="filterPersonnel()">
       </div>
       <div class="table-wrap"><table>
         <thead><tr>
           <th style="width:38px"><input type="checkbox" id="chkAllPerson" onclick="toggleAllPerson(this)"></th>
-          <th>동</th><th>호</th><th>멤버</th><th>사용자명</th>
+          <th>동</th><th>호</th><th>멤버#</th><th>사용자명</th>
           <th style="width:48px">카드</th><th style="width:58px">비밀번호</th>
           <th style="width:48px">지문</th><th style="width:52px">손바닥</th><th style="width:48px">얼굴</th>
         </tr></thead>
@@ -191,7 +191,7 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
       <div class="form-grid">
         <div class="form-group"><label>동</label><input type="text" id="attDong" placeholder="동 번호"></div>
         <div class="form-group"><label>호</label><input type="text" id="attHo" placeholder="호 번호"></div>
-        <div class="form-group"><label>멤버</label><input type="text" id="attMember" placeholder="멤버 번호"></div>
+        <div class="form-group"><label>멤버#</label><input type="text" id="attMember" placeholder="멤버# 번호"></div>
         <div class="form-group"><label>이름</label><input type="text" id="attName" placeholder="이름"></div>
         <div class="form-group"><label>단말기</label>
           <select id="attDevice"><option value="">전체 단말기</option></select></div>
@@ -209,7 +209,7 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
     <div class="panel-header" id="attHeader">출입 기록</div>
     <div class="panel-body">
       <div class="table-wrap"><table>
-        <thead><tr><th>시간</th><th>동</th><th>호</th><th>멤버</th><th>이름</th>
+        <thead><tr><th>시간</th><th>동</th><th>호</th><th>멤버#</th><th>이름</th>
           <th>단말기 SN</th><th>기록 타입</th><th>체온</th><th>사진</th></tr></thead>
         <tbody id="attBody"><tr><td colspan="9" class="empty-state">검색 조건을 입력하세요.</td></tr></tbody>
       </table></div>
@@ -225,11 +225,11 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
   <div class="modal">
     <h2 id="personModalTitle">사용자 추가</h2>
     <div class="form-grid">
-      <div class="form-group"><label>사용자 ID *</label><input type="text" id="mUid" maxlength="32"></div>
+      <div class="form-group"><label>동 *</label><input type="text" id="mDong" maxlength="10" placeholder="동 번호 (숫자)"></div>
+      <div class="form-group"><label>호 *</label><input type="text" id="mHo" maxlength="10" placeholder="호 번호 (숫자)"></div>
+      <div class="form-group"><label>멤버# *</label><input type="text" id="mMember" maxlength="5" placeholder="멤버 번호 (숫자)"></div>
       <div class="form-group"><label>이름 *</label><input type="text" id="mName" maxlength="64"></div>
-      <div class="form-group"><label>동 (Department)</label><input type="text" id="mDong" maxlength="64"></div>
-      <div class="form-group"><label>호 (Job)</label><input type="text" id="mHo" maxlength="64"></div>
-      <div class="form-group"><label>멤버 (IdentityCard)</label><input type="text" id="mMember" maxlength="64"></div>
+      <div class="form-group"><label style="color:#aaa;font-size:10px">사용자 ID (자동)</label><input type="text" id="mUid" maxlength="32" readonly style="background:#f5f5f5;color:#999;font-size:11px"></div>
       <div class="form-group"><label>카드번호</label><input type="text" id="mCard" maxlength="64"></div>
       <div class="form-group"><label>비밀번호</label><input type="password" id="mPass" maxlength="8"></div>
       <div class="form-group"><label>출입 타입</label>

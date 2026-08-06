@@ -293,7 +293,12 @@ async function distributePersonnel(){
   const u=getCheckedPersonUIDs();if(!u.length){setStatus('배포할 사용자를 선택하세요','err');return;}
   if(!devices.length)await refreshDevices();showDistributeModal(u);
 }
-function showAddPersonModal(){_editingUserId=null;_photoBase64=null;clearPersonModal();document.getElementById('personModalTitle').textContent='사용자 추가';document.getElementById('mUid').disabled=false;document.getElementById('personModal').classList.add('open');}
+function showAddPersonModal(){
+  _editingUserId=null;_photoBase64=null;clearPersonModal();
+  document.getElementById('personModalTitle').textContent='사용자 추가';
+  document.getElementById('mUid').value='';
+  document.getElementById('personModal').classList.add('open');
+}
 async function openEditPerson(uid){
   if(!uid){const u=getCheckedPersonUIDs();if(u.length!==1){setStatus('수정할 사용자를 1명 선택하세요','err');return;}uid=u[0];}
   _editingUserId=uid;_photoBase64=null;clearPersonModal();
@@ -303,11 +308,20 @@ async function openEditPerson(uid){
     const r=await apiPost('/api/People/GetDetail',{UserID:uid});
     if(!r.result)throw new Error(r.error??'사용자 조회 실패');
     const p=r.content??r.Data??r;
+    // UserID → 동/호/멤버# 분리표시
+    const n=parseInt(p.UserID,10);
+    if(!isNaN(n)&&p.UserID.length>=3){
+      document.getElementById('mDong').value=String(Math.floor(n/1000000));
+      document.getElementById('mHo').value=String(Math.floor((n/100)%10000));
+      document.getElementById('mMember').value=String(n%100);
+    }else{
+      document.getElementById('mDong').value=p.UserID??'';
+    }
     document.getElementById('mUid').value=p.UserID??'';
+    document.getElementById('mDong').readOnly=true;
+    document.getElementById('mHo').readOnly=true;
+    document.getElementById('mMember').readOnly=true;
     document.getElementById('mName').value=p.Name??'';
-    document.getElementById('mDong').value=p.Department??'';
-    document.getElementById('mHo').value=p.Job??'';
-    document.getElementById('mMember').value=p.IdentityCard??'';
     document.getElementById('mCard').value=(p.CardNum&&p.CardNum!=='0')?p.CardNum:'';
     document.getElementById('mPass').value=(p.Password&&p.Password!=='0000')?p.Password:'';
     document.getElementById('mAccess').value=p.AccessType??0;
@@ -318,21 +332,36 @@ async function openEditPerson(uid){
 }
 function editSelectedPerson(){openEditPerson(null);}
 function clearPersonModal(){
-  ['mUid','mName','mDong','mHo','mMember','mCard','mPass','mExpiry'].forEach(id=>{document.getElementById(id).value='';});
+  ['mUid','mName','mDong','mHo','mMember','mCard','mPass','mExpiry'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.readOnly=false;}});
   document.getElementById('mAccess').value='0';document.getElementById('mPhotoStatus').textContent='';document.getElementById('mPhotoFile').value='';_photoBase64=null;
   const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}
+  updateUidPreview();
 }
 function closePersonModal(){document.getElementById('personModal').classList.remove('open');}
+function updateUidPreview(){
+  const d=parseInt(document.getElementById('mDong')?.value||'0')||0;
+  const h=parseInt(document.getElementById('mHo')?.value||'0')||0;
+  const m=parseInt(document.getElementById('mMember')?.value||'0')||0;
+  const el=document.getElementById('mUid');
+  if(el&&!el.readOnly){el.value=(d||h||m)?String(d*1000000+h*100+m):'';}
+}
 function previewPhoto(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{const data=e.target.result;_photoBase64=data.split(',')[1];const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src=data;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent=f.name+' ('+(f.size/1024).toFixed(1)+'KB)';};r.readAsDataURL(f);
 }
 function clearPhoto(){_photoBase64=null;document.getElementById('mPhotoFile').value='';document.getElementById('mPhotoStatus').textContent='';const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}}
 async function savePerson(){
-  const uid=document.getElementById('mUid').value.trim();const name=document.getElementById('mName').value.trim();
-  if(!uid||!name){setStatus('사용자 ID와 이름은 필수입니다','err');return;}
+  const name=document.getElementById('mName').value.trim();
+  const dongStr=document.getElementById('mDong').value.trim();
+  const hoStr=document.getElementById('mHo').value.trim();
+  const memberStr=document.getElementById('mMember').value.trim();
+  const dN=parseInt(dongStr),hN=parseInt(hoStr),mN=parseInt(memberStr);
+  if(!name){setStatus('이름은 필수입니다','err');return;}
+  if(isNaN(dN)||isNaN(hN)||isNaN(mN)||!dongStr||!hoStr||!memberStr){setStatus('동/호/멤버# 동시 입력 필수 (모두 숫자)','err');return;}
+  let uid;
+  if(_editingUserId){uid=_editingUserId;}else{uid=String(dN*1000000+hN*100+mN);}
   let exp=0;const ev=document.getElementById('mExpiry').value;if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
-  const p={UserID:uid,Name:name,Department:document.getElementById('mDong').value.trim(),Job:document.getElementById('mHo').value.trim(),IdentityCard:document.getElementById('mMember').value.trim(),CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:parseInt(document.getElementById('mAccess').value)||0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??''};
+  const p={UserID:uid,Name:name,Department:dongStr,Job:hoStr,IdentityCard:memberStr,CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:parseInt(document.getElementById('mAccess').value)||0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??''};
   try{
     if(_editingUserId){const r=await apiPost('/api/People/Update',p);if(!r.result)throw new Error(r.error??'수정 실패');setStatus('사용자 수정 완료','ok');addLog('사용자 수정: '+uid);}
     else{const r=await apiPost('/api/People/New',p);if(!r.result)throw new Error(r.error??'추가 실패');setStatus('사용자 추가 완료','ok');addLog('사용자 추가: '+uid);}
