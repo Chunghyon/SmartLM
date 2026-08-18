@@ -7,19 +7,19 @@ namespace FaceDeviceDesktopClient.Forms;
 
 public class DeviceRemoteControlForm : Form
 {
-    private GroupBox grpBasicControl;
-    private GroupBox grpAdvancedControl;
-    private Button btnRestart;
-    private Button btnOpenDoor;
-    private Button btnCloseAlarm;
-    private Button btnSyncTime;
-    private Button btnSyncPeople;
-    private Button btnDeleteAllPeople;
-    private Button btnClearRecords;
-    private Button btnRequestUpload;
-    private Button btnClose;
-    private Label lblDeviceInfo;
-    private TextBox txtResult;
+    private GroupBox grpBasicControl = null!;
+    private GroupBox grpAdvancedControl = null!;
+    private Button btnRestart = null!;
+    private Button btnOpenDoor = null!;
+    private Button btnCloseAlarm = null!;
+    private Button btnSyncTime = null!;
+    private Button btnSyncPeople = null!;
+    private Button btnDeleteAllPeople = null!;
+    private Button btnClearRecords = null!;
+    private Button btnRequestUpload = null!;
+    private Button btnClose = null!;
+    private Label lblDeviceInfo = null!;
+    private TextBox txtResult = null!;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string DeviceSN { get; set; } = string.Empty;

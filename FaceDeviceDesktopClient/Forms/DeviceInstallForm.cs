@@ -6,12 +6,12 @@ namespace FaceDeviceDesktopClient.Forms;
 
 public class DeviceInstallForm : Form
 {
-    private TextBox txtDeviceName;
-    private TextBox txtTagName;
-    private TextBox txtMenuPassword;
-    private ComboBox cmbLanguage;
-    private Button btnInstall;
-    private Button btnCancel;
+    private TextBox txtDeviceName = null!;
+    private TextBox txtTagName = null!;
+    private TextBox txtMenuPassword = null!;
+    private ComboBox cmbLanguage = null!;
+    private Button btnInstall = null!;
+    private Button btnCancel = null!;
 
     public string DeviceName => txtDeviceName.Text.Trim();
     public string TagName => txtTagName.Text.Trim();

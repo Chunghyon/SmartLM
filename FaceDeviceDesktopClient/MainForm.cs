@@ -137,7 +137,7 @@ public partial class MainForm : Form
         dgvDevices.CellContentClick += (s, e) =>
         {
             if (e.RowIndex < 0) return;
-            if (e.ColumnIndex != dgvDevices.Columns["Selected"].Index) return;
+            if (dgvDevices.Columns["Selected"] is not { } selectedCol || e.ColumnIndex != selectedCol.Index) return;
             dgvDevices.CommitEdit(DataGridViewDataErrorContexts.Commit);
         };
 
@@ -145,7 +145,7 @@ public partial class MainForm : Form
         dgvDevices.CellFormatting += (s, e) =>
         {
             if (e.RowIndex < 0) return;
-            if (e.ColumnIndex == dgvDevices.Columns["Status"].Index)
+            if (dgvDevices.Columns["Status"] is { } statusCol && e.ColumnIndex == statusCol.Index)
             {
                 // 바인딩된 DeviceInfo에서 실시간 재계산
                 if (dgvDevices.Rows[e.RowIndex].DataBoundItem is DeviceInfo di)
@@ -192,13 +192,13 @@ public partial class MainForm : Form
 
         dgvPersonnel.CellFormatting += (sender, e) =>
         {
-            if (e.ColumnIndex == dgvPersonnel.Columns["ColPhoto"].Index && e.Value != null)
+            if (dgvPersonnel.Columns["ColPhoto"] is { } photoCol && e.ColumnIndex == photoCol.Index && e.Value != null)
             {
                 var pv = e.Value.ToString();
                 e.Value = string.IsNullOrWhiteSpace(pv) ? "X" : "O";
                 e.FormattingApplied = true;
             }
-            else if (e.ColumnIndex == dgvPersonnel.Columns["ColPassword"].Index && e.Value != null)
+            else if (dgvPersonnel.Columns["ColPassword"] is { } pwCol && e.ColumnIndex == pwCol.Index && e.Value != null)
             {
                 var pw = e.Value.ToString();
                 if (!string.IsNullOrWhiteSpace(pw))
@@ -207,18 +207,18 @@ public partial class MainForm : Form
                     e.FormattingApplied = true;
                 }
             }
-            else if (e.ColumnIndex == dgvPersonnel.Columns["ColCard"].Index && e.Value != null)
+            else if (dgvPersonnel.Columns["ColCard"] is { } cardCol && e.ColumnIndex == cardCol.Index && e.Value != null)
             {
                 var cv = e.Value.ToString();
                 e.Value = (string.IsNullOrWhiteSpace(cv) || cv == "0") ? "X" : "O";
                 e.FormattingApplied = true;
             }
-            else if (e.ColumnIndex == dgvPersonnel.Columns["ColFingerprint"].Index && e.Value != null)
+            else if (dgvPersonnel.Columns["ColFingerprint"] is { } fpCol && e.ColumnIndex == fpCol.Index && e.Value != null)
             {
                 e.Value = e.Value.ToString() == "0" ? "X" : "O";
                 e.FormattingApplied = true;
             }
-            else if (e.ColumnIndex == dgvPersonnel.Columns["ColPalmvein"].Index && e.Value != null)
+            else if (dgvPersonnel.Columns["ColPalmvein"] is { } pvCol && e.ColumnIndex == pvCol.Index && e.Value != null)
             {
                 e.Value = e.Value.ToString() == "0" ? "X" : "O";
                 e.FormattingApplied = true;
@@ -228,7 +228,7 @@ public partial class MainForm : Form
         dgvPersonnel.CellDoubleClick += (sender, e) =>
         {
             if (e.RowIndex >= 0)
-                btnEditPerson_Click(sender, EventArgs.Empty);
+                btnEditPerson_Click(sender!, EventArgs.Empty);
         };
 
         // 동 입력 시 호 활성화/비활성화
@@ -275,10 +275,10 @@ public partial class MainForm : Form
     private void DgvAttendance_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
     {
         if (e.Value == null) return;
-        int dongIdx   = dgvAttendance.Columns["AttDong"].Index;
-        int hoIdx     = dgvAttendance.Columns["AttHo"].Index;
-        int memberIdx = dgvAttendance.Columns["AttMember"].Index;
-        int eventIdx  = dgvAttendance.Columns["AttEvent"].Index;
+        int dongIdx   = dgvAttendance.Columns["AttDong"]!.Index;
+        int hoIdx     = dgvAttendance.Columns["AttHo"]!.Index;
+        int memberIdx = dgvAttendance.Columns["AttMember"]!.Index;
+        int eventIdx  = dgvAttendance.Columns["AttEvent"]!.Index;
         if ((e.ColumnIndex == dongIdx || e.ColumnIndex == hoIdx || e.ColumnIndex == memberIdx)
             && long.TryParse(e.Value.ToString(), out long id))
         {
@@ -313,7 +313,7 @@ public partial class MainForm : Form
 
         // Calculate the X offset of the "No" column
         int xOffset = grid.RowHeadersWidth;
-        int noColIndex = grid.Columns["No"].Index;
+        int noColIndex = grid.Columns["No"]!.Index;
         for (int i = 0; i < noColIndex; i++)
             if (grid.Columns[i].Visible)
                 xOffset += grid.Columns[i].Width;
@@ -323,7 +323,7 @@ public partial class MainForm : Form
             Alignment = StringAlignment.Center,
             LineAlignment = StringAlignment.Center
         };
-        var noBounds = new Rectangle(xOffset, e.RowBounds.Top, grid.Columns["No"].Width, e.RowBounds.Height);
+        var noBounds = new Rectangle(xOffset, e.RowBounds.Top, grid.Columns["No"]!.Width, e.RowBounds.Height);
         e.Graphics.DrawString(rowLabel, grid.Font, SystemBrushes.ControlText, noBounds, centerFormat);
     }
 
@@ -331,7 +331,7 @@ public partial class MainForm : Form
     {
         if (e.RowIndex < 0) return;
         // 선택 체크박스 열 더블클릭은 무시
-        if (e.ColumnIndex == dgvDevices.Columns["Selected"].Index) return;
+        if (dgvDevices.Columns["Selected"] is { } selCol && e.ColumnIndex == selCol.Index) return;
 
         try
         {
@@ -359,7 +359,7 @@ public partial class MainForm : Form
         menuRemoteControl.Click += MenuRemoteControl_Click;
 
         var menuRefresh = new ToolStripMenuItem("새로 고침");
-        menuRefresh.Click += (s, e) => RefreshDevices();
+        menuRefresh.Click += async (s, e) => await RefreshDevices();
 
         var menuSeparator = new ToolStripSeparator();
 

@@ -298,7 +298,7 @@ app.MapPost("/admin/people/reload-from-files", (MySqlStateStore store) =>
 });
 
 // 사용자 Photo 필드가 Base64이면 직접 반환, 단말기 경로이면 온라인 단말기에서 프록시 다운로드
-app.MapGet("/admin/people/{userId}/photo", async (string userId, MySqlStateStore store) =>
+app.MapGet("/admin/people/{userId}/photo", (string userId, MySqlStateStore store) =>
 {
     var person = store.GetPeople().FirstOrDefault(p =>
         string.Equals(p.UserID, userId, StringComparison.OrdinalIgnoreCase));
@@ -1239,8 +1239,8 @@ app.MapPost("/api/Device/SearchStream", async (DeviceDiscoveryService discoveryS
         var subnet = body?["Subnet"]?.GetValue<string>();
 
         context.Response.ContentType = "text/event-stream";
-        context.Response.Headers.Add("Cache-Control", "no-cache");
-        context.Response.Headers.Add("Connection", "keep-alive");
+        context.Response.Headers.CacheControl = "no-cache";
+        context.Response.Headers.Connection = "keep-alive";
 
         await context.Response.Body.FlushAsync();
 

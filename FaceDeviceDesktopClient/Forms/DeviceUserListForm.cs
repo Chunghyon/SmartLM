@@ -190,10 +190,10 @@ public class DeviceUserListForm : Form
         foreach (var p in _people.OrderBy(x => x.UserID, StringComparer.OrdinalIgnoreCase))
         {
             int rowIdx = _dgv.Rows.Add(
-                p.UserID,
-                p.Name,
-                p.Password,
-                p.CardNum,
+                p.UserID ?? string.Empty,
+                p.Name ?? string.Empty,
+                p.Password ?? string.Empty,
+                p.CardNum ?? string.Empty,
                 (p.Fingerprints?.Count ?? 0).ToString(),
                 (p.Palmveins?.Count    ?? 0).ToString(),
                 string.IsNullOrWhiteSpace(p.FaceFeature) ? "0" : "1"
