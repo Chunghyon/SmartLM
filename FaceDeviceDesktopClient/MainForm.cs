@@ -9,7 +9,7 @@ namespace FaceDeviceDesktopClient;
 public partial class MainForm : Form
 {
     private readonly HttpClient _httpClient;
-    private readonly string _serverUrl = "http://localhost:8100";
+    private string _serverUrl = "http://localhost:8100";
 
     // Personnel grid sorting
     private List<PersonInfo> _personnelList = new();
@@ -31,7 +31,19 @@ public partial class MainForm : Form
         SetupPersonnelGrid();
         SetupAttendanceGrid();
         SetupDeviceContextMenu();
+        tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
+        this.Activated += (_, _) =>
+        {
+            if (tabControl.SelectedTab == tabDashboard)
+                _ = RefreshSystemInfo();
+        };
         LoadInitialData();
+    }
+
+    private void tabControl_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (tabControl.SelectedTab == tabDashboard)
+            _ = RefreshSystemInfo();
     }
 
     private void SetupDiscoveredDevicesGrid()
@@ -458,10 +470,78 @@ public partial class MainForm : Form
 
             int totalRecords = devices?.Sum(d => d.RecordCount) ?? 0;
             lblTotalRecords.Text = totalRecords.ToString();
+
+            try
+            {
+                var settings = await _httpClient.GetFromJsonAsync<System.Text.Json.JsonElement>("/admin/settings");
+                if (settings.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    int months = 12;
+                    if (settings.TryGetProperty("RecordRetentionMonths", out var p))
+                        months = p.GetInt32();
+                    else if (settings.TryGetProperty("recordRetentionMonths", out var p2))
+                        months = p2.GetInt32();
+                    if (months < 0) months = 0;
+                    if (months > 120) months = 120;
+                    numRetentionMonths.Value = months;
+
+                    var urls = new List<string>();
+                    if (settings.TryGetProperty("LocalUrls", out var lu) || settings.TryGetProperty("localUrls", out lu))
+                    {
+                        foreach (var item in lu.EnumerateArray())
+                        {
+                            var u = item.GetString();
+                            if (!string.IsNullOrWhiteSpace(u)) urls.Add(u);
+                        }
+                    }
+                    string? cur = null;
+                    if (settings.TryGetProperty("ServerUrl", out var su)) cur = su.GetString();
+                    else if (settings.TryGetProperty("serverUrl", out var su2)) cur = su2.GetString();
+
+                    cmbServerUrl.Items.Clear();
+                    foreach (var u in urls.Distinct())
+                        cmbServerUrl.Items.Add(u);
+                    if (!string.IsNullOrWhiteSpace(cur) && !cmbServerUrl.Items.Contains(cur))
+                        cmbServerUrl.Items.Add(cur);
+                    if (!string.IsNullOrWhiteSpace(cur))
+                        cmbServerUrl.Text = cur;
+                }
+            }
+            catch { }
         }
         catch (Exception ex)
         {
             ShowError($"Failed to refresh system info: {ex.Message}");
+        }
+    }
+
+    private async void btnSaveRetention_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            int months = (int)numRetentionMonths.Value;
+            var url = (cmbServerUrl.Text ?? "").Trim();
+            var resp = await _httpClient.PostAsJsonAsync("/admin/settings", new
+            {
+                RecordRetentionMonths = months,
+                ServerUrl = url
+            });
+            if (!resp.IsSuccessStatusCode)
+            {
+                ShowError($"설정 저장 실패: HTTP {resp.StatusCode}");
+                return;
+            }
+            if (!string.IsNullOrWhiteSpace(url))
+                _serverUrl = url.TrimEnd('/');
+            lblStatus.Text = "설정이 XML에 저장되었습니다.";
+            MessageBox.Show(
+                $"서버 URL: {(string.IsNullOrWhiteSpace(url) ? "(유지)" : url)}\n" +
+                (months == 0 ? "출입기록 자동 삭제 안 함" : $"출입기록 {months}개월 이후 자동 삭제"),
+                "설정 저장", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"보관기간 저장 실패: {ex.Message}");
         }
     }
 

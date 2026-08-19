@@ -94,10 +94,24 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
       <button class="btn-secondary" onclick="refreshSystemInfo()" style="font-size:11px;padding:4px 9px">새로고침</button>
     </div>
     <div class="panel-body"><table>
-      <tr><th style="width:160px">서버 URL</th><td id="infoServerUrl">-</td></tr>
+      <tr><th style="width:160px">서버 URL</th><td>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select id="serverUrlSelect" style="min-width:260px"></select>
+          <button class="btn-primary" type="button" onclick="saveSettings()">저장</button>
+        </div>
+        <div id="infoSettingsPath" style="font-size:11px;color:#888;margin-top:4px"></div>
+      </td></tr>
       <tr><th>등록 단말기</th><td id="infoDevices">-</td></tr>
       <tr><th>등록 사용자</th><td id="infoPersonnel">-</td></tr>
       <tr><th>출입 기록</th><td id="infoRecords">-</td></tr>
+      <tr><th>기록 보관기간</th><td>
+        <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="number" id="retentionMonths" min="0" max="120" value="12" style="width:80px">
+          <span>개월 (0 = 삭제하지 않음)</span>
+          <button class="btn-primary" type="button" onclick="saveSettings()">저장</button>
+        </label>
+        <div style="font-size:11px;color:#888;margin-top:4px">설정한 개월이 지난 출입기록은 자동 삭제됩니다.</div>
+      </td></tr>
     </table></div>
   </div>
   <div class="panel">

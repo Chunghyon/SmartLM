@@ -80,14 +80,42 @@ const apiPost=(u,b)=>api('POST',u,b??{});
 const apiDel=u=>api('DELETE',u);
 
 /* ── 대시보드 ── */
+async function saveSettings(){
+  const n=parseInt(document.getElementById('retentionMonths').value,10);
+  const url=document.getElementById('serverUrlSelect')?.value||'';
+  if(Number.isNaN(n)||n<0){setStatus('보관기간을 확인하세요','err');return;}
+  try{
+    const r=await apiPost('/admin/settings',{RecordRetentionMonths:n,ServerUrl:url});
+    const m=r.RecordRetentionMonths??r.recordRetentionMonths??n;
+    document.getElementById('retentionMonths').value=m;
+    setStatus('설정 저장됨 (XML)','ok');
+    addLog('설정 저장: URL='+(r.ServerUrl||url)+', 보관='+m+'개월');
+    await refreshSystemInfo();
+  }catch(e){setStatus('설정 저장 실패: '+e.message,'err');}
+}
 async function refreshSystemInfo(){
   try{
     const d=await apiGet('/admin/system-info');
+    const st=await apiGet('/admin/settings');
+    Object.assign(d,st);
     document.getElementById('statDevices').textContent=d.TotalDevices??'-';
     document.getElementById('statOnline').textContent=d.OnlineDevices??'-';
     document.getElementById('statPersonnel').textContent=d.TotalPeople??'-';
     document.getElementById('statRecords').textContent=d.TotalRecords??'-';
-    document.getElementById('infoServerUrl').textContent=window.location.origin;
+    const rm=document.getElementById('retentionMonths');
+    if(rm && (d.RecordRetentionMonths??d.recordRetentionMonths)!=null) rm.value=d.RecordRetentionMonths??d.recordRetentionMonths;
+    const sel=document.getElementById('serverUrlSelect');
+    if(sel){
+      const urls=d.LocalUrls||d.localUrls||[];
+      const cur=d.ServerUrl||d.serverUrl||window.location.origin;
+      sel.innerHTML=urls.map(u=>'<option value="'+u+'">'+u+'</option>').join('');
+      if(cur && ![...sel.options].some(o=>o.value===cur)){
+        const o=document.createElement('option');o.value=cur;o.textContent=cur;sel.appendChild(o);
+      }
+      sel.value=cur;
+    }
+    const sp=document.getElementById('infoSettingsPath');
+    if(sp)sp.textContent='설정 파일: '+(d.SettingsPath||d.settingsPath||'');
     document.getElementById('infoDevices').textContent=d.TotalDevices??'-';
     document.getElementById('infoPersonnel').textContent=d.TotalPeople??'-';
     document.getElementById('infoRecords').textContent=d.TotalRecords??'-';

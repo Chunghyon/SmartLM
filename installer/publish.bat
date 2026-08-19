@@ -1,0 +1,2 @@
+dotnet publish ..\FaceDeviceHttpPcServer\FaceDeviceHttpPcServer.csproj -c Release -r win-x64 --self-contained true -o dist\FDHPS
+dotnet publish ..\FaceDeviceDesktopClient\FaceDeviceDesktopClient.csproj -c Release -r win-x64 --self-contained true -o dist\FDDC

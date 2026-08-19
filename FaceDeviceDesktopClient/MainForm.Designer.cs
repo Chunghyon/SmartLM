@@ -28,6 +28,12 @@ namespace FaceDeviceDesktopClient
 
             // Dashboard controls
             this.grpSystemInfo = new System.Windows.Forms.GroupBox();
+            this.lblRetention = new System.Windows.Forms.Label();
+            this.numRetentionMonths = new System.Windows.Forms.NumericUpDown();
+            this.lblRetentionHint = new System.Windows.Forms.Label();
+            this.btnSaveRetention = new System.Windows.Forms.Button();
+            this.lblServerUrl = new System.Windows.Forms.Label();
+            this.cmbServerUrl = new System.Windows.Forms.ComboBox();
             this.lblTotalDevices = new System.Windows.Forms.Label();
             this.lblTotalPersonnel = new System.Windows.Forms.Label();
             this.lblTotalDepartments = new System.Windows.Forms.Label();
@@ -143,9 +149,15 @@ namespace FaceDeviceDesktopClient
             this.grpSystemInfo.Controls.Add(this.lblTotalPersonnel);
             this.grpSystemInfo.Controls.Add(this.label4);
             this.grpSystemInfo.Controls.Add(this.lblTotalRecords);
+            this.grpSystemInfo.Controls.Add(this.lblRetention);
+            this.grpSystemInfo.Controls.Add(this.numRetentionMonths);
+            this.grpSystemInfo.Controls.Add(this.lblRetentionHint);
+            this.grpSystemInfo.Controls.Add(this.btnSaveRetention);
+            this.grpSystemInfo.Controls.Add(this.lblServerUrl);
+            this.grpSystemInfo.Controls.Add(this.cmbServerUrl);
             this.grpSystemInfo.Location = new System.Drawing.Point(20, 20);
             this.grpSystemInfo.Name = "grpSystemInfo";
-            this.grpSystemInfo.Size = new System.Drawing.Size(500, 200);
+            this.grpSystemInfo.Size = new System.Drawing.Size(620, 310);
             this.grpSystemInfo.TabIndex = 0;
             this.grpSystemInfo.TabStop = false;
             this.grpSystemInfo.Text = "";
@@ -209,6 +221,40 @@ namespace FaceDeviceDesktopClient
             this.lblTotalRecords.Size = new System.Drawing.Size(19, 21);
             this.lblTotalRecords.TabIndex = 7;
             this.lblTotalRecords.Text = "0";
+
+            this.lblRetention.AutoSize = true;
+            this.lblRetention.Location = new System.Drawing.Point(20, 162);
+            this.lblRetention.Name = "lblRetention";
+            this.lblRetention.Text = "기록 보관기간:";
+
+            this.numRetentionMonths.Location = new System.Drawing.Point(150, 160);
+            this.numRetentionMonths.Name = "numRetentionMonths";
+            this.numRetentionMonths.Minimum = 0;
+            this.numRetentionMonths.Maximum = 120;
+            this.numRetentionMonths.Value = 12;
+            this.numRetentionMonths.Size = new System.Drawing.Size(70, 23);
+
+            this.lblRetentionHint.AutoSize = true;
+            this.lblRetentionHint.Location = new System.Drawing.Point(228, 163);
+            this.lblRetentionHint.Name = "lblRetentionHint";
+            this.lblRetentionHint.Text = "개월 (0 = 삭제 안 함)";
+
+            this.btnSaveRetention.Location = new System.Drawing.Point(150, 250);
+            this.btnSaveRetention.Name = "btnSaveRetention";
+            this.btnSaveRetention.Size = new System.Drawing.Size(120, 32);
+            this.btnSaveRetention.Text = "저장";
+            this.btnSaveRetention.UseVisualStyleBackColor = true;
+            this.btnSaveRetention.Click += new System.EventHandler(this.btnSaveRetention_Click);
+
+            this.lblServerUrl.AutoSize = true;
+            this.lblServerUrl.Location = new System.Drawing.Point(20, 210);
+            this.lblServerUrl.Name = "lblServerUrl";
+            this.lblServerUrl.Text = "서버 URL:";
+
+            this.cmbServerUrl.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            this.cmbServerUrl.Location = new System.Drawing.Point(150, 206);
+            this.cmbServerUrl.Name = "cmbServerUrl";
+            this.cmbServerUrl.Size = new System.Drawing.Size(300, 23);
 
             // 
             // tabDevices
@@ -727,6 +773,12 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.GroupBox grpSystemInfo;
+        private System.Windows.Forms.Label lblRetention;
+        private System.Windows.Forms.NumericUpDown numRetentionMonths;
+        private System.Windows.Forms.Label lblRetentionHint;
+        private System.Windows.Forms.Button btnSaveRetention;
+        private System.Windows.Forms.Label lblServerUrl;
+        private System.Windows.Forms.ComboBox cmbServerUrl;
         private System.Windows.Forms.Label lblTotalDevices;
         private System.Windows.Forms.Label lblTotalPersonnel;
         private System.Windows.Forms.Label lblTotalDepartments;

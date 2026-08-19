@@ -76,6 +76,23 @@ builder.Services.AddSingleton(sp =>
     return new MySqlStateStore(factory, storagePath);
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var env = sp.GetRequiredService<IHostEnvironment>();
+    var configuredPath = builder.Configuration["StoragePath"];
+    var storagePath = string.IsNullOrWhiteSpace(configuredPath)
+        ? Path.Combine(env.ContentRootPath, "App_Data")
+        : Path.GetFullPath(Path.IsPathRooted(configuredPath)
+            ? configuredPath
+            : Path.Combine(env.ContentRootPath, configuredPath));
+    var settingsPath = builder.Configuration["SettingsPath"];
+    if (string.IsNullOrWhiteSpace(settingsPath))
+        settingsPath = Path.Combine(storagePath, "FaceDeviceSettings.xml");
+    else if (!Path.IsPathRooted(settingsPath))
+        settingsPath = Path.Combine(env.ContentRootPath, settingsPath);
+    return new SystemSettingsStore(Path.GetFullPath(settingsPath), builder.Configuration);
+});
+builder.Services.AddHostedService<RecordRetentionCleanupService>();
 builder.Services.AddSingleton<DeviceCommandTracker>();
 builder.Services.AddSingleton<DeviceDiscoveryService>();
 builder.Services.AddHttpClient();
@@ -610,12 +627,41 @@ app.MapGet("/admin/system-info", (MySqlStateStore store) =>
     var totalRecords = devs.Sum(d => d.RecordCount);
     var cutoff = DateTimeOffset.UtcNow.AddMinutes(-5);
     var onlineCount  = devs.Count(d => d.LastKeepaliveAtUtc.HasValue && d.LastKeepaliveAtUtc.Value >= cutoff);
+    var months = app.Services.GetRequiredService<SystemSettingsStore>().Get().RecordRetentionMonths;
     return Results.Ok(new
     {
         TotalDevices   = devs.Count,
         OnlineDevices  = onlineCount,
         TotalPeople    = people.Count,
-        TotalRecords   = totalRecords
+        TotalRecords   = totalRecords,
+        RecordRetentionMonths = months
+    });
+});
+
+app.MapGet("/admin/settings", (SystemSettingsStore settings) =>
+{
+    var s = settings.Get();
+    return Results.Ok(new
+    {
+        s.ServerUrl,
+        s.RecordRetentionMonths,
+        SettingsPath = settings.SettingsFilePath,
+        LocalUrls = settings.GetLocalServerUrls()
+    });
+});
+
+app.MapPost("/admin/settings", (JsonNode? body, SystemSettingsStore settings) =>
+{
+    int? months = body?["RecordRetentionMonths"]?.GetValue<int>();
+    var url = body?["ServerUrl"]?.GetValue<string>();
+    var saved = settings.Save(months, url);
+    LogHub.Instance.Info($"[Settings] URL={saved.ServerUrl}, 보관기간={saved.RecordRetentionMonths}개월, file={settings.SettingsFilePath}");
+    return Results.Ok(new
+    {
+        saved.ServerUrl,
+        saved.RecordRetentionMonths,
+        SettingsPath = settings.SettingsFilePath,
+        LocalUrls = settings.GetLocalServerUrls()
     });
 });
 

@@ -571,6 +571,18 @@ public sealed class MySqlStateStore
         db.SaveChanges();
     }
 
+    public int DeleteRecordsOlderThan(DateTime utcCutoff)
+    {
+        using var db = CreateDb();
+        var rows = db.IdentifyRecords.Where(r =>
+            (r.RecordTime.HasValue && r.RecordTime.Value < utcCutoff) ||
+            (!r.RecordTime.HasValue && r.ReceivedAt < utcCutoff)).ToList();
+        if (rows.Count == 0) return 0;
+        db.IdentifyRecords.RemoveRange(rows);
+        db.SaveChanges();
+        return rows.Count;
+    }
+
     public void ClearAllRecords()
     {
         using var db = CreateDb();
