@@ -65,13 +65,9 @@ builder.Services.AddDbContextFactory<FaceDeviceDbContext>(options =>
 builder.Services.AddSingleton(sp =>
 {
     var env = sp.GetRequiredService<IHostEnvironment>();
-    var configuredPath = builder.Configuration["StoragePath"];
-    var storagePath = string.IsNullOrWhiteSpace(configuredPath)
-        ? Path.Combine(env.ContentRootPath, "App_Data")
-        : Path.GetFullPath(Path.IsPathRooted(configuredPath)
-            ? configuredPath
-            : Path.Combine(env.ContentRootPath, configuredPath));
-
+    var storagePath = ResolveConfiguredPath(builder.Configuration["StoragePath"], env.ContentRootPath,
+        Path.Combine(env.ContentRootPath, "App_Data"));
+    Directory.CreateDirectory(storagePath);
     var factory = sp.GetRequiredService<IDbContextFactory<FaceDeviceDbContext>>();
     return new MySqlStateStore(factory, storagePath);
 });
@@ -79,18 +75,12 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton(sp =>
 {
     var env = sp.GetRequiredService<IHostEnvironment>();
-    var configuredPath = builder.Configuration["StoragePath"];
-    var storagePath = string.IsNullOrWhiteSpace(configuredPath)
-        ? Path.Combine(env.ContentRootPath, "App_Data")
-        : Path.GetFullPath(Path.IsPathRooted(configuredPath)
-            ? configuredPath
-            : Path.Combine(env.ContentRootPath, configuredPath));
-    var settingsPath = builder.Configuration["SettingsPath"];
-    if (string.IsNullOrWhiteSpace(settingsPath))
-        settingsPath = Path.Combine(storagePath, "FaceDeviceSettings.xml");
-    else if (!Path.IsPathRooted(settingsPath))
-        settingsPath = Path.Combine(env.ContentRootPath, settingsPath);
-    return new SystemSettingsStore(Path.GetFullPath(settingsPath), builder.Configuration);
+    var storagePath = ResolveConfiguredPath(builder.Configuration["StoragePath"], env.ContentRootPath,
+        Path.Combine(env.ContentRootPath, "App_Data"));
+    var settingsPath = ResolveConfiguredPath(builder.Configuration["SettingsPath"], env.ContentRootPath,
+        Path.Combine(storagePath, "FaceDeviceSettings.xml"));
+    Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
+    return new SystemSettingsStore(settingsPath, builder.Configuration);
 });
 builder.Services.AddHostedService<RecordRetentionCleanupService>();
 builder.Services.AddSingleton<DeviceCommandTracker>();
@@ -2104,7 +2094,7 @@ var serverTask = app.RunAsync(cts.Token);
 
 // 서버 URL 가져오기 및 브라우저용으로 변환
 var urls = app.Urls.ToArray();
-var rawUrl = urls.Length > 0 ? urls[0] : "http://localhost:8100";
+var rawUrl = urls.Length > 0 ? urls[0] : "http://localhost";
 // 0.0.0.0을 localhost로 변환 (브라우저에서 사용 가능하도록)
 var serverUrl = rawUrl.Replace("0.0.0.0", "localhost");
 
@@ -2121,6 +2111,20 @@ Application.Run(mainForm);
 
 // 서버 종료 대기
 await serverTask;
+
+
+static string ResolveConfiguredPath(string? configured, string contentRoot, string? fallback = null)
+{
+    var path = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
+    if (string.IsNullOrWhiteSpace(path))
+        return contentRoot;
+    path = Environment.ExpandEnvironmentVariables(path);
+    var myDocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    path = path.Replace("{MyDocuments}", myDocs, StringComparison.OrdinalIgnoreCase);
+    if (!Path.IsPathRooted(path))
+        path = Path.Combine(contentRoot, path);
+    return Path.GetFullPath(path);
+}
 
 static string? FirstNonEmpty(params string?[] values) =>
     values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));

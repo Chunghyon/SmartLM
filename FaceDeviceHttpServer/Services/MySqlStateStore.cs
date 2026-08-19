@@ -620,7 +620,7 @@ public sealed class MySqlStateStore
         Directory.CreateDirectory(_peoplePath);
 
         using var db = CreateDb();
-        IEnumerable<PersonEntity> query;
+        //IEnumerable<PersonEntity> query;
         var ids = userIds?.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList() ?? new List<string>();
         if (ids.Count == 0)
         {

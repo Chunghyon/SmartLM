@@ -9,7 +9,7 @@ namespace FaceDeviceDesktopClient;
 public partial class MainForm : Form
 {
     private readonly HttpClient _httpClient;
-    private string _serverUrl = "http://localhost:8100";
+    private string _serverUrl = "http://localhost";
 
     // Personnel grid sorting
     private List<PersonInfo> _personnelList = new();

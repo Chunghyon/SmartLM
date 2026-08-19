@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FaceDeviceSettings>
-  <ServerUrl>http://localhost:8100</ServerUrl>
+  <ServerUrl>http://localhost</ServerUrl>
   <RecordRetentionMonths>12</RecordRetentionMonths>
 </FaceDeviceSettings>

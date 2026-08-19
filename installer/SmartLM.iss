@@ -2,6 +2,7 @@
 #define MyAppVersion "1.0.0"
 
 [Setup]
+AppPublisher="Illitek Co., Ltd."
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\SmartLM
@@ -11,19 +12,27 @@ OutputBaseFilename=SmartLM_Setup
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64compatible
-PrivilegesRequired=admin
+PrivilegesRequired=none
+MinVersion=10.0
+DisableProgramGroupPage=yes
+
+[Dirs]
+Name: "{userdocs}\SmartLM"
+Name: "{userdocs}\SmartLM\App_Data"
 
 [Files]
-Source: "dist\FDHPS\*"; DestDir: "{app}\FDHPS"; Flags: ignoreversion recursesubdirs
+Source: "dist\FDHS\*"; DestDir: "{app}\FDHS"; Flags: ignoreversion recursesubdirs
 Source: "dist\FDDC\*";  DestDir: "{app}\FDDC";  Flags: ignoreversion recursesubdirs
-Source: "FaceDeviceSettings.xml"; DestDir: "{commonappdata}\SmartLM"; Flags: onlyifdoesntexist
+Source: "FaceDeviceSettings.xml"; DestDir: "{userdocs}\SmartLM"; Flags: onlyifdoesntexist
+Source: "appsettings.installed.json"; DestDir: "{app}\FDHS"; DestName: "appsettings.json"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Face Device HTTP Server"; Filename: "{app}\FDHPS\FaceDeviceHttpPcServer.exe"
-Name: "{group}\Face Device Desktop Client"; Filename: "{app}\FDDC\FaceDeviceDesktopClient.exe"
-Name: "{autodesktop}\FDHPS"; Filename: "{app}\FDHPS\FaceDeviceHttpPcServer.exe"
-Name: "{autodesktop}\FDDC";  Filename: "{app}\FDDC\FaceDeviceDesktopClient.exe"
+Name: "{group}\Face Device HTTP Server"; Filename: "{app}\FDHS\FaceDeviceHttpServer.exe"; WorkingDir: "{app}\FDHS"
+Name: "{group}\Face Device Desktop Client"; Filename: "{app}\FDDC\FaceDeviceDesktopClient.exe"; WorkingDir: "{app}\FDDC"
+Name: "{autodesktop}\FDHS"; Filename: "{app}\FDHS\FaceDeviceHttpServer.exe"; WorkingDir: "{app}\FDHS"
+Name: "{autodesktop}\FDDC"; Filename: "{app}\FDDC\FaceDeviceDesktopClient.exe"; WorkingDir: "{app}\FDDC"
 
 [Run]
-Filename: "{app}\FDHPS\FaceDeviceHttpPcServer.exe"; Description: "¼­¹ö ½ÇÇà"; Flags: nowait postinstall skipifsilent
-Filename: "{app}\FDDC\FaceDeviceDesktopClient.exe"; Description: "Å¬¶óÀÌ¾ðÆ® ½ÇÇà"; Flags: nowait postinstall skipifsilent
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""SmartLM FDHS HTTP"" dir=in action=allow protocol=TCP localport=80"; Flags: runhidden
+Filename: "{app}\FDHS\FaceDeviceHttpServer.exe"; Description: "FDHS ì‹¤í–‰"; WorkingDir: "{app}\FDHS"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\FDDC\FaceDeviceDesktopClient.exe"; Description: "FDDC ì‹¤í–‰"; WorkingDir: "{app}\FDDC"; Flags: nowait postinstall skipifsilent unchecked

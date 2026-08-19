@@ -8,7 +8,7 @@ namespace FaceDeviceHttpPcServer.Services;
 [XmlRoot("FaceDeviceSettings")]
 public sealed class SystemSettings
 {
-    public string ServerUrl { get; set; } = "http://localhost:8100";
+    public string ServerUrl { get; set; } = "http://localhost";
     public int RecordRetentionMonths { get; set; } = 12;
 }
 
@@ -101,7 +101,7 @@ public sealed class SystemSettingsStore
                 if (Serializer.Deserialize(fs) is SystemSettings loaded)
                 {
                     if (string.IsNullOrWhiteSpace(loaded.ServerUrl))
-                        loaded.ServerUrl = "http://localhost:8100";
+                        loaded.ServerUrl = "http://localhost";
                     return loaded;
                 }
             }
@@ -110,7 +110,7 @@ public sealed class SystemSettingsStore
 
         return new SystemSettings
         {
-            ServerUrl = "http://localhost:8100",
+            ServerUrl = "http://localhost",
             RecordRetentionMonths = config.GetValue("RecordRetentionMonths", 12)
         };
     }
@@ -137,6 +137,6 @@ public sealed class SystemSettingsStore
     {
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Port > 0)
             return uri.Port;
-        return 8100;
+        return 80;
     }
 }

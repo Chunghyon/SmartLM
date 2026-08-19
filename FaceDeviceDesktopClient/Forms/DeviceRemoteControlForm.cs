@@ -236,7 +236,7 @@ public class DeviceRemoteControlForm : Form
             AddLog($"[{DateTime.Now:HH:mm:ss}] Executing: {commandName}...");
 
             using var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri("http://localhost:8100");
+            httpClient.BaseAddress = new Uri("http://localhost");
 
             var request = new
             {
