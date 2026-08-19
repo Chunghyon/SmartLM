@@ -76,6 +76,7 @@ builder.Services.AddSingleton(sp =>
     return new MySqlStateStore(factory, storagePath);
 });
 
+builder.Services.AddSingleton<DeviceCommandTracker>();
 builder.Services.AddSingleton<DeviceDiscoveryService>();
 builder.Services.AddHttpClient();
 
@@ -454,7 +455,7 @@ app.MapPost("/admin/devices/{sn}/reset-pending", (string sn, MySqlStateStore sto
     return Results.Ok(ApiResponse.Ok($"Reset pending state for device {sn}."));
 });
 
-app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, MySqlStateStore store) =>
+app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, MySqlStateStore store, DeviceCommandTracker tracker) =>
 {
     try
     {
@@ -463,42 +464,46 @@ app.MapPost("/admin/devices/{sn}/remote-command", (string sn, JsonNode? body, My
         if (string.IsNullOrWhiteSpace(commandType))
             return Results.BadRequest(new ApiResponse(400, "CommandType is required"));
 
+        var job = tracker.Start(sn, "Remote", $"원격 명령 대기 중: {commandType}");
+
         switch (commandType)
         {
             case "restart":
                 store.QueueRemoteCommand(sn, restart: true);
                 LogHub.Instance.Info($"Remote command queued: Restart device {sn}");
-                return Results.Ok(ApiResponse.Ok("Restart command queued"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id, Message = "Restart command queued" }));
 
             case "opendoor":
                 store.QueueRemoteCommand(sn, opendoor: true);
                 LogHub.Instance.Info($"Remote command queued: Open door on {sn}");
-                return Results.Ok(ApiResponse.Ok("Open door command queued"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id, Message = "Open door command queued" }));
 
             case "closealarm":
                 store.QueueRemoteCommand(sn, closealarm: true);
                 LogHub.Instance.Info($"Remote command queued: Close alarm on {sn}");
-                return Results.Ok(ApiResponse.Ok("Close alarm command queued"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id, Message = "Close alarm command queued" }));
 
             case "pushallpeople":
                 var peopleCount = store.MarkAddPeopleRequested(sn);
+                var addJob = tracker.Start(sn, "AddPeople", $"{peopleCount}명 배포 대기 중");
                 LogHub.Instance.Info($"Remote command queued: Push all people to {sn} ({peopleCount} people)");
-                return Results.Ok(ApiResponse.Ok($"Push all people command queued ({peopleCount} people)"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = addJob.Id, Message = $"Push all people command queued ({peopleCount} people)" }));
 
             case "deleteallpeople":
                 var deletedCount = store.DeleteAllPeople(sn);
+                var delJob = tracker.Start(sn, "DeletePeople", $"{deletedCount}명 삭제 대기 중");
                 LogHub.Instance.Info($"Remote command: Delete all people from {sn} ({deletedCount} people marked for deletion)");
-                return Results.Ok(ApiResponse.Ok($"Delete all people command queued ({deletedCount} people)"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = delJob.Id, Message = $"Delete all people command queued ({deletedCount} people)" }));
 
             case "clearrecords":
                 store.QueueRemoteCommand(sn, clearRecord: true);
                 LogHub.Instance.Info($"Remote command queued: Clear records on {sn}");
-                return Results.Ok(ApiResponse.Ok("Clear records command queued"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id, Message = "Clear records command queued" }));
 
             case "repostrecord":
                 store.QueueRemoteCommand(sn, repostRecord: true);
                 LogHub.Instance.Info($"Remote command queued: Repost records from {sn}");
-                return Results.Ok(ApiResponse.Ok("Repost records command queued"));
+                return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id, Message = "Repost records command queued" }));
 
             case "synctime":
                 var nowTs = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -621,15 +626,16 @@ app.MapDelete("/admin/departments/{id}", (string id, MySqlStateStore store) =>
 
 // ── Admin: 단말기→서버 전체 사용자 Pull 요청 ─────────────────────────────────────
 // 단말기에게 PushAllPeople 원격 명령 전송 → 단말기가 /People/PushPeople 로 모든 사용자 Push
-app.MapPost("/admin/devices/{sn}/pull-all-people", (string sn, MySqlStateStore store) =>
+app.MapPost("/admin/devices/{sn}/pull-all-people", (string sn, MySqlStateStore store, DeviceCommandTracker tracker) =>
 {
     var device = store.GetDevice(sn);
     if (device is null)
         return Results.NotFound(new ApiResponse(404, "Device not found."));
 
     store.QueueRemoteCommand(sn, pushAllPeople: true);
+    var job = tracker.Start(sn, "Remote", "단말기 사용자 가져오기 대기 중");
     LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 다음 RemoteCommand 폴링 시 실행");
-    return Results.Ok(ApiResponse.Ok($"PushAllPeople command queued for device {sn}. Device will upload all users via /People/PushPeople."));
+    return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
 });
 
 // ── Admin: 단말기→서버 Photo 가져오기 (단말기 경로 → Base64 변환 저장) ──────────────
@@ -743,7 +749,7 @@ app.MapPost("/admin/people/distribute-all", (JsonNode? body, MySqlStateStore sto
 
 // ── Admin: 복수 단말기에 전체 사용자 배포 ────────────────────────────────────────
 // POST /admin/people/distribute-to-devices  body: { "TargetSNs": ["SN001","SN002"] }
-app.MapPost("/admin/people/distribute-to-devices", (JsonNode? body, MySqlStateStore store) =>
+app.MapPost("/admin/people/distribute-to-devices", (JsonNode? body, MySqlStateStore store, DeviceCommandTracker tracker) =>
 {
     var snArray = body?["TargetSNs"]?.AsArray();
     if (snArray is null || snArray.Count == 0)
@@ -774,8 +780,9 @@ app.MapPost("/admin/people/distribute-to-devices", (JsonNode? body, MySqlStateSt
 
         store.StageServerPeopleForDevice(sn, serverPeople);
         var count = store.MarkAddPeopleRequested(sn);
+        var job = tracker.Start(sn, "AddPeople", $"{count}명 배포 대기 중");
         LogHub.Instance.Info($"[Distribute-Multi] {count}명을 단말기 {sn}으로 전달 예약 (stage={serverPeople.Count()}명)");
-        results.Add(new { SN = sn, Success = true, PendingCount = count });
+        results.Add(new { SN = sn, Success = true, PendingCount = count, JobId = job.Id });
     }
 
     return Results.Ok(ApiResponseWithContent.Ok(results));
@@ -828,6 +835,9 @@ app.MapPost("/Device/RemoteCommand", (RemoteCommandRequest request, MySqlStateSt
     if (cmd is null)
         return Results.Ok(new RemoteCommandResponse());
 
+    app.Services.GetRequiredService<DeviceCommandTracker>()
+        .CompleteLatest(request.SN, "Remote", true, "원격 명령이 단말기에 전달되었습니다.");
+
     return Results.Ok(new RemoteCommandResponse
     {
         Restart = cmd.Restart,
@@ -840,6 +850,13 @@ app.MapPost("/Device/RemoteCommand", (RemoteCommandRequest request, MySqlStateSt
         ClearRecord = cmd.ClearRecord,
         SetTime = cmd.SetTime
     });
+});
+
+
+app.MapGet("/admin/command-jobs/{id}", (string id, DeviceCommandTracker tracker) =>
+{
+    var job = tracker.Get(id);
+    return job is null ? Results.NotFound(new ApiResponse(404, "Job not found.")) : Results.Ok(job);
 });
 
 // ── /People/DownloadPeopleListResult ─────────────────────────────────────────
@@ -865,6 +882,20 @@ app.MapPost("/People/DownloadPeopleListResult", (DownloadPeopleListResultRequest
     else if (request.SuccessCount > 0)
     {
         LogHub.Instance.Info($"[결과] 다운로드 성공: 단말기 {request.SN}에 {request.SuccessCount}명 정상 저장 완료!");
+    }
+
+    var tracker = app.Services.GetRequiredService<DeviceCommandTracker>();
+    if (request.FailCount > 0)
+    {
+        var msg = request.FailList != null && request.FailList.Count > 0
+            ? string.Join("\n", request.FailList.Select(f => $"사용자 {f.UserID}: {f.ErrMsg} (ErrorCode {f.ErrorCode})"))
+            : $"다운로드 실패 {request.FailCount}명";
+        tracker.CompleteLatest(request.SN, "AddPeople", false, msg);
+    }
+    else
+    {
+        tracker.CompleteLatest(request.SN, "AddPeople", true,
+            $"단말기 {request.SN}에 {request.SuccessCount}명 저장 완료");
     }
 
     // Clear pending count only after device confirms successful save
@@ -894,10 +925,14 @@ app.MapPost("/People/DeletePeopleList", (DeletePeopleListRequest request, MySqlS
 });
 
 // ── /People/DeletePeopleListResult ───────────────────────────────────────────
-app.MapPost("/People/DeletePeopleListResult", (DeletePeopleListResultRequest request, MySqlStateStore store) =>
+app.MapPost("/People/DeletePeopleListResult", (DeletePeopleListResultRequest request, MySqlStateStore store, DeviceCommandTracker tracker) =>
 {
     if (string.IsNullOrWhiteSpace(request.SN))
         return Results.BadRequest(new ApiResponse(400, "SN is required."));
+    var ok = request.FailCount <= 0;
+    tracker.CompleteLatest(request.SN, "DeletePeople", ok,
+        ok ? $"단말기 {request.SN}에서 {request.SuccessCount}명 삭제 완료"
+           : $"삭제 실패 {request.FailCount}명 (성공 {request.SuccessCount}명)");
     return Results.Ok(ApiResponse.Ok());
 });
 

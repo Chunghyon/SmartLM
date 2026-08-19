@@ -1,3 +1,4 @@
+using FaceDeviceDesktopClient.Services;
 using System;
 using System.ComponentModel;
 using System.Net.Http.Json;
@@ -247,7 +248,31 @@ public class DeviceRemoteControlForm : Form
 
             if (response.IsSuccessStatusCode)
             {
-                AddLog($"[{DateTime.Now:HH:mm:ss}] ? {commandName} command sent successfully.");
+                Cursor = Cursors.WaitCursor;
+                UseWaitCursor = true;
+                try
+                {
+                    var payload = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                    string? jobId = null;
+                    if (payload.ValueKind != System.Text.Json.JsonValueKind.Undefined
+                        && payload.TryGetProperty("Content", out var content)
+                        && content.ValueKind == System.Text.Json.JsonValueKind.Object
+                        && content.TryGetProperty("JobId", out var idEl))
+                    {
+                        jobId = idEl.GetString();
+                    }
+
+                    AddLog($"[{DateTime.Now:HH:mm:ss}] {commandName} 단말기 처리 대기 중...");
+                    var (ok, message) = await DeviceCommandWaiter.WaitAsync(httpClient, jobId is null ? [] : [jobId], TimeSpan.FromSeconds(90));
+                    AddLog($"[{DateTime.Now:HH:mm:ss}] {message}");
+                    MessageBox.Show(message, ok ? commandName : commandName + " 실패",
+                        MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                }
+                finally
+                {
+                    UseWaitCursor = false;
+                    Cursor = Cursors.Default;
+                }
             }
             else
             {

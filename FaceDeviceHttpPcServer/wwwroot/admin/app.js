@@ -1,3 +1,30 @@
+
+async function waitCommandJobs(jobIds,timeoutMs){
+  const ids=(jobIds||[]).filter(Boolean);
+  if(!ids.length)return {ok:true,message:'대기할 명령이 없습니다.'};
+  const deadline=Date.now()+(timeoutMs||90000);
+  let last='단말기 응답 대기 중...';
+  while(Date.now()<deadline){
+    let pending=0, failed=[], succeeded=[];
+    for(const id of ids){
+      try{
+        const job=await apiGet('/admin/command-jobs/'+id);
+        last=job.message||job.Message||last;
+        const st=(job.status||job.Status||'Pending');
+        if(st==='Pending')pending++;
+        else if(st==='Failed')failed.push(last);
+        else succeeded.push(last);
+      }catch(e){pending++;}
+    }
+    if(pending===0){
+      if(failed.length)return {ok:false,message:failed.join('\n')};
+      return {ok:true,message:succeeded.join('\n')||'명령이 완료되었습니다.'};
+    }
+    await new Promise(r=>setTimeout(r,500));
+  }
+  return {ok:false,message:'단말기 응답 대기 시간이 초과되었습니다.\n'+last};
+}
+
 ﻿
 let devices=[],personnel=[],filteredPersonnel=[];
 let _devRowNumbers={},_devRowCounter=0;
@@ -175,8 +202,20 @@ async function executeDistribute(){
   const u=JSON.parse(document.getElementById('distributeDevList').dataset.uids||'[]');
   if(!sns.length){setStatus('대상 단말기를 선택하세요','err');return;}
   closeDistributeModal();
-  try{await apiPost('/admin/people/distribute-to-devices',{PersonIds:u,TargetSNs:sns});setStatus('배포 완료','ok');addLog('배포: '+u.length+'명 -> '+sns.length+'개 단말기');}
+  const prev=document.body.style.cursor;
+  document.body.style.cursor='wait';
+  try{
+    const r=await apiPost('/admin/people/distribute-to-devices',{PersonIds:u,TargetSNs:sns});
+    const items=(r&& (r.content||r.Content))||[];
+    const jobIds=items.map(x=>x.JobId||x.jobId).filter(Boolean);
+    setStatus('단말기 배포 결과 대기 중...','ok');
+    const done=await waitCommandJobs(jobIds,90000);
+    setStatus(done.message, done.ok?'ok':'err');
+    addLog((done.ok?'배포 완료: ':'배포 실패: ')+done.message);
+    alert(done.message);
+  }
   catch(e){setStatus('배포 실패: '+e.message,'err');}
+  finally{document.body.style.cursor=prev||'default';}
 }
 function closeDistributeModal(){document.getElementById('distributeModal').classList.remove('open');}
 async function syncTimeSelected(){

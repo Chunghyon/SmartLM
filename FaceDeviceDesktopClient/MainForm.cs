@@ -1,3 +1,4 @@
+using FaceDeviceDesktopClient.Services;
 using System.Net.Http.Json;
 using System.ComponentModel;
 using System.Text.Json;
@@ -16,7 +17,7 @@ public partial class MainForm : Form
     private string _personnelSortColumn = string.Empty;
     private ListSortDirection _personnelSortDirection = ListSortDirection.Ascending;
 
-    // ´Ü¸»±â °íÁ¤ ¼ø¹ø: SN ¡æ ¼ø¹ø (ÇÑ ¹ø ºÎ¿©µÈ ¹øÈ£´Â º¯°æµÇÁö ¾ÊÀ½)
+    // ë‹¨ë§ê¸° ê³ ì • ìˆœë²ˆ: SN â†’ ìˆœë²ˆ (í•œ ë²ˆ ë¶€ì—¬ëœ ë²ˆí˜¸ëŠ” ë³€ê²½ë˜ì§€ ì•ŠìŒ)
     private readonly Dictionary<string, int> _deviceRowNumbers =
         new(StringComparer.OrdinalIgnoreCase);
     private int _deviceRowCounter = 0;
@@ -46,7 +47,7 @@ public partial class MainForm : Form
         dgvDiscoveredDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
             Name = "IpAddress", 
-            HeaderText = "IP ÁÖ¼Ò", 
+            HeaderText = "IP ì£¼ì†Œ", 
             DataPropertyName = "IpAddress",
             Width = 150 
         });
@@ -54,7 +55,7 @@ public partial class MainForm : Form
         dgvDiscoveredDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
             Name = "DeviceSN", 
-            HeaderText = "½Ã¸®¾ó³Ñ¹ö", 
+            HeaderText = "ì‹œë¦¬ì–¼ë„˜ë²„", 
             DataPropertyName = "DeviceSN",
             Width = 200 
         });
@@ -62,7 +63,7 @@ public partial class MainForm : Form
         dgvDiscoveredDevices.Columns.Add(new DataGridViewTextBoxColumn 
         { 
             Name = "DeviceName", 
-            HeaderText = "µğ¹ÙÀÌ½º¸í", 
+            HeaderText = "ë””ë°”ì´ìŠ¤ëª…", 
             DataPropertyName = "DeviceName",
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
         });
@@ -78,7 +79,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewCheckBoxColumn
         {
             Name = "Selected",
-            HeaderText = "¼±ÅÃ",
+            HeaderText = "ì„ íƒ",
             Width = 55,
             ReadOnly = false
         });
@@ -86,7 +87,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "No",
-            HeaderText = "¼ø¹ø",
+            HeaderText = "ìˆœë²ˆ",
             DataPropertyName = "",
             Width = 50,
             ReadOnly = true
@@ -95,7 +96,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "DeviceName",
-            HeaderText = "´Ü¸»±â¸í",
+            HeaderText = "ë‹¨ë§ê¸°ëª…",
             DataPropertyName = "DeviceName",
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
         });
@@ -103,7 +104,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "TagName",
-            HeaderText = "À§Ä¡",
+            HeaderText = "ìœ„ì¹˜",
             DataPropertyName = "TagName",
             Width = 120
         });
@@ -111,7 +112,7 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "SN",
-            HeaderText = "½Ã¸®¾ó³Ñ¹ö",
+            HeaderText = "ì‹œë¦¬ì–¼ë„˜ë²„",
             DataPropertyName = "SN",
             Width = 150
         });
@@ -127,13 +128,13 @@ public partial class MainForm : Form
         dgvDevices.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "Status",
-            HeaderText = "»óÅÂ",
+            HeaderText = "ìƒíƒœ",
             DataPropertyName = "Status",
             Width = 80,
             ReadOnly = true
         });
 
-        // Ã¼Å©¹Ú½º Å¬¸¯ Ã³¸®: CellContentClick + CommitEdit·Î Áï½Ã ¹İ¿µ
+        // ì²´í¬ë°•ìŠ¤ í´ë¦­ ì²˜ë¦¬: CellContentClick + CommitEditë¡œ ì¦‰ì‹œ ë°˜ì˜
         dgvDevices.CellContentClick += (s, e) =>
         {
             if (e.RowIndex < 0) return;
@@ -141,17 +142,17 @@ public partial class MainForm : Form
             dgvDevices.CommitEdit(DataGridViewDataErrorContexts.Commit);
         };
 
-        // »óÅÂ ÄÃ·³ »ö»ó Ç¥½Ã + ÃÖ½Å »óÅÂ Àç°è»ê
+        // ìƒíƒœ ì»¬ëŸ¼ ìƒ‰ìƒ í‘œì‹œ + ìµœì‹  ìƒíƒœ ì¬ê³„ì‚°
         dgvDevices.CellFormatting += (s, e) =>
         {
             if (e.RowIndex < 0) return;
             if (dgvDevices.Columns["Status"] is { } statusCol && e.ColumnIndex == statusCol.Index)
             {
-                // ¹ÙÀÎµùµÈ DeviceInfo¿¡¼­ ½Ç½Ã°£ Àç°è»ê
+                // ë°”ì¸ë”©ëœ DeviceInfoì—ì„œ ì‹¤ì‹œê°„ ì¬ê³„ì‚°
                 if (dgvDevices.Rows[e.RowIndex].DataBoundItem is DeviceInfo di)
                     e.Value = di.Status;
                 var val = e.Value?.ToString();
-                if (val == "Á¤»ó")
+                if (val == "ì •ìƒ")
                 {
                     e.CellStyle.ForeColor = System.Drawing.Color.Green;
                     e.CellStyle.Font = new System.Drawing.Font(dgvDevices.Font, System.Drawing.FontStyle.Bold);
@@ -179,16 +180,16 @@ public partial class MainForm : Form
 
         dgvPersonnel.Columns.Clear();
 
-        dgvPersonnel.Columns.Add(new DataGridViewCheckBoxColumn { Name = "ColSelect",      HeaderText = "¼±ÅÃ",         Width = 55,  SortMode = DataGridViewColumnSortMode.NotSortable, ReadOnly = false });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",        HeaderText = "µ¿",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",          HeaderText = "È£",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "¸â¹ö#",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",        HeaderText = "»ç¿ëÀÚ¸í",     Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",        HeaderText = "Ä«µå",         Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword",    HeaderText = "ºñ¹Ğ¹øÈ£",     Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFingerprint", HeaderText = "Áö¹®",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPalmvein",    HeaderText = "¼Õ¹Ù´Ú",       Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
-        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",       HeaderText = "¾ó±¼",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewCheckBoxColumn { Name = "ColSelect",      HeaderText = "ì„ íƒ",         Width = 55,  SortMode = DataGridViewColumnSortMode.NotSortable, ReadOnly = false });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColDong",        HeaderText = "ë™",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColHo",          HeaderText = "í˜¸",           Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColMember",      HeaderText = "ë©¤ë²„#",         Width = 60,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",        HeaderText = "ì‚¬ìš©ìëª…",     Width = 150, SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",        HeaderText = "ì¹´ë“œ",         Width = 70,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword",    HeaderText = "ë¹„ë°€ë²ˆí˜¸",     Width = 80,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFingerprint", HeaderText = "ì§€ë¬¸",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPalmvein",    HeaderText = "ì†ë°”ë‹¥",       Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
+        dgvPersonnel.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPhoto",       HeaderText = "ì–¼êµ´",         Width = 55,  SortMode = DataGridViewColumnSortMode.Programmatic, ReadOnly = true });
 
         dgvPersonnel.CellFormatting += (sender, e) =>
         {
@@ -203,7 +204,7 @@ public partial class MainForm : Form
                 var pw = e.Value.ToString();
                 if (!string.IsNullOrWhiteSpace(pw))
                 {
-                    e.Value = new string('¡Ü', Math.Min(pw.Length, 8));
+                    e.Value = new string('â—', Math.Min(pw.Length, 8));
                     e.FormattingApplied = true;
                 }
             }
@@ -231,7 +232,7 @@ public partial class MainForm : Form
                 btnEditPerson_Click(sender!, EventArgs.Empty);
         };
 
-        // µ¿ ÀÔ·Â ½Ã È£ È°¼ºÈ­/ºñÈ°¼ºÈ­
+        // ë™ ì…ë ¥ ì‹œ í˜¸ í™œì„±í™”/ë¹„í™œì„±í™”
         txtFilterDong.TextChanged += (s, e) =>
         {
             bool hasDong = !string.IsNullOrWhiteSpace(txtFilterDong.Text);
@@ -239,12 +240,12 @@ public partial class MainForm : Form
             lblFilterHo.Enabled = hasDong;
             if (!hasDong)
                 txtFilterHo.Text = "";
-            btnSelectByFilter.Text = "¼±ÅÃ";
+            btnSelectByFilter.Text = "ì„ íƒ";
         };
 
         txtFilterHo.TextChanged += (s, e) =>
         {
-            btnSelectByFilter.Text = "¼±ÅÃ";
+            btnSelectByFilter.Text = "ì„ íƒ";
         };
     }
 
@@ -257,13 +258,13 @@ public partial class MainForm : Form
 
         dgvAttendance.Columns.Clear();
 
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttTime",   HeaderText = "½Ã°£",     DataPropertyName = "RecordTime",  Width = 160 });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDong",   HeaderText = "µ¿",     DataPropertyName = "UserID",      Width = 65  });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttHo",     HeaderText = "È£",       DataPropertyName = "UserID",      Width = 65  });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttMember", HeaderText = "¸â¹ö#",   DataPropertyName = "UserID",      Width = 55  });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttName",   HeaderText = "»ç¿ëÀÚ¸í", DataPropertyName = "UserName",    Width = 130 });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDevice", HeaderText = "´Ü¸»±â",   DataPropertyName = "DeviceSN",    Width = 130 });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttEvent",  HeaderText = "ÀÌº¥Æ®",    DataPropertyName = "RecordType",  Width = 100 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttTime",   HeaderText = "ì‹œê°„",     DataPropertyName = "RecordTime",  Width = 160 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDong",   HeaderText = "ë™",     DataPropertyName = "UserID",      Width = 65  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttHo",     HeaderText = "í˜¸",       DataPropertyName = "UserID",      Width = 65  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttMember", HeaderText = "ë©¤ë²„#",   DataPropertyName = "UserID",      Width = 55  });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttName",   HeaderText = "ì‚¬ìš©ìëª…", DataPropertyName = "UserName",    Width = 130 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDevice", HeaderText = "ë‹¨ë§ê¸°",   DataPropertyName = "DeviceSN",    Width = 130 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttEvent",  HeaderText = "ì´ë²¤íŠ¸",    DataPropertyName = "RecordType",  Width = 100 });
 
         dgvAttendance.CellFormatting += DgvAttendance_CellFormatting;
 
@@ -303,7 +304,7 @@ public partial class MainForm : Form
         var grid = sender as DataGridView;
         if (grid == null) return;
 
-        // ÇØ´ç ÇàÀÇ SNÀ¸·Î °íÁ¤ ¼ø¹ø Á¶È¸
+        // í•´ë‹¹ í–‰ì˜ SNìœ¼ë¡œ ê³ ì • ìˆœë²ˆ ì¡°íšŒ
         string? sn = null;
         if (e.RowIndex >= 0 && e.RowIndex < grid.Rows.Count)
             sn = grid.Rows[e.RowIndex].Cells["SN"].Value?.ToString();
@@ -330,7 +331,7 @@ public partial class MainForm : Form
     private void DgvDevices_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0) return;
-        // ¼±ÅÃ Ã¼Å©¹Ú½º ¿­ ´õºíÅ¬¸¯Àº ¹«½Ã
+        // ì„ íƒ ì²´í¬ë°•ìŠ¤ ì—´ ë”ë¸”í´ë¦­ì€ ë¬´ì‹œ
         if (dgvDevices.Columns["Selected"] is { } selCol && e.ColumnIndex == selCol.Index) return;
 
         try
@@ -347,7 +348,7 @@ public partial class MainForm : Form
         }
         catch (Exception ex)
         {
-            ShowError($"´Ü¸»±â ¼³Á¤ ¿­±â ½ÇÆĞ: {ex.Message}");
+            ShowError($"ë‹¨ë§ê¸° ì„¤ì • ì—´ê¸° ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -355,15 +356,15 @@ public partial class MainForm : Form
     {
         var contextMenu = new ContextMenuStrip();
 
-        var menuRemoteControl = new ToolStripMenuItem("¼öÁ¤");
+        var menuRemoteControl = new ToolStripMenuItem("ìˆ˜ì •");
         menuRemoteControl.Click += MenuRemoteControl_Click;
 
-        var menuRefresh = new ToolStripMenuItem("»õ·Î °íÄ§");
+        var menuRefresh = new ToolStripMenuItem("ìƒˆë¡œ ê³ ì¹¨");
         menuRefresh.Click += async (s, e) => await RefreshDevices();
 
         var menuSeparator = new ToolStripSeparator();
 
-        var menuDelete = new ToolStripMenuItem("Á¦°Å");
+        var menuDelete = new ToolStripMenuItem("ì œê±°");
         menuDelete.Click += MenuDeleteDevice_Click;
         menuDelete.ForeColor = System.Drawing.Color.DarkRed;
 
@@ -374,7 +375,7 @@ public partial class MainForm : Form
     private void MenuRemoteControl_Click(object? sender, EventArgs e)
     {
         var row = dgvDevices.SelectedRows.Count > 0 ? dgvDevices.SelectedRows[0] : null;
-        if (row == null) { MessageBox.Show("´Ü¸»±â¸¦ ¼±ÅÃÇÏ¼¼¿ä.", "¾Ë¸²", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        if (row == null) { MessageBox.Show("ë‹¨ë§ê¸°ë¥¼ ì„ íƒí•˜ì„¸ìš”.", "ì•Œë¦¼", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
         try
         {
             var device = row.DataBoundItem as DeviceInfo;
@@ -382,7 +383,7 @@ public partial class MainForm : Form
             using var form = new DeviceSettingsForm(device, _httpClient);
             if (form.ShowDialog() == DialogResult.OK) { _ = RefreshDevices(); _ = RefreshSystemInfo(); }
         }
-        catch (Exception ex) { ShowError($"´Ü¸»±â ¼³Á¤ ¿­±â ½ÇÆĞ: {ex.Message}"); }
+        catch (Exception ex) { ShowError($"ë‹¨ë§ê¸° ì„¤ì • ì—´ê¸° ì‹¤íŒ¨: {ex.Message}"); }
     }
 
     private async void MenuDeleteDevice_Click(object? sender, EventArgs e)
@@ -500,7 +501,7 @@ public partial class MainForm : Form
 
     private void UpdateDeviceGrid(List<DeviceInfo> devices)
     {
-        // ÇöÀç Ã¼Å©µÈ SN ¸ñ·Ï º¸Á¸
+        // í˜„ì¬ ì²´í¬ëœ SN ëª©ë¡ ë³´ì¡´
         var checkedSNs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (DataGridViewRow row in dgvDevices.Rows)
             if (row.Cells["Selected"].Value is true)
@@ -509,7 +510,7 @@ public partial class MainForm : Form
                 if (!string.IsNullOrEmpty(sn)) checkedSNs.Add(sn);
             }
 
-        // ÇöÀç ½ºÅ©·Ñ À§Ä¡¿Í ¼±ÅÃ SN º¸Á¸
+        // í˜„ì¬ ìŠ¤í¬ë¡¤ ìœ„ì¹˜ì™€ ì„ íƒ SN ë³´ì¡´
         int firstVisibleRow = dgvDevices.FirstDisplayedScrollingRowIndex;
         string? selectedSN = null;
         if (dgvDevices.SelectedRows.Count > 0)
@@ -520,12 +521,12 @@ public partial class MainForm : Form
 
         if (devices.Count > 0)
         {
-            // »õ·Î ³ªÅ¸³­ SN¿¡ ¼ø¹ø ºÎ¿© (±âÁ¸ SNÀº À¯Áö)
+            // ìƒˆë¡œ ë‚˜íƒ€ë‚œ SNì— ìˆœë²ˆ ë¶€ì—¬ (ê¸°ì¡´ SNì€ ìœ ì§€)
             foreach (var d in devices)
                 if (!_deviceRowNumbers.ContainsKey(d.SN))
                     _deviceRowNumbers[d.SN] = ++_deviceRowCounter;
 
-            // ¼ø¹ø ±âÁØÀ¸·Î Á¤·ÄÇÏ¿© Ç¥½Ã ¼ø¼­¸¦ °íÁ¤
+            // ìˆœë²ˆ ê¸°ì¤€ìœ¼ë¡œ ì •ë ¬í•˜ì—¬ í‘œì‹œ ìˆœì„œë¥¼ ê³ ì •
             devices.Sort((a, b) =>
             {
                 int na = _deviceRowNumbers.TryGetValue(a.SN, out var va) ? va : int.MaxValue;
@@ -537,14 +538,14 @@ public partial class MainForm : Form
             dgvDevices.DataSource = bindingList;
             lblStatus.Text = $"Loaded {devices.Count} device(s)";
 
-            // Ã¼Å©¹Ú½º »óÅÂ º¹¿ø (¹Ì¼±ÅÃ Çàµµ ¸í½ÃÀûÀ¸·Î false ÁöÁ¤ÇÏ¿© null ¹æÁö)
+            // ì²´í¬ë°•ìŠ¤ ìƒíƒœ ë³µì› (ë¯¸ì„ íƒ í–‰ë„ ëª…ì‹œì ìœ¼ë¡œ false ì§€ì •í•˜ì—¬ null ë°©ì§€)
             foreach (DataGridViewRow row in dgvDevices.Rows)
             {
                 var sn = row.Cells["SN"].Value?.ToString();
                 row.Cells["Selected"].Value = !string.IsNullOrEmpty(sn) && checkedSNs.Contains(sn);
             }
 
-            // ¼±ÅÃ Çà º¹¿ø (ÀÚµ¿ ¼±ÅÃµÈ Çà ¸ÕÀú ÇØÁ¦ ÈÄ º¹¿ø)
+            // ì„ íƒ í–‰ ë³µì› (ìë™ ì„ íƒëœ í–‰ ë¨¼ì € í•´ì œ í›„ ë³µì›)
             dgvDevices.ClearSelection();
             if (selectedSN != null)
             {
@@ -556,11 +557,11 @@ public partial class MainForm : Form
                     }
             }
 
-            // ½ºÅ©·Ñ À§Ä¡ º¹¿ø
+            // ìŠ¤í¬ë¡¤ ìœ„ì¹˜ ë³µì›
             if (firstVisibleRow >= 0 && firstVisibleRow < dgvDevices.RowCount)
                 dgvDevices.FirstDisplayedScrollingRowIndex = firstVisibleRow;
 
-            // »óÅÂ ÄÃ·³ ÁÖ±â °»½Å Å¸ÀÌ¸Ó (20ÃÊ¸¶´Ù Refresh)
+            // ìƒíƒœ ì»¬ëŸ¼ ì£¼ê¸° ê°±ì‹  íƒ€ì´ë¨¸ (20ì´ˆë§ˆë‹¤ Refresh)
             _deviceStatusTimer?.Stop();
             _deviceStatusTimer?.Dispose();
             _deviceStatusTimer = new System.Windows.Forms.Timer { Interval = 20_000 };
@@ -576,13 +577,13 @@ public partial class MainForm : Form
         // Refresh device filter combo in event search
         var prevSel = cmbAttDevice.SelectedItem?.ToString();
         cmbAttDevice.Items.Clear();
-        cmbAttDevice.Items.Add("ÀüÃ¼ ´Ü¸»±â");
+        cmbAttDevice.Items.Add("ì „ì²´ ë‹¨ë§ê¸°");
         foreach (var d in devices)
         {
             var label = string.IsNullOrWhiteSpace(d.DeviceName) ? d.SN : d.DeviceName;
             cmbAttDevice.Items.Add(label);
         }
-        cmbAttDevice.SelectedIndex = Math.Max(0, cmbAttDevice.Items.IndexOf(prevSel ?? "ÀüÃ¼ ´Ü¸»±â"));
+        cmbAttDevice.SelectedIndex = Math.Max(0, cmbAttDevice.Items.IndexOf(prevSel ?? "ì „ì²´ ë‹¨ë§ê¸°"));
     }
 
     private async Task RefreshDepartments()
@@ -738,12 +739,12 @@ public partial class MainForm : Form
                 dgvAttendance.DataSource = null;
                 dgvAttendance.DataSource = result.Data.DataList;
                 dgvAttendance.AutoResizeColumns();
-                lblAttendanceCount.Text = $"ÀüÃ¼: {result.Data.TotalCount}°Ç";
+                lblAttendanceCount.Text = $"ì „ì²´: {result.Data.TotalCount}ê±´";
             }
         }
         catch (Exception ex)
         {
-            ShowError($"ÃâÀÔ Á¶È¸ ½ÇÆĞ: {ex.Message}");
+            ShowError($"ì¶œì… ì¡°íšŒ ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -751,23 +752,23 @@ public partial class MainForm : Form
     {
         try
         {
-            // »ç¿ë °¡´ÉÇÑ ³×Æ®¿öÅ© ÀÎÅÍÆäÀÌ½º °¡Á®¿À±â
+            // ì‚¬ìš© ê°€ëŠ¥í•œ ë„¤íŠ¸ì›Œí¬ ì¸í„°í˜ì´ìŠ¤ ê°€ì ¸ì˜¤ê¸°
             var interfacesResponse = await _httpClient.GetAsync("/api/Device/GetNetworkInterfaces");
             var interfacesResult = await interfacesResponse.Content.ReadFromJsonAsync<BrowserApiResponse<List<NetworkInterfaceInfo>>>();
 
             if (interfacesResult?.Code != 0 || interfacesResult.Data == null || interfacesResult.Data.Count == 0)
             {
-                MessageBox.Show("»ç¿ë °¡´ÉÇÑ ³×Æ®¿öÅ© ÀÎÅÍÆäÀÌ½º°¡ ¾ø½À´Ï´Ù.", "¿À·ù",
+                MessageBox.Show("ì‚¬ìš© ê°€ëŠ¥í•œ ë„¤íŠ¸ì›Œí¬ ì¸í„°í˜ì´ìŠ¤ê°€ ì—†ìŠµë‹ˆë‹¤.", "ì˜¤ë¥˜",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             var networkInterfaces = interfacesResult.Data;
 
-            // Search ¿É¼Ç ¼±ÅÃ ´ÙÀÌ¾ó·Î±×
+            // Search ì˜µì…˜ ì„ íƒ ë‹¤ì´ì–¼ë¡œê·¸
             using var searchDialog = new Form
             {
-                Text = "´Ü¸»±â °Ë»ö ¼³Á¤",
+                Text = "ë‹¨ë§ê¸° ê²€ìƒ‰ ì„¤ì •",
                 Size = new Size(450, 330),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
@@ -777,7 +778,7 @@ public partial class MainForm : Form
 
             var lblInterface = new Label
             {
-                Text = "³×Æ®¿öÅ© ÀÎÅÍÆäÀÌ½º:",
+                Text = "ë„¤íŠ¸ì›Œí¬ ì¸í„°í˜ì´ìŠ¤:",
                 Location = new Point(20, 20),
                 Size = new Size(150, 20)
             };
@@ -791,13 +792,13 @@ public partial class MainForm : Form
 
             foreach (var iface in networkInterfaces)
             {
-                cmbInterface.Items.Add($"{iface.LocalIp} (ºê·ÎµåÄ³½ºÆ®: {iface.BroadcastIp})");
+                cmbInterface.Items.Add($"{iface.LocalIp} (ë¸Œë¡œë“œìºìŠ¤íŠ¸: {iface.BroadcastIp})");
             }
             cmbInterface.SelectedIndex = 0;
 
             var rbBroadcast = new RadioButton
             {
-                Text = "ºê·ÎµåÄ³½ºÆ® °Ë»ö (UDP Discovery)",
+                Text = "ë¸Œë¡œë“œìºìŠ¤íŠ¸ ê²€ìƒ‰ (UDP Discovery)",
                 Location = new Point(20, 90),
                 Size = new Size(350, 25),
                 Checked = true
@@ -805,14 +806,14 @@ public partial class MainForm : Form
 
             var rbNetworkScan = new RadioButton
             {
-                Text = "³×Æ®¿öÅ© ½ºÄµ (HTTP Probe)",
+                Text = "ë„¤íŠ¸ì›Œí¬ ìŠ¤ìº” (HTTP Probe)",
                 Location = new Point(20, 120),
                 Size = new Size(350, 25)
             };
 
             var lblPort = new Label
             {
-                Text = "UDP Æ÷Æ®:",
+                Text = "UDP í¬íŠ¸:",
                 Location = new Point(20, 150),
                 Size = new Size(100, 20)
             };
@@ -827,7 +828,7 @@ public partial class MainForm : Form
 
             var lblSubnet = new Label
             {
-                Text = "¼­ºê³İ:",
+                Text = "ì„œë¸Œë„·:",
                 Location = new Point(20, 180),
                 Size = new Size(200, 20)
             };
@@ -837,12 +838,12 @@ public partial class MainForm : Form
                 Location = new Point(20, 205),
                 Size = new Size(200, 25),
                 Text = "192.168.0",
-                PlaceholderText = "¿¹: 192.168.0"
+                PlaceholderText = "ì˜ˆ: 192.168.0"
             };
 
             var btnOk = new Button
             {
-                Text = "°Ë»ö ½ÃÀÛ",
+                Text = "ê²€ìƒ‰ ì‹œì‘",
                 DialogResult = DialogResult.OK,
                 Location = new Point(290, 250),
                 Size = new Size(120, 30)
@@ -850,7 +851,7 @@ public partial class MainForm : Form
 
             var btnCancel = new Button
             {
-                Text = "Ãë¼Ò",
+                Text = "ì·¨ì†Œ",
                 DialogResult = DialogResult.Cancel,
                 Location = new Point(170, 250),
                 Size = new Size(100, 30)
@@ -866,7 +867,7 @@ public partial class MainForm : Form
             searchDialog.AcceptButton = btnOk;
             searchDialog.CancelButton = btnCancel;
 
-            // ¿É¼Ç º¯°æ ½Ã subnet ÀÔ·Â È°¼ºÈ­/ºñÈ°¼ºÈ­
+            // ì˜µì…˜ ë³€ê²½ ì‹œ subnet ì…ë ¥ í™œì„±í™”/ë¹„í™œì„±í™”
             rbBroadcast.CheckedChanged += (s, args) =>
             {
                 lblPort.Visible = rbBroadcast.Checked;
@@ -884,11 +885,11 @@ public partial class MainForm : Form
             btnAutoSearch.Enabled = false;
             dgvDiscoveredDevices.DataSource = null;
 
-            // ¼±ÅÃµÈ ·ÎÄÃ IP ÃßÃâ
+            // ì„ íƒëœ ë¡œì»¬ IP ì¶”ì¶œ
             var selectedIpText = cmbInterface.SelectedItem?.ToString() ?? "";
             var selectedLocalIp = selectedIpText.Split(' ')[0];
 
-            // UDP Æ÷Æ® ÆÄ½Ì
+            // UDP í¬íŠ¸ íŒŒì‹±
             if (!int.TryParse(txtPort.Text, out var discoveryPort))
             {
                 discoveryPort = 8101;
@@ -896,15 +897,15 @@ public partial class MainForm : Form
 
             if (rbBroadcast.Checked)
             {
-                // Broadcast Search - ÀÏ¹İ API È£Ãâ (¿Ï·á ÈÄ °á°ú Ç¥½Ã)
-                lblStatus.Text = $"ºê·ÎµåÄ³½ºÆ® °Ë»ö Áß... (¼Ò½º IP: {selectedLocalIp}, Æ÷Æ®: {discoveryPort})";
+                // Broadcast Search - ì¼ë°˜ API í˜¸ì¶œ (ì™„ë£Œ í›„ ê²°ê³¼ í‘œì‹œ)
+                lblStatus.Text = $"ë¸Œë¡œë“œìºìŠ¤íŠ¸ ê²€ìƒ‰ ì¤‘... (ì†ŒìŠ¤ IP: {selectedLocalIp}, í¬íŠ¸: {discoveryPort})";
 
                 var devices = new List<DiscoveredDevice>();
 
-                // ÁßÁö ¹öÆ°À» Æ÷ÇÔÇÑ ÁøÇà ´ëÈ­»óÀÚ
+                // ì¤‘ì§€ ë²„íŠ¼ì„ í¬í•¨í•œ ì§„í–‰ ëŒ€í™”ìƒì
                 var progressForm = new Form
                 {
-                    Text = "ºê·ÎµåÄ³½ºÆ® °Ë»ö Áß",
+                    Text = "ë¸Œë¡œë“œìºìŠ¤íŠ¸ ê²€ìƒ‰ ì¤‘",
                     Size = new Size(400, 150),
                     StartPosition = FormStartPosition.CenterParent,
                     FormBorderStyle = FormBorderStyle.FixedDialog,
@@ -914,7 +915,7 @@ public partial class MainForm : Form
 
                 var lblProgress = new Label
                 {
-                    Text = "´Ü¸»±â °Ë»ö Áß... Àá½Ã¸¸ ±â´Ù·ÁÁÖ¼¼¿ä.",
+                    Text = "ë‹¨ë§ê¸° ê²€ìƒ‰ ì¤‘... ì ì‹œë§Œ ê¸°ë‹¤ë ¤ì£¼ì„¸ìš”.",
                     Location = new Point(20, 20),
                     Size = new Size(360, 25),
                     TextAlign = System.Drawing.ContentAlignment.MiddleCenter
@@ -922,7 +923,7 @@ public partial class MainForm : Form
 
                 var lblDeviceCount = new Label
                 {
-                    Text = "¹ß°ßµÈ µğ¹ÙÀÌ½º: 0°³",
+                    Text = "ë°œê²¬ëœ ë””ë°”ì´ìŠ¤: 0ê°œ",
                     Location = new Point(20, 50),
                     Size = new Size(360, 25),
                     TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
@@ -931,7 +932,7 @@ public partial class MainForm : Form
 
                 var btnStop = new Button
                 {
-                    Text = "ÁßÁö",
+                    Text = "ì¤‘ì§€",
                     Location = new Point(150, 80),
                     Size = new Size(100, 30)
                 };
@@ -950,7 +951,7 @@ public partial class MainForm : Form
                         cts.Cancel();
                 };
 
-                // ºñµ¿±â °Ë»ö ½ÇÇà
+                // ë¹„ë™ê¸° ê²€ìƒ‰ ì‹¤í–‰
                 var searchTask = Task.Run(async () =>
                 {
                     try
@@ -964,40 +965,40 @@ public partial class MainForm : Form
 
                         var response = await _httpClient.PostAsJsonAsync("/api/Device/Search", request, cts.Token);
 
-                        // ÀÀ´ä µğ¹ö±ë
+                        // ì‘ë‹µ ë””ë²„ê¹…
                         var responseText = await response.Content.ReadAsStringAsync();
-                        System.Diagnostics.Debug.WriteLine($"°Ë»ö ÀÀ´ä ¿øº»: {responseText}");
+                        System.Diagnostics.Debug.WriteLine($"ê²€ìƒ‰ ì‘ë‹µ ì›ë³¸: {responseText}");
 
                         var result = JsonSerializer.Deserialize<BrowserApiResponse<List<DiscoveredDevice>>>(responseText);
 
-                        System.Diagnostics.Debug.WriteLine($"¿ªÁ÷·ÄÈ­ °á°ú: result={result?.Result}, Code={result?.Code}, Data count={result?.Data?.Count}");
+                        System.Diagnostics.Debug.WriteLine($"ì—­ì§ë ¬í™” ê²°ê³¼: result={result?.Result}, Code={result?.Code}, Data count={result?.Data?.Count}");
 
                         if (result?.Result == true && result.Data != null && result.Data.Count > 0)
                         {
                             devices.AddRange(result.Data);
-                            System.Diagnostics.Debug.WriteLine($"µğ¹ÙÀÌ½º Ãß°¡µÊ: {devices.Count}°³");
+                            System.Diagnostics.Debug.WriteLine($"ë””ë°”ì´ìŠ¤ ì¶”ê°€ë¨: {devices.Count}ê°œ");
 
-                            // UI ½º·¹µå¿¡¼­ Ä«¿îÆ® ¾÷µ¥ÀÌÆ®
+                            // UI ìŠ¤ë ˆë“œì—ì„œ ì¹´ìš´íŠ¸ ì—…ë°ì´íŠ¸
                             if (lblDeviceCount.InvokeRequired)
                             {
                                 lblDeviceCount.Invoke((Action)(() =>
                                 {
-                                    lblDeviceCount.Text = $"¹ß°ßµÈ µğ¹ÙÀÌ½º: {devices.Count}°³";
+                                    lblDeviceCount.Text = $"ë°œê²¬ëœ ë””ë°”ì´ìŠ¤: {devices.Count}ê°œ";
                                 }));
                             }
                             else
                             {
-                                lblDeviceCount.Text = $"¹ß°ßµÈ µğ¹ÙÀÌ½º: {devices.Count}°³";
+                                lblDeviceCount.Text = $"ë°œê²¬ëœ ë””ë°”ì´ìŠ¤: {devices.Count}ê°œ";
                             }
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"Á¶°Ç ½ÇÆĞ: Result={result?.Result}, Data null={result?.Data == null}, Data count={result?.Data?.Count}");
+                            System.Diagnostics.Debug.WriteLine($"ì¡°ê±´ ì‹¤íŒ¨: Result={result?.Result}, Data null={result?.Data == null}, Data count={result?.Data?.Count}");
                         }
                     }
                     catch (OperationCanceledException)
                     {
-                        // »ç¿ëÀÚ°¡ ÁßÁöÇÔ
+                        // ì‚¬ìš©ìê°€ ì¤‘ì§€í•¨
                     }
                     catch (Exception ex)
                     {
@@ -1005,17 +1006,17 @@ public partial class MainForm : Form
                         {
                             this.Invoke((Action)(() =>
                             {
-                                MessageBox.Show($"°Ë»ö Áß ¿À·ù ¹ß»ı: {ex.Message}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show($"ê²€ìƒ‰ ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {ex.Message}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }));
                         }
                         else
                         {
-                            MessageBox.Show($"°Ë»ö Áß ¿À·ù ¹ß»ı: {ex.Message}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show($"ê²€ìƒ‰ ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {ex.Message}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 }, cts.Token);
 
-                // ´ëÈ­»óÀÚ Ç¥½Ã
+                // ëŒ€í™”ìƒì í‘œì‹œ
                 progressForm.Shown += async (s, args) =>
                 {
                     await searchTask;
@@ -1027,18 +1028,18 @@ public partial class MainForm : Form
 
                 cts.Dispose();
 
-                // °á°ú Ç¥½Ã
+                // ê²°ê³¼ í‘œì‹œ
                 if (devices.Count > 0)
                 {
                     dgvDiscoveredDevices.DataSource = devices;
                     dgvDiscoveredDevices.AutoResizeColumns();
-                    lblStatus.Text = $"¹ß°ß: {devices.Count}°³ ´Ü¸»±â";
+                    lblStatus.Text = $"ë°œê²¬: {devices.Count}ê°œ ë‹¨ë§ê¸°";
                 }
                 else
                 {
                     dgvDiscoveredDevices.DataSource = null;
-                    lblStatus.Text = "ºê·ÎµåÄ³½ºÆ® °Ë»ö °á°ú ¾øÀ½";
-                    MessageBox.Show("´Ü¸»±â¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù. ³×Æ®¿öÅ© ½ºÄµÀ» ½ÃµµÇØº¸¼¼¿ä.", "°Ë»ö °á°ú",
+                    lblStatus.Text = "ë¸Œë¡œë“œìºìŠ¤íŠ¸ ê²€ìƒ‰ ê²°ê³¼ ì—†ìŒ";
+                    MessageBox.Show("ë‹¨ë§ê¸°ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. ë„¤íŠ¸ì›Œí¬ ìŠ¤ìº”ì„ ì‹œë„í•´ë³´ì„¸ìš”.", "ê²€ìƒ‰ ê²°ê³¼",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -1093,7 +1094,7 @@ public partial class MainForm : Form
 
                 try
                 {
-                    // Server-Sent Events·Î ½Ç½Ã°£ ÁøÇà »óÈ² ¼ö½Å
+                    // Server-Sent Eventsë¡œ ì‹¤ì‹œê°„ ì§„í–‰ ìƒí™© ìˆ˜ì‹ 
                     using var httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
                     httpClient.BaseAddress = new Uri(_serverUrl);
 
@@ -1110,7 +1111,7 @@ public partial class MainForm : Form
                     string? line;
                     while ((line = await reader.ReadLineAsync()) != null)
                     {
-                        // ºó ÁÙ ¹«½Ã (SSE Çü½Ä¿¡¼­ \n\nÀ¸·Î ¸Ş½ÃÁö ±¸ºĞ)
+                        // ë¹ˆ ì¤„ ë¬´ì‹œ (SSE í˜•ì‹ì—ì„œ \n\nìœ¼ë¡œ ë©”ì‹œì§€ êµ¬ë¶„)
                         if (string.IsNullOrWhiteSpace(line))
                             continue;
 
@@ -1134,7 +1135,7 @@ public partial class MainForm : Form
                             }
                             catch (JsonException)
                             {
-                                // JSON ÆÄ½Ì ½ÇÆĞ ¹«½Ã (·Î±×´Â ¼­¹ö ÂÊ¿¡¼­ Ã³¸®)
+                                // JSON íŒŒì‹± ì‹¤íŒ¨ ë¬´ì‹œ (ë¡œê·¸ëŠ” ì„œë²„ ìª½ì—ì„œ ì²˜ë¦¬)
                             }
                         }
                         else if (line.StartsWith("progress: "))
@@ -1195,12 +1196,12 @@ public partial class MainForm : Form
                 return;
             }
 
-            // ÀÌ¹Ì µî·ÏµÈ µğ¹ÙÀÌ½ºÀÎÁö È®ÀÎ
+            // ì´ë¯¸ ë“±ë¡ëœ ë””ë°”ì´ìŠ¤ì¸ì§€ í™•ì¸
             List<DeviceInfo>? existingDevices = null;
             try
             {
                 existingDevices = await _httpClient.GetFromJsonAsync<List<DeviceInfo>>("/admin/devices");
-                System.Diagnostics.Debug.WriteLine($"Å¬¶óÀÌ¾ğÆ®: ±âÁ¸ µğ¹ÙÀÌ½º ¸ñ·Ï Á¶È¸ ¼º°ø ({existingDevices?.Count ?? 0}°³)");
+                System.Diagnostics.Debug.WriteLine($"í´ë¼ì´ì–¸íŠ¸: ê¸°ì¡´ ë””ë°”ì´ìŠ¤ ëª©ë¡ ì¡°íšŒ ì„±ê³µ ({existingDevices?.Count ?? 0}ê°œ)");
                 if (existingDevices != null)
                 {
                     foreach (var dev in existingDevices)
@@ -1211,24 +1212,24 @@ public partial class MainForm : Form
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"±âÁ¸ µğ¹ÙÀÌ½º ¸ñ·Ï Á¶È¸ ½ÇÆĞ: {ex.Message}");
-                // ½ÇÆĞÇØµµ °è¼Ó ÁøÇà (Áßº¹ Ã¼Å© °Ç³Ê¶Ù±â)
+                System.Diagnostics.Debug.WriteLine($"ê¸°ì¡´ ë””ë°”ì´ìŠ¤ ëª©ë¡ ì¡°íšŒ ì‹¤íŒ¨: {ex.Message}");
+                // ì‹¤íŒ¨í•´ë„ ê³„ì† ì§„í–‰ (ì¤‘ë³µ ì²´í¬ ê±´ë„ˆë›°ê¸°)
             }
 
             if (existingDevices != null)
             {
-                System.Diagnostics.Debug.WriteLine($"Å¬¶óÀÌ¾ğÆ®: Áßº¹ Ã¼Å© - µî·Ï ½Ãµµ ÁßÀÎ µğ¹ÙÀÌ½º: {deviceSN} at {ip}");
+                System.Diagnostics.Debug.WriteLine($"í´ë¼ì´ì–¸íŠ¸: ì¤‘ë³µ ì²´í¬ - ë“±ë¡ ì‹œë„ ì¤‘ì¸ ë””ë°”ì´ìŠ¤: {deviceSN} at {ip}");
 
                 var duplicateBySN = existingDevices.FirstOrDefault(d => d.SN == deviceSN);
                 var duplicateByIP = existingDevices.FirstOrDefault(d => d.IpAddress == ip);
 
                 if (duplicateBySN != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Å¬¶óÀÌ¾ğÆ®: SN Áßº¹ ¹ß°ß: {duplicateBySN.SN} at {duplicateBySN.IpAddress}");
+                    System.Diagnostics.Debug.WriteLine($"í´ë¼ì´ì–¸íŠ¸: SN ì¤‘ë³µ ë°œê²¬: {duplicateBySN.SN} at {duplicateBySN.IpAddress}");
                 }
                 if (duplicateByIP != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Å¬¶óÀÌ¾ğÆ®: IP Áßº¹ ¹ß°ß: {duplicateByIP.SN} at {duplicateByIP.IpAddress}");
+                    System.Diagnostics.Debug.WriteLine($"í´ë¼ì´ì–¸íŠ¸: IP ì¤‘ë³µ ë°œê²¬: {duplicateByIP.SN} at {duplicateByIP.IpAddress}");
                 }
 
                 var alreadyRegistered = existingDevices.Any(d => 
@@ -1237,40 +1238,40 @@ public partial class MainForm : Form
                 if (alreadyRegistered)
                 {
                     MessageBox.Show(
-                        $"ÀÌ µğ¹ÙÀÌ½º´Â ÀÌ¹Ì µî·ÏµÇ¾î ÀÖ½À´Ï´Ù.\n\n" +
-                        $"IP ÁÖ¼Ò: {ip}\n" +
-                        $"µğ¹ÙÀÌ½º SN: {deviceSN}",
-                        "Áßº¹ µî·Ï",
+                        $"ì´ ë””ë°”ì´ìŠ¤ëŠ” ì´ë¯¸ ë“±ë¡ë˜ì–´ ìˆìŠµë‹ˆë‹¤.\n\n" +
+                        $"IP ì£¼ì†Œ: {ip}\n" +
+                        $"ë””ë°”ì´ìŠ¤ SN: {deviceSN}",
+                        "ì¤‘ë³µ ë“±ë¡",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
-                    lblStatus.Text = "ÀÌ¹Ì µî·ÏµÈ µğ¹ÙÀÌ½º";
+                    lblStatus.Text = "ì´ë¯¸ ë“±ë¡ëœ ë””ë°”ì´ìŠ¤";
                     return;
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"Å¬¶óÀÌ¾ğÆ®: Áßº¹ ¾øÀ½, µî·Ï ÁøÇà");
+                    System.Diagnostics.Debug.WriteLine($"í´ë¼ì´ì–¸íŠ¸: ì¤‘ë³µ ì—†ìŒ, ë“±ë¡ ì§„í–‰");
                 }
             }
 
-            // È®ÀÎ ´ëÈ­»óÀÚ
+            // í™•ì¸ ëŒ€í™”ìƒì
             var result = MessageBox.Show(
-                $"µğ¹ÙÀÌ½º¸¦ µî·ÏÇÏ½Ã°Ú½À´Ï±î?\n\n" +
-                $"IP ÁÖ¼Ò: {ip}\n" +
-                $"µğ¹ÙÀÌ½º SN: {deviceSN}\n\n" +
-                $"µğ¹ÙÀÌ½º´Â HTTPv2 ÇÁ·ÎÅäÄİÀ» ÅëÇØ ÀÌ ¼­¹ö(Æ÷Æ® 80)¿Í Åë½ÅÇÕ´Ï´Ù.",
-                "µğ¹ÙÀÌ½º µî·Ï",
+                $"ë””ë°”ì´ìŠ¤ë¥¼ ë“±ë¡í•˜ì‹œê² ìŠµë‹ˆê¹Œ?\n\n" +
+                $"IP ì£¼ì†Œ: {ip}\n" +
+                $"ë””ë°”ì´ìŠ¤ SN: {deviceSN}\n\n" +
+                $"ë””ë°”ì´ìŠ¤ëŠ” HTTPv2 í”„ë¡œí† ì½œì„ í†µí•´ ì´ ì„œë²„(í¬íŠ¸ 80)ì™€ í†µì‹ í•©ë‹ˆë‹¤.",
+                "ë””ë°”ì´ìŠ¤ ë“±ë¡",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
             if (result != DialogResult.Yes)
             {
-                lblStatus.Text = "µî·Ï Ãë¼ÒµÊ";
+                lblStatus.Text = "ë“±ë¡ ì·¨ì†Œë¨";
                 return;
             }
 
-            lblStatus.Text = $"µğ¹ÙÀÌ½º µî·Ï Áß: {deviceSN}...";
+            lblStatus.Text = $"ë””ë°”ì´ìŠ¤ ë“±ë¡ ì¤‘: {deviceSN}...";
 
-            // ´Ü¼øÈ÷ IP ÁÖ¼Ò¸¸ ÀúÀå
+            // ë‹¨ìˆœíˆ IP ì£¼ì†Œë§Œ ì €ì¥
             var registerRequest = new
             {
                 IpAddress = ip,
@@ -1283,42 +1284,42 @@ public partial class MainForm : Form
             try
             {
                 responseContent = await registerResponse.Content.ReadAsStringAsync();
-                System.Diagnostics.Debug.WriteLine($"µî·Ï ÀÀ´ä: {responseContent}");
+                System.Diagnostics.Debug.WriteLine($"ë“±ë¡ ì‘ë‹µ: {responseContent}");
             }
             catch (Exception ex)
             {
-                ShowError($"ÀÀ´ä ÀĞ±â ½ÇÆĞ: {ex.Message}");
+                ShowError($"ì‘ë‹µ ì½ê¸° ì‹¤íŒ¨: {ex.Message}");
                 return;
             }
 
-            // JSON ÆÄ½Ì ½Ãµµ
+            // JSON íŒŒì‹± ì‹œë„
             BrowserApiResponse<string>? registerResult = null;
             try
             {
                 registerResult = JsonSerializer.Deserialize<BrowserApiResponse<string>>(responseContent);
-                System.Diagnostics.Debug.WriteLine($"µî·Ï ÆÄ½Ì °á°ú: Result={registerResult?.Result}, ErrCode={registerResult?.ErrCode}, Error={registerResult?.Error}");
+                System.Diagnostics.Debug.WriteLine($"ë“±ë¡ íŒŒì‹± ê²°ê³¼: Result={registerResult?.Result}, ErrCode={registerResult?.ErrCode}, Error={registerResult?.Error}");
             }
             catch (Exception ex)
             {
-                ShowError($"µî·Ï ÀÀ´ä JSON ÆÄ½Ì ½ÇÆĞ:\n{ex.Message}\n\nÀÀ´ä ³»¿ë:\n{responseContent}");
+                ShowError($"ë“±ë¡ ì‘ë‹µ JSON íŒŒì‹± ì‹¤íŒ¨:\n{ex.Message}\n\nì‘ë‹µ ë‚´ìš©:\n{responseContent}");
                 return;
             }
 
             if (registerResult == null)
             {
-                ShowError($"µî·Ï ÀÀ´äÀÌ nullÀÔ´Ï´Ù.\n\nÀÀ´ä ³»¿ë:\n{responseContent}");
+                ShowError($"ë“±ë¡ ì‘ë‹µì´ nullì…ë‹ˆë‹¤.\n\nì‘ë‹µ ë‚´ìš©:\n{responseContent}");
                 return;
             }
 
             if (registerResult.Result == true)
             {
-                lblStatus.Text = $"µğ¹ÙÀÌ½º µî·Ï ¿Ï·á: {deviceSN}";
+                lblStatus.Text = $"ë””ë°”ì´ìŠ¤ ë“±ë¡ ì™„ë£Œ: {deviceSN}";
                 MessageBox.Show(
-                    $"µğ¹ÙÀÌ½º°¡ ¼º°øÀûÀ¸·Î µî·ÏµÇ¾ú½À´Ï´Ù.\n\n" +
+                    $"ë””ë°”ì´ìŠ¤ê°€ ì„±ê³µì ìœ¼ë¡œ ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤.\n\n" +
                     $"IP: {ip}\n" +
                     $"SN: {deviceSN}\n\n" +
-                    $"µğ¹ÙÀÌ½º´Â HTTPv2 ÇÁ·ÎÅäÄİ¿¡ µû¶ó ÀÚµ¿À¸·Î ¿¬°áµË´Ï´Ù.", 
-                    "µî·Ï ¿Ï·á", 
+                    $"ë””ë°”ì´ìŠ¤ëŠ” HTTPv2 í”„ë¡œí† ì½œì— ë”°ë¼ ìë™ìœ¼ë¡œ ì—°ê²°ë©ë‹ˆë‹¤.", 
+                    "ë“±ë¡ ì™„ë£Œ", 
                     MessageBoxButtons.OK, 
                     MessageBoxIcon.Information);
 
@@ -1330,12 +1331,12 @@ public partial class MainForm : Form
             }
             else
             {
-                ShowError($"µî·Ï ½ÇÆĞ: {registerResult?.Error ?? "Unknown error"} (Code: {registerResult?.ErrCode})");
+                ShowError($"ë“±ë¡ ì‹¤íŒ¨: {registerResult?.Error ?? "Unknown error"} (Code: {registerResult?.ErrCode})");
             }
         }
         catch (Exception ex)
         {
-            ShowError($"µî·Ï ½ÇÆĞ: {ex.Message}");
+            ShowError($"ë“±ë¡ ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -1373,7 +1374,7 @@ public partial class MainForm : Form
         {
             if (form.AlreadySaved)
             {
-                // Person was already saved via "ÀúÀå ¹× ¼±ÅÃÇÑ ´Ü¸»±â·Î Àü¼Û"
+                // Person was already saved via "ì €ì¥ ë° ì„ íƒí•œ ë‹¨ë§ê¸°ë¡œ ì „ì†¡"
                 lblStatus.Text = "Personnel added and device transfer requested";
                 // Refresh to update UI - assignment counts will update after device keepalive
                 await RefreshPersonnel();
@@ -1381,13 +1382,13 @@ public partial class MainForm : Form
             }
             else
             {
-                // User clicked "ÀúÀå" button - need to save now
+                // User clicked "ì €ì¥" button - need to save now
                 try
                 {
                     var person = form.Person;
 
-                    // PersonForm.BuildPersonInfo()¿¡¼­ PhotoData ¡æ Photo(Base64) º¯È¯ÀÌ ÀÌ¹Ì ¿Ï·áµÊ
-                    // PhotoData°¡ ÀÖ´Âµ¥ Photo°¡ ¾ÆÁ÷ º¯È¯ ¾È µÆÀ» °æ¿ì¸¸ º¸Á¤
+                    // PersonForm.BuildPersonInfo()ì—ì„œ PhotoData â†’ Photo(Base64) ë³€í™˜ì´ ì´ë¯¸ ì™„ë£Œë¨
+                    // PhotoDataê°€ ìˆëŠ”ë° Photoê°€ ì•„ì§ ë³€í™˜ ì•ˆ ëì„ ê²½ìš°ë§Œ ë³´ì •
                     if (person.PhotoData != null && person.PhotoData.Length > 0 &&
                         string.IsNullOrWhiteSpace(person.Photo))
                     {
@@ -1425,7 +1426,7 @@ public partial class MainForm : Form
     {
         if (dgvPersonnel.SelectedRows.Count == 0)
         {
-            MessageBox.Show("¼öÁ¤ÇÒ »ç¿ëÀÚ¸¦ ¼±ÅÃÇØÁÖ¼¼¿ä", "¾È³»",
+            MessageBox.Show("ìˆ˜ì •í•  ì‚¬ìš©ìë¥¼ ì„ íƒí•´ì£¼ì„¸ìš”", "ì•ˆë‚´",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -1441,7 +1442,7 @@ public partial class MainForm : Form
 
             if (getResult?.Code != 0 || getResult.Content == null)
             {
-                ShowError($"»ç¿ëÀÚ Á¤º¸ Á¶È¸ ½ÇÆĞ: {getResult?.Msg}");
+                ShowError($"ì‚¬ìš©ì ì •ë³´ ì¡°íšŒ ì‹¤íŒ¨: {getResult?.Msg}");
                 return;
             }
 
@@ -1455,7 +1456,7 @@ public partial class MainForm : Form
             {
                 if (form.AlreadySaved)
                 {
-                    // Person was already saved via "ÀúÀå ¹× ¼±ÅÃÇÑ ´Ü¸»±â·Î Àü¼Û"
+                    // Person was already saved via "ì €ì¥ ë° ì„ íƒí•œ ë‹¨ë§ê¸°ë¡œ ì „ì†¡"
                     lblStatus.Text = "Personnel updated and device transfer requested";
                     // Refresh to update UI - assignment counts will update after device keepalive
                     await RefreshPersonnel();
@@ -1463,11 +1464,11 @@ public partial class MainForm : Form
                 }
                 else
                 {
-                    // User clicked "ÀúÀå" button - need to save now
+                    // User clicked "ì €ì¥" button - need to save now
                     try
                     {
-                        // Photo°¡ ´Ü¸»±â ³»ºÎ °æ·Î("/data/user_pic/xxx.jpg" ÇüÅÂ)ÀÎ °æ¿ì¸¸ null Ã³¸®
-                        // Base64 JPEG´Â "/9j/"·Î ½ÃÀÛÇÏ¹Ç·Î È®ÀåÀÚ Æ÷ÇÔ ¿©ºÎ·Î ´Ü¸»±â °æ·Î ÆÇº°
+                        // Photoê°€ ë‹¨ë§ê¸° ë‚´ë¶€ ê²½ë¡œ("/data/user_pic/xxx.jpg" í˜•íƒœ)ì¸ ê²½ìš°ë§Œ null ì²˜ë¦¬
+                        // Base64 JPEGëŠ” "/9j/"ë¡œ ì‹œì‘í•˜ë¯€ë¡œ í™•ì¥ì í¬í•¨ ì—¬ë¶€ë¡œ ë‹¨ë§ê¸° ê²½ë¡œ íŒë³„
                         if (!string.IsNullOrWhiteSpace(form.Person.Photo))
                         {
                             bool looksLikePath = form.Person.Photo.Contains(":\\") ||
@@ -1484,31 +1485,31 @@ public partial class MainForm : Form
 
                         if (result?.Code == 0)
                         {
-                            lblStatus.Text = "»ç¿ëÀÚ Á¤º¸°¡ ¼öÁ¤µÇ¾ú½À´Ï´Ù";
+                            lblStatus.Text = "ì‚¬ìš©ì ì •ë³´ê°€ ìˆ˜ì •ë˜ì—ˆìŠµë‹ˆë‹¤";
                             await RefreshPersonnel();
                             await RefreshSystemInfo();
                         }
                         else
                         {
-                            ShowError($"»ç¿ëÀÚ ¼öÁ¤ ½ÇÆĞ: {result?.Msg}");
+                            ShowError($"ì‚¬ìš©ì ìˆ˜ì • ì‹¤íŒ¨: {result?.Msg}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        ShowError($"»ç¿ëÀÚ ¼öÁ¤ Áß ¿À·ù ¹ß»ı: {ex.Message}");
+                        ShowError($"ì‚¬ìš©ì ìˆ˜ì • ì¤‘ ì˜¤ë¥˜ ë°œìƒ: {ex.Message}");
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            ShowError($"»ç¿ëÀÚ ¼öÁ¤ ½ÇÆĞ: {ex.Message}");
+            ShowError($"ì‚¬ìš©ì ìˆ˜ì • ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
     private async void btnDeletePerson_Click(object sender, EventArgs e)
     {
-        // ColSelect Ã¼Å©µÈ Çà ¿ì¼±, ¾øÀ¸¸é SelectedRows ÀüÃ¼ »ç¿ë
+        // ColSelect ì²´í¬ëœ í–‰ ìš°ì„ , ì—†ìœ¼ë©´ SelectedRows ì „ì²´ ì‚¬ìš©
         var targetRows = dgvPersonnel.Rows.Cast<DataGridViewRow>()
             .Where(r => r.Cells["ColSelect"].Value is true)
             .ToList();
@@ -1517,7 +1518,7 @@ public partial class MainForm : Form
 
         if (targetRows.Count == 0)
         {
-            MessageBox.Show("»èÁ¦ÇÒ »ç¿ëÀÚ¸¦ ¼±ÅÃÇØÁÖ¼¼¿ä", "¾È³»",
+            MessageBox.Show("ì‚­ì œí•  ì‚¬ìš©ìë¥¼ ì„ íƒí•´ì£¼ì„¸ìš”", "ì•ˆë‚´",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -1528,8 +1529,8 @@ public partial class MainForm : Form
                 .Select(r => (r.Tag as PersonInfo)?.Name)
                 .Where(n => n != null));
             var result = MessageBox.Show(
-                $"{names} ({targetRows.Count}¸í)¸¦ »èÁ¦ÇÏ½Ã°Ú½À´Ï±î?",
-                "»ç¿ëÀÚ »èÁ¦ È®ÀÎ",
+                $"{names} ({targetRows.Count}ëª…)ë¥¼ ì‚­ì œí•˜ì‹œê² ìŠµë‹ˆê¹Œ?",
+                "ì‚¬ìš©ì ì‚­ì œ í™•ì¸",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
 
@@ -1556,15 +1557,15 @@ public partial class MainForm : Form
                 }
             }
 
-            lblStatus.Text = $"{successCount}¸í »èÁ¦ ¿Ï·á";
+            lblStatus.Text = $"{successCount}ëª… ì‚­ì œ ì™„ë£Œ";
             if (errors.Count > 0)
-                ShowError($"ÀÏºÎ »èÁ¦ ½ÇÆĞ:\n{string.Join("\n", errors)}");
+                ShowError($"ì¼ë¶€ ì‚­ì œ ì‹¤íŒ¨:\n{string.Join("\n", errors)}");
             await RefreshPersonnel();
             await RefreshSystemInfo();
         }
         catch (Exception ex)
         {
-            ShowError($"»ç¿ëÀÚ »èÁ¦ ½ÇÆĞ: {ex.Message}");
+            ShowError($"ì‚¬ìš©ì ì‚­ì œ ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -1574,21 +1575,21 @@ public partial class MainForm : Form
         {
             var form = new Form
             {
-                Text = "½Ç½Ã°£ ÀÌº¥Æ® º¸±â",
+                Text = "ì‹¤ì‹œê°„ ì´ë²¤íŠ¸ ë³´ê¸°",
                 Size = new System.Drawing.Size(1000, 650),
                 StartPosition = FormStartPosition.CenterParent
             };
 
             var filterPanel = new Panel { Dock = DockStyle.Top, Height = 40, Padding = new Padding(5) };
-            var lblFilter = new Label { Text = "´Ü¸»±â:", AutoSize = true, Location = new Point(5, 12) };
+            var lblFilter = new Label { Text = "ë‹¨ë§ê¸°:", AutoSize = true, Location = new Point(5, 12) };
             var cmbDevice = new ComboBox
             {
                 Location = new Point(60, 8), Width = 200,
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
-            cmbDevice.Items.Add("ÀüÃ¼ ´Ü¸»±â");
+            cmbDevice.Items.Add("ì „ì²´ ë‹¨ë§ê¸°");
             foreach (var item in cmbAttDevice.Items)
-                if (item.ToString() != "ÀüÃ¼ ´Ü¸»±â")
+                if (item.ToString() != "ì „ì²´ ë‹¨ë§ê¸°")
                     cmbDevice.Items.Add(item);
             cmbDevice.SelectedIndex = 0;
 
@@ -1607,13 +1608,13 @@ public partial class MainForm : Form
                 AutoGenerateColumns = false
             };
 
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Time",   HeaderText = "½Ã°£",     Width = 160 });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Dong",   HeaderText = "µ¿",       Width = 65  });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Ho",     HeaderText = "È£",       Width = 65  });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Member", HeaderText = "¸â¹ö#",     Width = 55  });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Name",   HeaderText = "»ç¿ëÀÚ¸í", Width = 130 });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Device", HeaderText = "´Ü¸»±â",   Width = 130 });
-            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Event",  HeaderText = "ÀÌº¥Æ®",   Width = 100 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Time",   HeaderText = "ì‹œê°„",     Width = 160 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Dong",   HeaderText = "ë™",       Width = 65  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Ho",     HeaderText = "í˜¸",       Width = 65  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Member", HeaderText = "ë©¤ë²„#",     Width = 55  });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Name",   HeaderText = "ì‚¬ìš©ìëª…", Width = 130 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Device", HeaderText = "ë‹¨ë§ê¸°",   Width = 130 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "RT_Event",  HeaderText = "ì´ë²¤íŠ¸",   Width = 100 });
 
             async Task LoadRecords()
             {
@@ -1654,11 +1655,11 @@ public partial class MainForm : Form
                                     evtLabel
                                 );
                             }
-                            lblCount.Text = $"ÃÑ {result.Data.TotalCount}°Ç";
+                            lblCount.Text = $"ì´ {result.Data.TotalCount}ê±´";
                         });
                     }
                 }
-                catch { /* ¹«½Ã - Å¸ÀÌ¸Ó ¹İº¹ È£Ãâ */ }
+                catch { /* ë¬´ì‹œ - íƒ€ì´ë¨¸ ë°˜ë³µ í˜¸ì¶œ */ }
             }
 
             var timer = new System.Windows.Forms.Timer { Interval = 3000 };
@@ -1673,7 +1674,7 @@ public partial class MainForm : Form
         }
         catch (Exception ex)
         {
-            ShowError($"½Ç½Ã°£ º¸±â ¿­±â ½ÇÆĞ: {ex.Message}");
+            ShowError($"ì‹¤ì‹œê°„ ë³´ê¸° ì—´ê¸° ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -1685,7 +1686,7 @@ public partial class MainForm : Form
         {
             if (row.DataBoundItem is not AttendanceRecord rec) continue;
             var devDisplay = rec.DeviceSN;
-            if (deviceFilter != "ÀüÃ¼ ´Ü¸»±â" && devDisplay != deviceFilter) continue;
+            if (deviceFilter != "ì „ì²´ ë‹¨ë§ê¸°" && devDisplay != deviceFilter) continue;
             long uid = 0;
             long.TryParse(rec.UserID, out uid);
             dgv.Rows.Add(
@@ -1703,10 +1704,10 @@ public partial class MainForm : Form
     private void btnRefreshDevices_Click(object sender, EventArgs e) => _ = RefreshDevices();
     private void btnRefreshDepartments_Click(object sender, EventArgs e) => _ = RefreshDepartments();
 
-    // ¦¡¦¡ ´Ü¸»±â¿¡¼­ »ç¿ëÀÚ °¡Á®¿À±â ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ ë‹¨ë§ê¸°ì—ì„œ ì‚¬ìš©ì ê°€ì ¸ì˜¤ê¸° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private async void btnPullPeople_Click(object sender, EventArgs e)
     {
-        // Ã¼Å©µÈ ´Ü¸»±â ¸ñ·Ï ¼öÁı
+        // ì²´í¬ëœ ë‹¨ë§ê¸° ëª©ë¡ ìˆ˜ì§‘
         var checkedRows = dgvDevices.Rows.Cast<DataGridViewRow>()
             .Where(r => r.Cells["Selected"].Value is true)
             .ToList();
@@ -1716,7 +1717,7 @@ public partial class MainForm : Form
 
         if (checkedRows.Count == 0)
         {
-            MessageBox.Show("»ç¿ëÀÚ¸¦ °¡Á®¿Ã ´Ü¸»±â¸¦ ¼±ÅÃ(Ã¼Å©)ÇÏ¼¼¿ä.", "¾È³»",
+            MessageBox.Show("ì‚¬ìš©ìë¥¼ ê°€ì ¸ì˜¬ ë‹¨ë§ê¸°ë¥¼ ì„ íƒ(ì²´í¬)í•˜ì„¸ìš”.", "ì•ˆë‚´",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -1726,8 +1727,8 @@ public partial class MainForm : Form
             .Where(n => !string.IsNullOrEmpty(n));
 
         var confirm = MessageBox.Show(
-            $"´ÙÀ½ ´Ü¸»±â {checkedRows.Count}°³¿¡ ÀúÀåµÈ ¸ğµç »ç¿ëÀÚ µ¥ÀÌÅÍ¸¦\nPC ¼­¹ö·Î °¡Á®¿À°Ú½À´Ï±î?\n\n{string.Join("\n", names)}\n\n´Ü¸»±â°¡ ´ÙÀ½ Æú¸µ ½Ã¿¡ »ç¿ëÀÚ µ¥ÀÌÅÍ¸¦ Àü¼ÛÇÕ´Ï´Ù.",
-            "»ç¿ëÀÚ °¡Á®¿À±â È®ÀÎ", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            $"ë‹¤ìŒ ë‹¨ë§ê¸° {checkedRows.Count}ê°œì— ì €ì¥ëœ ëª¨ë“  ì‚¬ìš©ì ë°ì´í„°ë¥¼\nPC ì„œë²„ë¡œ ê°€ì ¸ì˜¤ê² ìŠµë‹ˆê¹Œ?\n\n{string.Join("\n", names)}\n\në‹¨ë§ê¸°ê°€ ë‹¤ìŒ í´ë§ ì‹œì— ì‚¬ìš©ì ë°ì´í„°ë¥¼ ì „ì†¡í•©ë‹ˆë‹¤.",
+            "ì‚¬ìš©ì ê°€ì ¸ì˜¤ê¸° í™•ì¸", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         if (confirm != DialogResult.Yes) return;
 
         try
@@ -1740,21 +1741,21 @@ public partial class MainForm : Form
                 var resp = await _httpClient.PostAsJsonAsync($"/admin/devices/{sn}/pull-all-people", new { });
                 if (resp.IsSuccessStatusCode) ok++; else fail++;
             }
-            lblStatus.Text = $"»ç¿ëÀÚ °¡Á®¿À±â ¸í·É Àü¼Û: {ok}°³ ¼º°ø, {fail}°³ ½ÇÆĞ";
+            lblStatus.Text = $"ì‚¬ìš©ì ê°€ì ¸ì˜¤ê¸° ëª…ë ¹ ì „ì†¡: {ok}ê°œ ì„±ê³µ, {fail}ê°œ ì‹¤íŒ¨";
             MessageBox.Show(
-                $"{ok}°³ ´Ü¸»±â¿¡ »ç¿ëÀÚ °¡Á®¿À±â ¸í·ÉÀ» Àü¼ÛÇß½À´Ï´Ù.\n´Ü¸»±â°¡ ´ÙÀ½ Æú¸µ ½Ã »ç¿ëÀÚ µ¥ÀÌÅÍ¸¦ ¼­¹ö·Î Àü¼ÛÇÕ´Ï´Ù.\n\nÀá½Ã ÈÄ »ç¿ëÀÚ ÅÇÀ» »õ·Î°íÄ§ÇÏ¼¼¿ä.",
-                "Àü¼Û ¿Ï·á", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                $"{ok}ê°œ ë‹¨ë§ê¸°ì— ì‚¬ìš©ì ê°€ì ¸ì˜¤ê¸° ëª…ë ¹ì„ ì „ì†¡í–ˆìŠµë‹ˆë‹¤.\në‹¨ë§ê¸°ê°€ ë‹¤ìŒ í´ë§ ì‹œ ì‚¬ìš©ì ë°ì´í„°ë¥¼ ì„œë²„ë¡œ ì „ì†¡í•©ë‹ˆë‹¤.\n\nì ì‹œ í›„ ì‚¬ìš©ì íƒ­ì„ ìƒˆë¡œê³ ì¹¨í•˜ì„¸ìš”.",
+                "ì „ì†¡ ì™„ë£Œ", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
-            ShowError($"»ç¿ëÀÚ °¡Á®¿À±â ½ÇÆĞ: {ex.Message}");
+            ShowError($"ì‚¬ìš©ì ê°€ì ¸ì˜¤ê¸° ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
-    // ¦¡¦¡ ¼­¹ö »ç¿ëÀÚ¸¦ ´Ü¸»±â·Î ¹èÆ÷ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ ì„œë²„ ì‚¬ìš©ìë¥¼ ë‹¨ë§ê¸°ë¡œ ë°°í¬ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private async void btnDistributePeople_Click(object sender, EventArgs e)
     {
-        // Á¢¼ÓµÈ ´Ü¸»±â ¸ñ·Ï Ç¥½Ã ÈÄ ¼±ÅÃ
+        // ì ‘ì†ëœ ë‹¨ë§ê¸° ëª©ë¡ í‘œì‹œ í›„ ì„ íƒ
         List<DeviceInfo>? devices;
         try
         {
@@ -1762,21 +1763,21 @@ public partial class MainForm : Form
         }
         catch (Exception ex)
         {
-            ShowError($"´Ü¸»±â ¸ñ·Ï Á¶È¸ ½ÇÆĞ: {ex.Message}");
+            ShowError($"ë‹¨ë§ê¸° ëª©ë¡ ì¡°íšŒ ì‹¤íŒ¨: {ex.Message}");
             return;
         }
 
         if (devices == null || devices.Count == 0)
         {
-            MessageBox.Show("µî·ÏµÈ ´Ü¸»±â°¡ ¾ø½À´Ï´Ù.", "¾È³»",
+            MessageBox.Show("ë“±ë¡ëœ ë‹¨ë§ê¸°ê°€ ì—†ìŠµë‹ˆë‹¤.", "ì•ˆë‚´",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        // ´Ü¸»±â ¼±ÅÃ ´ÙÀÌ¾ó·Î±×
+        // ë‹¨ë§ê¸° ì„ íƒ ë‹¤ì´ì–¼ë¡œê·¸
         using var dlg = new Form
         {
-            Text = "¹èÆ÷ ´ë»ó ´Ü¸»±â ¼±ÅÃ",
+            Text = "ë°°í¬ ëŒ€ìƒ ë‹¨ë§ê¸° ì„ íƒ",
             Size = new Size(500, 400),
             StartPosition = FormStartPosition.CenterParent,
             FormBorderStyle = FormBorderStyle.FixedDialog,
@@ -1785,7 +1786,7 @@ public partial class MainForm : Form
 
         var lbl = new Label
         {
-            Text = "»ç¿ëÀÚ¸¦ Àü¼ÛÇÒ ´Ü¸»±â¸¦ ¼±ÅÃÇÏ¼¼¿ä (º¹¼ö ¼±ÅÃ °¡´É):",
+            Text = "ì‚¬ìš©ìë¥¼ ì „ì†¡í•  ë‹¨ë§ê¸°ë¥¼ ì„ íƒí•˜ì„¸ìš” (ë³µìˆ˜ ì„ íƒ ê°€ëŠ¥):",
             Location = new Point(15, 15), Size = new Size(460, 20)
         };
 
@@ -1801,17 +1802,17 @@ public partial class MainForm : Form
         }
         clb.DisplayMember = "Value";
 
-        var btnAll = new Button { Text = "ÀüÃ¼ ¼±ÅÃ", Location = new Point(15, 325), Size = new Size(100, 28) };
+        var btnAll = new Button { Text = "ì „ì²´ ì„ íƒ", Location = new Point(15, 325), Size = new Size(100, 28) };
         btnAll.Click += (s, _) => { for (int i = 0; i < clb.Items.Count; i++) clb.SetItemChecked(i, true); };
 
         var btnOk = new Button
         {
-            Text = "¹èÆ÷ ½ÃÀÛ", DialogResult = DialogResult.OK,
+            Text = "ë°°í¬ ì‹œì‘", DialogResult = DialogResult.OK,
             Location = new Point(275, 325), Size = new Size(90, 28)
         };
         var btnCancel = new Button
         {
-            Text = "Ãë¼Ò", DialogResult = DialogResult.Cancel,
+            Text = "ì·¨ì†Œ", DialogResult = DialogResult.Cancel,
             Location = new Point(375, 325), Size = new Size(90, 28)
         };
 
@@ -1826,12 +1827,12 @@ public partial class MainForm : Form
 
         if (selectedSNs.Count == 0)
         {
-            MessageBox.Show("¹èÆ÷ÇÒ ´Ü¸»±â¸¦ ÇÏ³ª ÀÌ»ó ¼±ÅÃÇÏ¼¼¿ä.", "¾È³»",
+            MessageBox.Show("ë°°í¬í•  ë‹¨ë§ê¸°ë¥¼ í•˜ë‚˜ ì´ìƒ ì„ íƒí•˜ì„¸ìš”.", "ì•ˆë‚´",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        // ±×¸®µå¿¡¼­ ¼±ÅÃ(Ã¼Å©)µÈ »ç¿ëÀÚ ID ¼öÁı
+        // ê·¸ë¦¬ë“œì—ì„œ ì„ íƒ(ì²´í¬)ëœ ì‚¬ìš©ì ID ìˆ˜ì§‘
         var selectedUserIds = dgvPersonnel.Rows
             .Cast<DataGridViewRow>()
             .Where(r => r.Cells["ColSelect"].Value is true)
@@ -1841,7 +1842,7 @@ public partial class MainForm : Form
 
         if (selectedUserIds.Count == 0)
         {
-            MessageBox.Show("¹èÆ÷ÇÒ »ç¿ëÀÚ¸¦ ÇÏ³ª ÀÌ»ó ¼±ÅÃÇÏ¼¼¿ä.", "¾È³»",
+            MessageBox.Show("ë°°í¬í•  ì‚¬ìš©ìë¥¼ í•˜ë‚˜ ì´ìƒ ì„ íƒí•˜ì„¸ìš”.", "ì•ˆë‚´",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -1854,20 +1855,48 @@ public partial class MainForm : Form
 
             if (resp.IsSuccessStatusCode)
             {
-                lblStatus.Text = $"¹èÆ÷ ¸í·É Àü¼Û ¿Ï·á: {selectedSNs.Count}°³ ´Ü¸»±â, {selectedUserIds.Count}¸í";
-                MessageBox.Show(
-                    $"{selectedUserIds.Count}¸íÀ» {selectedSNs.Count}°³ ´Ü¸»±â·Î ¹èÆ÷ ¸í·ÉÀ» Àü¼ÛÇß½À´Ï´Ù.\n´Ü¸»±â°¡ ´ÙÀ½ Keepalive ½Ã »ç¿ëÀÚ µ¥ÀÌÅÍ¸¦ ¼ö½ÅÇÕ´Ï´Ù.",
-                    "¹èÆ÷ ¿Ï·á", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                await RefreshDevices();
+                UseWaitCursor = true;
+                Cursor = Cursors.WaitCursor;
+                try
+                {
+                    var payload = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                    var jobIds = new List<string>();
+                    if (payload.ValueKind != System.Text.Json.JsonValueKind.Undefined
+                        && payload.TryGetProperty("Content", out var content)
+                        && content.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var item in content.EnumerateArray())
+                        {
+                            if (item.TryGetProperty("JobId", out var idEl))
+                            {
+                                var id = idEl.GetString();
+                                if (!string.IsNullOrWhiteSpace(id))
+                                    jobIds.Add(id);
+                            }
+                        }
+                    }
+
+                    lblStatus.Text = "ë‹¨ë§ê¸° ë°°í¬ ê²°ê³¼ ëŒ€ê¸° ì¤‘...";
+                    var (ok, message) = await DeviceCommandWaiter.WaitAsync(_httpClient, jobIds, TimeSpan.FromSeconds(90));
+                    lblStatus.Text = message;
+                    MessageBox.Show(message, ok ? "ë°°í¬ ì™„ë£Œ" : "ë°°í¬ ì‹¤íŒ¨",
+                        MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                    await RefreshDevices();
+                }
+                finally
+                {
+                    UseWaitCursor = false;
+                    Cursor = Cursors.Default;
+                }
             }
             else
             {
-                ShowError($"¹èÆ÷ ¸í·É Àü¼Û ½ÇÆĞ: HTTP {resp.StatusCode}");
+                ShowError($"ë°°í¬ ëª…ë ¹ ì „ì†¡ ì‹¤íŒ¨: HTTP {resp.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            ShowError($"¹èÆ÷ ½ÇÆĞ: {ex.Message}");
+            ShowError($"ë°°í¬ ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -1876,7 +1905,7 @@ public partial class MainForm : Form
         var row = dgvDevices.SelectedRows.Count > 0 ? dgvDevices.SelectedRows[0] : null;
         if (row == null)
         {
-            MessageBox.Show("´Ü¸»±â¸¦ ¼±ÅÃÇÏ¼¼¿ä.", "¾Ë¸²", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("ë‹¨ë§ê¸°ë¥¼ ì„ íƒí•˜ì„¸ìš”.", "ì•Œë¦¼", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
         try
@@ -1886,22 +1915,22 @@ public partial class MainForm : Form
             using var form = new DeviceSettingsForm(device, _httpClient);
             if (form.ShowDialog() == DialogResult.OK) { _ = RefreshDevices(); _ = RefreshSystemInfo(); }
         }
-        catch (Exception ex) { ShowError($"´Ü¸»±â ¼³Á¤ ¿­±â ½ÇÆĞ: {ex.Message}"); }
+        catch (Exception ex) { ShowError($"ë‹¨ë§ê¸° ì„¤ì • ì—´ê¸° ì‹¤íŒ¨: {ex.Message}"); }
     }
 
     private async void btnRemoveDevice_Click(object sender, EventArgs e)
     {
-        // Ã¼Å©¹Ú½º·Î ¼±ÅÃµÈ Çà ¼öÁı
+        // ì²´í¬ë°•ìŠ¤ë¡œ ì„ íƒëœ í–‰ ìˆ˜ì§‘
         var checkedRows = dgvDevices.Rows.Cast<DataGridViewRow>()
             .Where(r => r.Cells["Selected"].Value is true)
             .ToList();
 
-        // Ã¼Å©µÈ Ç×¸ñÀÌ ¾øÀ¸¸é ±×¸®µå ¼±ÅÃ Çà »ç¿ë
+        // ì²´í¬ëœ í•­ëª©ì´ ì—†ìœ¼ë©´ ê·¸ë¦¬ë“œ ì„ íƒ í–‰ ì‚¬ìš©
         if (checkedRows.Count == 0)
         {
             if (dgvDevices.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Á¦°ÅÇÒ ´Ü¸»±â¸¦ ¼±ÅÃ(Ã¼Å©)ÇÏ°Å³ª ÇàÀ» Å¬¸¯ÇÏ¼¼¿ä.", "¾Ë¸²",
+                MessageBox.Show("ì œê±°í•  ë‹¨ë§ê¸°ë¥¼ ì„ íƒ(ì²´í¬)í•˜ê±°ë‚˜ í–‰ì„ í´ë¦­í•˜ì„¸ìš”.", "ì•Œë¦¼",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -1913,8 +1942,8 @@ public partial class MainForm : Form
             .Where(n => !string.IsNullOrEmpty(n));
 
         var confirm = MessageBox.Show(
-            $"´ÙÀ½ ´Ü¸»±â {checkedRows.Count}°³¸¦ Á¦°ÅÇÏ½Ã°Ú½À´Ï±î?\n\n{string.Join("\n", names)}",
-            "´Ü¸»±â Á¦°Å È®ÀÎ", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            $"ë‹¤ìŒ ë‹¨ë§ê¸° {checkedRows.Count}ê°œë¥¼ ì œê±°í•˜ì‹œê² ìŠµë‹ˆê¹Œ?\n\n{string.Join("\n", names)}",
+            "ë‹¨ë§ê¸° ì œê±° í™•ì¸", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (confirm != DialogResult.Yes) return;
 
         try
@@ -1927,13 +1956,13 @@ public partial class MainForm : Form
                 var resp = await _httpClient.DeleteAsync($"/admin/devices/{sn}");
                 if (resp.IsSuccessStatusCode) ok++; else fail++;
             }
-            lblStatus.Text = $"Á¦°Å ¿Ï·á: {ok}°³ ¼º°ø, {fail}°³ ½ÇÆĞ";
+            lblStatus.Text = $"ì œê±° ì™„ë£Œ: {ok}ê°œ ì„±ê³µ, {fail}ê°œ ì‹¤íŒ¨";
             await RefreshDevices();
             await RefreshSystemInfo();
         }
         catch (Exception ex)
         {
-            ShowError($"´Ü¸»±â Á¦°Å ½ÇÆĞ: {ex.Message}");
+            ShowError($"ë‹¨ë§ê¸° ì œê±° ì‹¤íŒ¨: {ex.Message}");
         }
     }
 
@@ -1956,7 +1985,7 @@ public partial class MainForm : Form
 
         if (string.IsNullOrEmpty(dong))
         {
-            MessageBox.Show("µ¿À» ÀÔ·ÂÇØÁÖ¼¼¿ä.", "¾Ë¸²", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("ë™ì„ ì…ë ¥í•´ì£¼ì„¸ìš”.", "ì•Œë¦¼", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -1967,7 +1996,7 @@ public partial class MainForm : Form
 
         bool useHo = !string.IsNullOrEmpty(ho) && colHo >= 0;
 
-        // ÇØ´ç ÇÊÅÍ¿¡ ¸ÅÄªµÇ´Â Çàµé ¼öÁı
+        // í•´ë‹¹ í•„í„°ì— ë§¤ì¹­ë˜ëŠ” í–‰ë“¤ ìˆ˜ì§‘
         var matched = new List<DataGridViewRow>();
         foreach (DataGridViewRow row in dgvPersonnel.Rows)
         {
@@ -1984,7 +2013,7 @@ public partial class MainForm : Form
 
         if (matched.Count == 0) return;
 
-        // ÀÌ¹Ì ¸ğµÎ ¼±ÅÃµÈ »óÅÂÀÌ¸é ¡æ ÇØÁ¦, ¾Æ´Ï¸é ¡æ ¼±ÅÃ (Åä±Û)
+        // ì´ë¯¸ ëª¨ë‘ ì„ íƒëœ ìƒíƒœì´ë©´ â†’ í•´ì œ, ì•„ë‹ˆë©´ â†’ ì„ íƒ (í† ê¸€)
         bool allSelected = matched.All(r => r.Selected);
         bool deselect = allSelected;
 
@@ -1997,15 +2026,15 @@ public partial class MainForm : Form
             row.Selected = check;
         }
 
-        btnSelectByFilter.Text = deselect ? "¼±ÅÃ" : "ÇØÁ¦";
+        btnSelectByFilter.Text = deselect ? "ì„ íƒ" : "í•´ì œ";
     }
 
     private async void btnReloadFromFiles_Click(object sender, EventArgs e)
     {
         var confirm = MessageBox.Show(
-            "¼­¹öÀÇ people Æú´õ¿¡ ÀúÀåµÈ JSON ÆÄÀÏµéÀ» ÀĞ¾î »ç¿ëÀÚ ¸ñ·ÏÀ» °»½ÅÇÕ´Ï´Ù.\n" +
-            "ÇöÀç ¸Ş¸ğ¸®¿¡ ¾ø´Â »ç¿ëÀÚ°¡ Ãß°¡µÇ°í, ±âÁ¸ »ç¿ëÀÚ´Â ÆÄÀÏ ³»¿ëÀ¸·Î µ¤¾î¾¹´Ï´Ù.\n\n°è¼ÓÇÏ½Ã°Ú½À´Ï±î?",
-            "ÆÄÀÏ¿¡¼­ ºÒ·¯¿À±â", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            "ì„œë²„ì˜ people í´ë”ì— ì €ì¥ëœ JSON íŒŒì¼ë“¤ì„ ì½ì–´ ì‚¬ìš©ì ëª©ë¡ì„ ê°±ì‹ í•©ë‹ˆë‹¤.\n" +
+            "í˜„ì¬ ë©”ëª¨ë¦¬ì— ì—†ëŠ” ì‚¬ìš©ìê°€ ì¶”ê°€ë˜ê³ , ê¸°ì¡´ ì‚¬ìš©ìëŠ” íŒŒì¼ ë‚´ìš©ìœ¼ë¡œ ë®ì–´ì”ë‹ˆë‹¤.\n\nê³„ì†í•˜ì‹œê² ìŠµë‹ˆê¹Œ?",
+            "íŒŒì¼ì—ì„œ ë¶ˆëŸ¬ì˜¤ê¸°", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         if (confirm != DialogResult.Yes) return;
 
         try
@@ -2013,7 +2042,7 @@ public partial class MainForm : Form
             var resp = await _httpClient.PostAsync("/admin/people/reload-from-files", null);
             if (!resp.IsSuccessStatusCode)
             {
-                ShowError($"ÆÄÀÏ ºÒ·¯¿À±â ½ÇÆĞ: HTTP {resp.StatusCode}");
+                ShowError($"íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨: HTTP {resp.StatusCode}");
                 return;
             }
             var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.Nodes.JsonObject>();
@@ -2022,14 +2051,14 @@ public partial class MainForm : Form
             int errors  = result?["errors"]?.GetValue<int>()  ?? 0;
 
             await RefreshPersonnel();
-            lblStatus.Text = $"ÆÄÀÏ ºÒ·¯¿À±â ¿Ï·á: {loaded}¸í ·Îµå, {skipped}°Ç °Ç³Ê¶Ü, {errors}°Ç ¿À·ù";
+            lblStatus.Text = $"íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸° ì™„ë£Œ: {loaded}ëª… ë¡œë“œ, {skipped}ê±´ ê±´ë„ˆëœ€, {errors}ê±´ ì˜¤ë¥˜";
             MessageBox.Show(
-                $"people Æú´õ¿¡¼­ ºÒ·¯¿À±â ¿Ï·á\n\n·Îµå: {loaded}¸í\n°Ç³Ê¶Ü: {skipped}°Ç\n¿À·ù: {errors}°Ç",
-                "¿Ï·á", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                $"people í´ë”ì—ì„œ ë¶ˆëŸ¬ì˜¤ê¸° ì™„ë£Œ\n\në¡œë“œ: {loaded}ëª…\nê±´ë„ˆëœ€: {skipped}ê±´\nì˜¤ë¥˜: {errors}ê±´",
+                "ì™„ë£Œ", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
-            ShowError($"ÆÄÀÏ ºÒ·¯¿À±â Áß ¿À·ù: {ex.Message}");
+            ShowError($"íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸° ì¤‘ ì˜¤ë¥˜: {ex.Message}");
         }
     }
 
@@ -2051,7 +2080,7 @@ public partial class MainForm : Form
         }
         if (hasDong && hasHo)
         {
-            // All members of this È£
+            // All members of this í˜¸
             long min = dv * 1_000_000L + hv * 100L;
             long max = min + 100L;
             return (null, min, max);
@@ -2079,62 +2108,62 @@ public partial class MainForm : Form
 
     private static string RecordTypeToLabel(int rt) => rt switch
     {
-        1  => "Ä«µå",
-        2  => "Áö¹®",
-        3  => "¾ó±¼ÀÎ½Ä",
-        4  => "Ä«µå+Áö¹®",
-        5  => "¾ó±¼+Áö¹®",
-        6  => "Ä«µå+¾ó±¼",
-        7  => "Ä«µå+ºñ¹Ğ¹øÈ£",
-        8  => "¾ó±¼+ºñ¹Ğ¹øÈ£",
-        9  => "Áö¹®+ºñ¹Ğ¹øÈ£",
-        10 => "ºñ¹Ğ¹øÈ£",
-        11 => "Ä«µå+Áö¹®+ºñ¹Ğ¹øÈ£",
-        12 => "Ä«µå+¾ó±¼+ºñ¹Ğ¹øÈ£",
-        13 => "Áö¹®+¾ó±¼+ºñ¹Ğ¹øÈ£",
-        14 => "Ä«µå+Áö¹®+¾ó±¼",
-        15 => "Áßº¹ÀÎÁõ",
-        16 => "À¯È¿±â°£¸¸·á",
-        17 => "½Ã°£´ë¸¸·á",
-        18 => "ÈŞÀÏÃâÀÔºÒ°¡",
-        19 => "¹Ìµî·Ï»ç¿ëÀÚ",
-        20 => "Àá±İ°¨Áö",
-        21 => "ÀÎÁõÈ½¼öÃÊ°ú",
-        22 => "Àá±İÁßÀÎÁõ°ÅºÎ",
-        23 => "ºĞ½Ç½Å°íÄ«µå",
-        24 => "ºí·¢¸®½ºÆ®Ä«µå",
-        25 => "¹«ÀÎÁõ°³¹æ",
-        26 => "Ä«µåÀÎÁõ±İÁö",
-        27 => "Áö¹®ÀÎÁõ±İÁö",
-        28 => "ÄÁÆ®·Ñ·¯¸¸·á",
-        29 => "À¯È¿±â°£ÀÓ¹Ú",
-        30 => "Ã¼¿ÂÀÌ»ó°ÅºÎ",
-        31 => "¹æ¹®ÀÚºñ¹Ğ¹øÈ£",
-        32 => "QRÄÚµå°³¹æ",
-        33 => "¸Ş´º»ç¿ëÀÚÃß°¡",
-        34 => "¸Ş´º»ç¿ëÀÚ¼öÁ¤",
-        35 => "¸Ş´º»ç¿ëÀÚ»èÁ¦",
-        36 => "¼Õ¹Ù´ÚÁ¤¸Æ",
-        37 => "Ä«µå+¼Õ¹Ù´ÚÁ¤¸Æ+¾ó±¼",
-        38 => "¼Õ¹Ù´ÚÁ¤¸Æ+ºñ¹Ğ¹øÈ£",
-        39 => "Ä«µå+¼Õ¹Ù´ÚÁ¤¸Æ",
-        40 => "¾ó±¼+¼Õ¹Ù´ÚÁ¤¸Æ",
-        41 => "Ä«µå+¼Õ¹Ù´ÚÁ¤¸Æ+ºñ¹Ğ¹øÈ£",
-        42 => "¼Õ¹Ù´ÚÁ¤¸Æ+¾ó±¼+ºñ¹Ğ¹øÈ£",
-        43 => "Áö¹®+¼Õ¹Ù´ÚÁ¤¸Æ+¾ó±¼",
-        44 => "º¹ÇÕÀÎÁõ´ë±â",
-        45 => "º¹ÇÕÀÎÁõ½ÇÆĞ",
-        46 => "º¹ÇÕÀÎÁõ¼º°ø",
-        47 => "½ÅºĞÁõºñ±³",
-        48 => "¹Ìµî·ÏÄ«µå",
-        49 => "¹Ìµî·ÏQR",
-        _  => $"(À¯Çü{rt})"
+        1  => "ì¹´ë“œ",
+        2  => "ì§€ë¬¸",
+        3  => "ì–¼êµ´ì¸ì‹",
+        4  => "ì¹´ë“œ+ì§€ë¬¸",
+        5  => "ì–¼êµ´+ì§€ë¬¸",
+        6  => "ì¹´ë“œ+ì–¼êµ´",
+        7  => "ì¹´ë“œ+ë¹„ë°€ë²ˆí˜¸",
+        8  => "ì–¼êµ´+ë¹„ë°€ë²ˆí˜¸",
+        9  => "ì§€ë¬¸+ë¹„ë°€ë²ˆí˜¸",
+        10 => "ë¹„ë°€ë²ˆí˜¸",
+        11 => "ì¹´ë“œ+ì§€ë¬¸+ë¹„ë°€ë²ˆí˜¸",
+        12 => "ì¹´ë“œ+ì–¼êµ´+ë¹„ë°€ë²ˆí˜¸",
+        13 => "ì§€ë¬¸+ì–¼êµ´+ë¹„ë°€ë²ˆí˜¸",
+        14 => "ì¹´ë“œ+ì§€ë¬¸+ì–¼êµ´",
+        15 => "ì¤‘ë³µì¸ì¦",
+        16 => "ìœ íš¨ê¸°ê°„ë§Œë£Œ",
+        17 => "ì‹œê°„ëŒ€ë§Œë£Œ",
+        18 => "íœ´ì¼ì¶œì…ë¶ˆê°€",
+        19 => "ë¯¸ë“±ë¡ì‚¬ìš©ì",
+        20 => "ì ê¸ˆê°ì§€",
+        21 => "ì¸ì¦íšŸìˆ˜ì´ˆê³¼",
+        22 => "ì ê¸ˆì¤‘ì¸ì¦ê±°ë¶€",
+        23 => "ë¶„ì‹¤ì‹ ê³ ì¹´ë“œ",
+        24 => "ë¸”ë™ë¦¬ìŠ¤íŠ¸ì¹´ë“œ",
+        25 => "ë¬´ì¸ì¦ê°œë°©",
+        26 => "ì¹´ë“œì¸ì¦ê¸ˆì§€",
+        27 => "ì§€ë¬¸ì¸ì¦ê¸ˆì§€",
+        28 => "ì»¨íŠ¸ë¡¤ëŸ¬ë§Œë£Œ",
+        29 => "ìœ íš¨ê¸°ê°„ì„ë°•",
+        30 => "ì²´ì˜¨ì´ìƒê±°ë¶€",
+        31 => "ë°©ë¬¸ìë¹„ë°€ë²ˆí˜¸",
+        32 => "QRì½”ë“œê°œë°©",
+        33 => "ë©”ë‰´ì‚¬ìš©ìì¶”ê°€",
+        34 => "ë©”ë‰´ì‚¬ìš©ììˆ˜ì •",
+        35 => "ë©”ë‰´ì‚¬ìš©ìì‚­ì œ",
+        36 => "ì†ë°”ë‹¥ì •ë§¥",
+        37 => "ì¹´ë“œ+ì†ë°”ë‹¥ì •ë§¥+ì–¼êµ´",
+        38 => "ì†ë°”ë‹¥ì •ë§¥+ë¹„ë°€ë²ˆí˜¸",
+        39 => "ì¹´ë“œ+ì†ë°”ë‹¥ì •ë§¥",
+        40 => "ì–¼êµ´+ì†ë°”ë‹¥ì •ë§¥",
+        41 => "ì¹´ë“œ+ì†ë°”ë‹¥ì •ë§¥+ë¹„ë°€ë²ˆí˜¸",
+        42 => "ì†ë°”ë‹¥ì •ë§¥+ì–¼êµ´+ë¹„ë°€ë²ˆí˜¸",
+        43 => "ì§€ë¬¸+ì†ë°”ë‹¥ì •ë§¥+ì–¼êµ´",
+        44 => "ë³µí•©ì¸ì¦ëŒ€ê¸°",
+        45 => "ë³µí•©ì¸ì¦ì‹¤íŒ¨",
+        46 => "ë³µí•©ì¸ì¦ì„±ê³µ",
+        47 => "ì‹ ë¶„ì¦ë¹„êµ",
+        48 => "ë¯¸ë“±ë¡ì¹´ë“œ",
+        49 => "ë¯¸ë“±ë¡QR",
+        _  => $"(ìœ í˜•{rt})"
     };
 
     private static string GetLocationLabel(string? userID)
     {
         if (long.TryParse(userID, out long id))
-            return $"{id / 1_000_000L}µ¿ {(id / 100L) % 10_000L}È£ ¸â¹ö{id % 100L}";
+            return $"{id / 1_000_000L}ë™ {(id / 100L) % 10_000L}í˜¸ ë©¤ë²„{id % 100L}";
         return userID ?? "";
     }
 

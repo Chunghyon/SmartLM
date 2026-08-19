@@ -183,17 +183,26 @@ public sealed class MySqlStateStore
 
         var batchSize = limit > 0 ? Math.Min(limit, 1000) : 1000;
         var staged = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged).Select(x => x.UserId).ToList();
-        var downloaded = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Downloaded).Select(x => x.UserId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var downloaded = db.DevicePeople
+            .Where(x => x.DeviceSn == deviceSn && x.Downloaded)
+            .Select(x => x.UserId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var query = db.People.AsQueryable();
         if (staged.Count > 0)
             query = query.Where(p => staged.Contains(p.UserId));
 
-        return query.AsEnumerable()
+        var people = query.AsEnumerable()
             .Where(p => !downloaded.Contains(p.UserId))
             .Take(batchSize)
             .Select(ToPersonInfo)
-            .ToArray();
+            .ToList();
+
+        foreach (var person in people)
+            UpsertDevicePerson(db, deviceSn, person.UserID, downloaded: true, owned: true);
+
+        db.SaveChanges();
+        return people;
     }
 
     public IReadOnlyCollection<string> GetDeletePeople(string deviceSn)
@@ -206,11 +215,21 @@ public sealed class MySqlStateStore
     {
         using var db = CreateDb();
         var device = GetOrCreateDevice(db, deviceSn);
-        var pending = db.People.Select(p => p.UserId).ToList();
-        var downloaded = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Downloaded).Select(x => x.UserId).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var remaining = pending.Count(id => !downloaded.Contains(id));
+
+        var staged = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged).Select(x => x.UserId).ToList();
+        var targetIds = staged.Count > 0
+            ? staged
+            : db.People.Select(p => p.UserId).ToList();
+
+        var downloaded = db.DevicePeople
+            .Where(x => x.DeviceSn == deviceSn && x.Downloaded)
+            .Select(x => x.UserId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var remaining = targetIds.Count(id => !downloaded.Contains(id));
         if (remaining == 0)
             device.PendingAddPeopleCount = 0;
+
         db.SaveChanges();
     }
 
@@ -359,7 +378,8 @@ public sealed class MySqlStateStore
     {
         using var db = CreateDb();
         var device = GetOrCreateDevice(db, deviceSn);
-        var count = db.People.Count();
+        var stagedCount = db.DevicePeople.Count(x => x.DeviceSn == deviceSn && x.Staged);
+        var count = stagedCount > 0 ? stagedCount : db.People.Count();
         device.PendingAddPeopleCount = count;
         db.SaveChanges();
         return count;
@@ -549,8 +569,13 @@ public sealed class MySqlStateStore
     {
         using var db = CreateDb();
         GetOrCreateDevice(db, deviceSn);
+
+        foreach (var row in db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged))
+            row.Staged = false;
+
         foreach (var person in serverPeople)
-            UpsertDevicePerson(db, deviceSn, person.UserID, staged: true);
+            UpsertDevicePerson(db, deviceSn, person.UserID, staged: true, downloaded: false);
+
         db.SaveChanges();
     }
 

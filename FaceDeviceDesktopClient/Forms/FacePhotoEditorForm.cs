@@ -19,7 +19,7 @@ public partial class FacePhotoEditorForm : Form
     private Point _offset = Point.Empty;
     private const int CANVAS_SIZE = 400;
     private const int FACE_GUIDE_SIZE = 300;
-    private const int OUTPUT_SIZE = 640;    // Ãâ·Â ÇØ»óµµ (SV ¸ğµ¨ È£È¯)
+    private const int OUTPUT_SIZE = 640;    // ì¶œë ¥ í•´ìƒë„ (SV ëª¨ë¸ í˜¸í™˜)
 
     public byte[]? ProcessedImageData { get; private set; }
 
@@ -33,7 +33,7 @@ public partial class FacePhotoEditorForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"ÀÌ¹ÌÁö ·Îµå ½ÇÆĞ: {ex.Message}", "¿À·ù",
+            MessageBox.Show($"ì´ë¯¸ì§€ ë¡œë“œ ì‹¤íŒ¨: {ex.Message}", "ì˜¤ë¥˜",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             this.DialogResult = DialogResult.Cancel;
         }
@@ -41,7 +41,7 @@ public partial class FacePhotoEditorForm : Form
 
     private void InitializeComponent()
     {
-        this.Text = "¾ó±¼ »çÁø ÆíÁı";
+        this.Text = "ì–¼êµ´ ì‚¬ì§„ í¸ì§‘";
         this.Size = new Size(600, 800);
         this.StartPosition = FormStartPosition.CenterParent;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -56,10 +56,10 @@ public partial class FacePhotoEditorForm : Form
             Padding = new Padding(20)
         };
 
-        // ¾È³» ·¹ÀÌºí
+        // ì•ˆë‚´ ë ˆì´ë¸”
         lblInstructions = new Label
         {
-            Text = "¾ó±¼ÀÌ °¡ÀÌµå¶óÀÎ(ÆÄ¶õ»ö ¿ø) ¾È¿¡ À§Ä¡ÇÏµµ·Ï Á¶Á¤ÇØÁÖ¼¼¿ä",
+            Text = "ì–¼êµ´ì´ ê°€ì´ë“œë¼ì¸(íŒŒë€ìƒ‰ ì›) ì•ˆì— ìœ„ì¹˜í•˜ë„ë¡ ì¡°ì •í•´ì£¼ì„¸ìš”",
             Location = new Point(20, 10),
             Size = new Size(540, 40),
             ForeColor = Color.Blue,
@@ -68,7 +68,7 @@ public partial class FacePhotoEditorForm : Form
         };
         mainPanel.Controls.Add(lblInstructions);
 
-        // Äµ¹ö½º (PictureBox)
+        // ìº”ë²„ìŠ¤ (PictureBox)
         pictureBox = new PictureBox
         {
             Location = new Point(80, 60),
@@ -79,10 +79,10 @@ public partial class FacePhotoEditorForm : Form
         pictureBox.Paint += PictureBox_Paint;
         mainPanel.Controls.Add(pictureBox);
 
-        // ÁÜ ÄÁÆ®·Ñ
+        // ì¤Œ ì»¨íŠ¸ë¡¤
         var lblZoom = new Label
         {
-            Text = "È®´ë/Ãà¼Ò:",
+            Text = "í™•ëŒ€/ì¶•ì†Œ:",
             Location = new Point(20, CANVAS_SIZE + 80),
             Width = 100
         };
@@ -116,10 +116,10 @@ public partial class FacePhotoEditorForm : Form
         };
         mainPanel.Controls.Add(lblZoomValue);
 
-        // ÀÌµ¿ ÄÁÆ®·Ñ
+        // ì´ë™ ì»¨íŠ¸ë¡¤
         var lblMove = new Label
         {
-            Text = "À§Ä¡ Á¶Á¤:",
+            Text = "ìœ„ì¹˜ ì¡°ì •:",
             Location = new Point(20, CANVAS_SIZE + 130),
             Width = 100
         };
@@ -130,7 +130,7 @@ public partial class FacePhotoEditorForm : Form
 
         btnMoveUp = new Button
         {
-            Text = "¡ã",
+            Text = "â–²",
             Location = new Point(240, btnY),
             Size = new Size(btnSize, btnSize)
         };
@@ -139,7 +139,7 @@ public partial class FacePhotoEditorForm : Form
 
         btnMoveLeft = new Button
         {
-            Text = "¢¸",
+            Text = "â—€",
             Location = new Point(180, btnY + 60),
             Size = new Size(btnSize, btnSize)
         };
@@ -148,7 +148,7 @@ public partial class FacePhotoEditorForm : Form
 
         btnMoveRight = new Button
         {
-            Text = "¢º",
+            Text = "â–¶",
             Location = new Point(300, btnY + 60),
             Size = new Size(btnSize, btnSize)
         };
@@ -157,17 +157,17 @@ public partial class FacePhotoEditorForm : Form
 
         btnMoveDown = new Button
         {
-            Text = "¡å",
+            Text = "â–¼",
             Location = new Point(240, btnY + 120),
             Size = new Size(btnSize, btnSize)
         };
         btnMoveDown.Click += (s, e) => { _offset.Y += 10; DrawPreview(); };
         mainPanel.Controls.Add(btnMoveDown);
 
-        // ÃÊ±âÈ­ ¹öÆ°
+        // ì´ˆê¸°í™” ë²„íŠ¼
         var btnReset = new Button
         {
-            Text = "ÃÊ±âÈ­",
+            Text = "ì´ˆê¸°í™”",
             Location = new Point(380, btnY + 60),
             Size = new Size(80, 50)
         };
@@ -180,12 +180,12 @@ public partial class FacePhotoEditorForm : Form
         };
         mainPanel.Controls.Add(btnReset);
 
-        // ÇÏ´Ü ¹öÆ°
+        // í•˜ë‹¨ ë²„íŠ¼
         int bottomY = CANVAS_SIZE + 300;
 
         btnOK = new Button
         {
-            Text = "È®ÀÎ",
+            Text = "í™•ì¸",
             Location = new Point(270, bottomY),
             Size = new Size(120, 40)
         };
@@ -194,7 +194,7 @@ public partial class FacePhotoEditorForm : Form
 
         btnCancel = new Button
         {
-            Text = "Ãë¼Ò",
+            Text = "ì·¨ì†Œ",
             Location = new Point(400, bottomY),
             Size = new Size(120, 40),
             DialogResult = DialogResult.Cancel
@@ -214,23 +214,23 @@ public partial class FacePhotoEditorForm : Form
         g.SmoothingMode = SmoothingMode.HighQuality;
         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-        // Áß¾Ó À§Ä¡ °è»ê
+        // ì¤‘ì•™ ìœ„ì¹˜ ê³„ì‚°
         int centerX = CANVAS_SIZE / 2;
         int centerY = CANVAS_SIZE / 2;
 
-        // ÀÌ¹ÌÁö Å©±â °è»ê
+        // ì´ë¯¸ì§€ í¬ê¸° ê³„ì‚°
         float scaledWidth = _originalImage.Width * _zoom;
         float scaledHeight = _originalImage.Height * _zoom;
 
-        // ÀÌ¹ÌÁö ±×¸®±â À§Ä¡
+        // ì´ë¯¸ì§€ ê·¸ë¦¬ê¸° ìœ„ì¹˜
         float x = centerX - (scaledWidth / 2) + _offset.X;
         float y = centerY - (scaledHeight / 2) + _offset.Y;
 
-        // ÀÌ¹ÌÁö ±×¸®±â
+        // ì´ë¯¸ì§€ ê·¸ë¦¬ê¸°
         g.DrawImage(_originalImage,
             new RectangleF(x, y, scaledWidth, scaledHeight));
 
-        // ¾ó±¼ °¡ÀÌµå¶óÀÎ (¿ø) ±×¸®±â
+        // ì–¼êµ´ ê°€ì´ë“œë¼ì¸ (ì›) ê·¸ë¦¬ê¸°
         int guideX = (CANVAS_SIZE - FACE_GUIDE_SIZE) / 2;
         int guideY = (CANVAS_SIZE - FACE_GUIDE_SIZE) / 2;
 
@@ -240,13 +240,13 @@ public partial class FacePhotoEditorForm : Form
             g.DrawEllipse(pen, guideX, guideY, FACE_GUIDE_SIZE, FACE_GUIDE_SIZE);
         }
 
-        // Áß½É¼± ±×¸®±â
+        // ì¤‘ì‹¬ì„  ê·¸ë¦¬ê¸°
         using (var pen = new Pen(Color.LightBlue, 1))
         {
             pen.DashStyle = DashStyle.Dot;
-            // ¼öÁ÷¼±
+            // ìˆ˜ì§ì„ 
             g.DrawLine(pen, centerX, guideY, centerX, guideY + FACE_GUIDE_SIZE);
-            // ¼öÆò¼±
+            // ìˆ˜í‰ì„ 
             g.DrawLine(pen, guideX, centerY, guideX + FACE_GUIDE_SIZE, centerY);
         }
     }
@@ -261,9 +261,9 @@ public partial class FacePhotoEditorForm : Form
         try
         {
             btnOK.Enabled = false;
-            btnOK.Text = "Ã³¸® Áß...";
+            btnOK.Text = "ì²˜ë¦¬ ì¤‘...";
 
-            // °¡ÀÌµå ¿µ¿ª ±âÁØÀ¸·Î Áß°£ ·»´õ¸µ (300x300)
+            // ê°€ì´ë“œ ì˜ì—­ ê¸°ì¤€ìœ¼ë¡œ ì¤‘ê°„ ë Œë”ë§ (300x300)
             var guideImage = new Bitmap(FACE_GUIDE_SIZE, FACE_GUIDE_SIZE);
 
             using (var g = Graphics.FromImage(guideImage))
@@ -291,25 +291,35 @@ public partial class FacePhotoEditorForm : Form
                 }
             }
 
-            // ÃÖÁ¾ Ãâ·Â: OUTPUT_SIZE¡¿OUTPUT_SIZE (±âº» 32bpp ARGB ¡æ JPEG ÀúÀå ½Ã GDI+°¡ ¿Ã¹Ù¸¥ YCbCr·Î º¯È¯)
+            // ìµœì¢… ì¶œë ¥: OUTPUT_SIZEÃ—OUTPUT_SIZE (ê¸°ë³¸ 32bpp ARGB â†’ JPEG ì €ì¥ ì‹œ GDI+ê°€ ì˜¬ë°”ë¥¸ YCbCrë¡œ ë³€í™˜)
             var finalImage = new Bitmap(OUTPUT_SIZE, OUTPUT_SIZE);
             using (var g = Graphics.FromImage(finalImage))
             {
                 g.SmoothingMode = SmoothingMode.HighQuality;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.Clear(Color.White);   // ¹è°æ Èò»ö (¾ËÆÄ ¾øÀ½)
+                g.Clear(Color.White);   // ë°°ê²½ í°ìƒ‰ (ì•ŒíŒŒ ì—†ìŒ)
                 g.DrawImage(guideImage, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
             }
             guideImage.Dispose();
 
-            // JPEG Ç°Áú 90À¸·Î ÀúÀå (±âº» 75´Â SV ¸ğµ¨ ¾ó±¼ÀÎ½Ä ½ÇÆĞ À¯¹ß)
+            if (!TryValidateSingleFace(finalImage, out var reason))
+            {
+                finalImage.Dispose();
+                MessageBox.Show(reason, "ì–¼êµ´ ì¸ì‹ ê²€ì‚¬",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                btnOK.Enabled = true;
+                btnOK.Text = "í™•ì¸";
+                return;
+            }
+
+            // JPEG í’ˆì§ˆ 90ìœ¼ë¡œ ì €ì¥ (ê¸°ë³¸ 75ëŠ” SV ëª¨ë¸ ì–¼êµ´ì¸ì‹ ì‹¤íŒ¨ ìœ ë°œ)
             using (var ms = new MemoryStream())
             {
                 var jpegEncoder = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders()
                     .First(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
                 var encoderParams = new System.Drawing.Imaging.EncoderParameters(1);
                 encoderParams.Param[0] = new System.Drawing.Imaging.EncoderParameter(
-                    System.Drawing.Imaging.Encoder.Quality, 85L);  // quality=85, Baseline JPEG, 4:2:0 (GDI+ ±âº»°ª)
+                    System.Drawing.Imaging.Encoder.Quality, 85L);  // quality=85, Baseline JPEG, 4:2:0 (GDI+ ê¸°ë³¸ê°’)
                 finalImage.Save(ms, jpegEncoder, encoderParams);
                 ProcessedImageData = ms.ToArray();
             }
@@ -321,10 +331,67 @@ public partial class FacePhotoEditorForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"ÀÌ¹ÌÁö Ã³¸® ½ÇÆĞ: {ex.Message}", "¿À·ù",
+            MessageBox.Show($"ì´ë¯¸ì§€ ì²˜ë¦¬ ì‹¤íŒ¨: {ex.Message}", "ì˜¤ë¥˜",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             btnOK.Enabled = true;
-            btnOK.Text = "È®ÀÎ";
+            btnOK.Text = "í™•ì¸";
+        }
+    }
+    private static bool TryValidateSingleFace(Bitmap image, out string reason)
+    {
+        reason = string.Empty;
+        try
+        {
+            var cascadePath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Resources",
+                "haarcascade_frontalface_default.xml");
+
+            if (!File.Exists(cascadePath))
+            {
+                reason = "ì–¼êµ´ ê²€ì¶œ ëª¨ë¸ íŒŒì¼ì´ ì—†ìŠµë‹ˆë‹¤.\n" + cascadePath;
+                return false;
+            }
+
+            using var mat = OpenCvSharp.Extensions.BitmapConverter.ToMat(image);
+            using var gray = new OpenCvSharp.Mat();
+            OpenCvSharp.Cv2.CvtColor(mat, gray, OpenCvSharp.ColorConversionCodes.BGR2GRAY);
+            OpenCvSharp.Cv2.EqualizeHist(gray, gray);
+
+            using var cascade = new OpenCvSharp.CascadeClassifier(cascadePath);
+            var faces = cascade.DetectMultiScale(
+                gray,
+                scaleFactor: 1.1,
+                minNeighbors: 5,
+                flags: OpenCvSharp.HaarDetectionTypes.ScaleImage,
+                minSize: new OpenCvSharp.Size(80, 80));
+
+            if (faces.Length == 0)
+            {
+                reason = "ì–¼êµ´ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.\nê°€ì´ë“œ ì› ì•ˆì— ì–¼êµ´ì´ í¬ê²Œ ì˜¤ë„ë¡ ì¡°ì •í•œ ë’¤ ë‹¤ì‹œ ì‹œë„í•˜ì„¸ìš”.";
+                return false;
+            }
+
+            if (faces.Length > 1)
+            {
+                reason = $"ì–¼êµ´ì´ {faces.Length}ê°œ ê°ì§€ë˜ì—ˆìŠµë‹ˆë‹¤.\ní•œ ì‚¬ëŒë§Œ ë‚˜ì˜¤ë„ë¡ ì‚¬ì§„ì„ ì¡°ì •í•˜ì„¸ìš”.";
+                return false;
+            }
+
+            var face = faces[0];
+            double ratio = Math.Min(face.Width, face.Height) / (double)Math.Min(image.Width, image.Height);
+            if (ratio < 0.25)
+            {
+                reason = "ì–¼êµ´ì´ ë„ˆë¬´ ì‘ìŠµë‹ˆë‹¤.\nê°€ì´ë“œ ì›ì— ì–¼êµ´ì´ ë” í¬ê²Œ ë“¤ì–´ì˜¤ë„ë¡ í™•ëŒ€í•˜ì„¸ìš”.";
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            reason = $"ì–¼êµ´ ê²€ì¶œ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.\n{ex.Message}";
+            return false;
         }
     }
 
