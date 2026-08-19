@@ -127,7 +127,7 @@ public class DeviceUserListForm : Form
 
             // 단말기에 QueryPeople(PushAllPeople) 명령 전송
             var cmdResp = await _httpClient.PostAsync(
-                $"/admin/devices/{_device.SN}/pull-all-people", null);
+                $"/admin/devices/{_device.SN}/query-owned-people", null);
 
             if (!cmdResp.IsSuccessStatusCode)
             {

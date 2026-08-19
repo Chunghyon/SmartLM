@@ -16,6 +16,7 @@ public sealed class DeviceCommandTracker
     private readonly object _sync = new();
     private readonly Dictionary<string, DeviceCommandJob> _jobs = new();
     private readonly HashSet<string> _ownedQueryReset = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _importToServer = new(StringComparer.OrdinalIgnoreCase);
 
 
     public DeviceCommandJob Start(string deviceSn, string type, string? message = null)
@@ -74,5 +75,17 @@ public sealed class DeviceCommandTracker
     {
         lock (_sync)
             return _ownedQueryReset.Remove(deviceSn);
+    }
+
+    public void MarkImportToServer(string deviceSn)
+    {
+        lock (_sync)
+            _importToServer.Add(deviceSn);
+    }
+
+    public bool ConsumeImportToServer(string deviceSn)
+    {
+        lock (_sync)
+            return _importToServer.Remove(deviceSn);
     }
 }

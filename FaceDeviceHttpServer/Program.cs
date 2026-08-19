@@ -681,8 +681,22 @@ app.MapPost("/admin/devices/{sn}/pull-all-people", (string sn, MySqlStateStore s
         return Results.NotFound(new ApiResponse(404, "Device not found."));
 
     store.QueueRemoteCommand(sn, pushAllPeople: true);
+    tracker.MarkOwnedQueryReset(sn);
+    tracker.MarkImportToServer(sn);
     var job = tracker.Start(sn, "Remote", "단말기 사용자 가져오기 대기 중");
-    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 다음 RemoteCommand 폴링 시 실행");
+    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 서버 사용자로 가져오기");
+    return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
+});
+
+app.MapPost("/admin/devices/{sn}/query-owned-people", (string sn, MySqlStateStore store, DeviceCommandTracker tracker) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    store.QueueRemoteCommand(sn, pushAllPeople: true);
+    tracker.MarkOwnedQueryReset(sn);
+    var job = tracker.Start(sn, "Remote", "단말기 사용자 목록 조회 대기 중");
+    LogHub.Instance.Info($"[Query Owned] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 단말기 목록만 조회 (서버 사용자 덮어쓰지 않음)");
     return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
 });
 
@@ -1131,12 +1145,13 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, MySqlStateStor
             var tracker = app.Services.GetRequiredService<DeviceCommandTracker>();
             if (tracker.ConsumeOwnedQueryReset(sn))
                 store.BeginOwnedPeopleQuery(sn);
-            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new());
+            var import = tracker.ConsumeImportToServer(sn);
+            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new(), updateServerPeople: import);
             success = s; fail = f;
             LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회 → OwnedPeople 동기화 완료");
 
             // 사진이 단말기 내부 경로인 경우 백그라운드에서 자동 다운로드
-            if (photoPathsToFetch.Count > 0)
+            if (import && photoPathsToFetch.Count > 0)
             {
                 var device = store.GetDevice(sn);
                 var ip = device?.IpAddress;

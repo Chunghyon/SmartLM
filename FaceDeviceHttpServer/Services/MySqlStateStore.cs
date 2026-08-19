@@ -209,12 +209,34 @@ public sealed class MySqlStateStore
     {
         using var db = CreateDb();
         var device = GetOrCreateDevice(db, deviceSn);
-        var pending = db.People.Select(p => p.UserId).ToList();
-        var downloaded = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Downloaded).Select(x => x.UserId).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var remaining = pending.Count(id => !downloaded.Contains(id));
-        if (remaining == 0)
-            device.PendingAddPeopleCount = 0;
+
+        // 이번 배포 대상(Staged)을 다운로드 완료로 표시하고 대기 카운트를 지운다.
+        var staged = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged).ToList();
+        if (staged.Count > 0)
+        {
+            foreach (var row in staged)
+            {
+                row.Downloaded = true;
+                row.Owned = true;
+                row.Staged = false;
+                row.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        else if (successCount > 0)
+        {
+            // staged 없이 전체 배포된 경우: 아직 Downloaded가 아닌 사용자를 완료 처리
+            var pending = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && !x.Downloaded).Take(successCount).ToList();
+            foreach (var row in pending)
+            {
+                row.Downloaded = true;
+                row.Owned = true;
+                row.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        device.PendingAddPeopleCount = 0;
         db.SaveChanges();
+        LogHub.Instance.Info($"[DownloadResult] {deviceSn} 배포 대기 해제 (성공 {successCount}명)");
     }
 
     public void SaveUploadedWorkSetting(string deviceSn, JsonObject setting)
@@ -498,7 +520,8 @@ public sealed class MySqlStateStore
         db.SaveChanges();
     }
 
-    public (int success, int fail, List<(string userId, string photoPath)> photoPathsToFetch) ReplaceDeviceOwnedPeople(string deviceSn, List<PersonInfo> people)
+    public (int success, int fail, List<(string userId, string photoPath)> photoPathsToFetch) ReplaceDeviceOwnedPeople(
+        string deviceSn, List<PersonInfo> people, bool updateServerPeople = false)
     {
         int success = 0, fail = 0;
         var photoPaths = new List<(string, string)>();
@@ -511,7 +534,7 @@ public sealed class MySqlStateStore
                 var existing = db.People.Find(person.UserID);
                 if (existing == null)
                     db.People.Add(ToEntity(person));
-                else
+                else if (updateServerPeople)
                     CopyToEntity(person, existing);
                 UpsertDevicePerson(db, deviceSn, person.UserID, downloaded: true, owned: true);
                 db.SaveChanges();
