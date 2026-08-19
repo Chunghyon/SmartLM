@@ -3,15 +3,16 @@ using System.Diagnostics;
 namespace FaceDeviceHttpPcServer.Services;
 
 /// <summary>
-/// Windows ¹æÈ­º® ±ÔÄ¢À» °ü¸®ÇÏ´Â ¼­ºñ½º
+/// Windows ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 public static class FirewallHelper
 {
     /// <summary>
-    /// ÇöÀç ¾ÖÇÃ¸®ÄÉÀÌ¼Ç¿¡ ´ëÇÑ ¹æÈ­º® ±ÔÄ¢ÀÌ ÀÖ´ÂÁö È®ÀÎ
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½Ì¼Ç¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     /// </summary>
     public static bool CheckFirewallRule(string ruleName)
     {
+        if (!OperatingSystem.IsWindows()) return true;
         try
         {
             var psi = new ProcessStartInfo
@@ -29,7 +30,7 @@ public static class FirewallHelper
             var output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
-            return output.Contains("±ÔÄ¢ ÀÌ¸§:") || output.Contains("Rule Name:");
+            return output.Contains("ï¿½ï¿½Ä¢ ï¿½Ì¸ï¿½:") || output.Contains("Rule Name:");
         }
         catch
         {
@@ -38,20 +39,21 @@ public static class FirewallHelper
     }
 
     /// <summary>
-    /// UDP Discovery¸¦ À§ÇÑ ¹æÈ­º® ±ÔÄ¢ Ãß°¡ (°ü¸®ÀÚ ±ÇÇÑ ÇÊ¿ä)
+    /// UDP Discoveryï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½)
     /// </summary>
     public static bool AddUdpFirewallRule(string programPath, string ruleName = "FDDC UDP Discovery")
     {
+        if (!OperatingSystem.IsWindows()) return true;
         try
         {
-            // ±âÁ¸ ±ÔÄ¢ÀÌ ÀÖ´ÂÁö È®ÀÎ
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¢ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
             if (CheckFirewallRule(ruleName))
             {
-                LogHub.Instance.Info($"¹æÈ­º® ±ÔÄ¢ÀÌ ÀÌ¹Ì Á¸ÀçÇÕ´Ï´Ù: {ruleName}");
+                LogHub.Instance.Info($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ï¿½ï¿½ ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½: {ruleName}");
                 return true;
             }
 
-            // ÀÎ¹Ù¿îµå ±ÔÄ¢ Ãß°¡
+            // ï¿½Î¹Ù¿ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½
             var psiIn = new ProcessStartInfo
             {
                 FileName = "netsh",
@@ -63,13 +65,13 @@ public static class FirewallHelper
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Verb = "runas" // °ü¸®ÀÚ ±ÇÇÑ ¿äÃ»
+                Verb = "runas" // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã»
             };
 
             using var processIn = Process.Start(psiIn);
             if (processIn == null)
             {
-                LogHub.Instance.Warn("¹æÈ­º® ±ÔÄ¢ Ãß°¡ ½ÇÆÐ: ÇÁ·Î¼¼½º ½ÃÀÛ ½ÇÆÐ");
+                LogHub.Instance.Warn("ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
                 return false;
             }
 
@@ -79,24 +81,24 @@ public static class FirewallHelper
 
             if (processIn.ExitCode == 0)
             {
-                LogHub.Instance.Info($"¹æÈ­º® ÀÎ¹Ù¿îµå ±ÔÄ¢ Ãß°¡ ¼º°ø: {ruleName}");
+                LogHub.Instance.Info($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½Î¹Ù¿ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½: {ruleName}");
                 return true;
             }
             else
             {
-                LogHub.Instance.Warn($"¹æÈ­º® ±ÔÄ¢ Ãß°¡ ½ÇÆÐ: {errorIn}");
+                LogHub.Instance.Warn($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½: {errorIn}");
                 return false;
             }
         }
         catch (Exception ex)
         {
-            LogHub.Instance.Warn($"¹æÈ­º® ±ÔÄ¢ Ãß°¡ ½ÇÆÐ: {ex.Message}");
+            LogHub.Instance.Warn($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
             return false;
         }
     }
 
     /// <summary>
-    /// ¹æÈ­º® ±ÔÄ¢ Á¦°Å
+    /// ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static bool RemoveFirewallRule(string ruleName)
     {
@@ -122,24 +124,24 @@ public static class FirewallHelper
 
             if (process.ExitCode == 0)
             {
-                LogHub.Instance.Info($"¹æÈ­º® ±ÔÄ¢ Á¦°Å ¼º°ø: {ruleName}");
+                LogHub.Instance.Info($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: {ruleName}");
                 return true;
             }
             else
             {
-                LogHub.Instance.Warn($"¹æÈ­º® ±ÔÄ¢ Á¦°Å ½ÇÆÐ: {error}");
+                LogHub.Instance.Warn($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: {error}");
                 return false;
             }
         }
         catch (Exception ex)
         {
-            LogHub.Instance.Warn($"¹æÈ­º® ±ÔÄ¢ Á¦°Å ½ÇÆÐ: {ex.Message}");
+            LogHub.Instance.Warn($"ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
             return false;
         }
     }
 
     /// <summary>
-    /// PowerShell ¸í·É¾î·Î ¹æÈ­º® ±ÔÄ¢ Ãß°¡ (´ëÃ¼ ¹æ¹ý)
+    /// PowerShell ï¿½ï¿½ï¿½É¾ï¿½ï¿½ ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ß°ï¿½ (ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½)
     /// </summary>
     public static string GetFirewallAddCommand(string programPath)
     {
@@ -151,13 +153,13 @@ public static class FirewallHelper
     }
 
     /// <summary>
-    /// »ç¿ëÀÚ¿¡°Ô ¼öµ¿À¸·Î ¹æÈ­º®À» ¼³Á¤ÇÏµµ·Ï ¾È³»ÇÏ´Â ¸Þ½ÃÁö
+    /// ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½È³ï¿½ï¿½Ï´ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½
     /// </summary>
     public static string GetManualFirewallInstructions()
     {
-        return @"UDP ºê·ÎµåÄ³½ºÆ® °Ë»öÀ» À§ÇØ Windows ¹æÈ­º® ¼³Á¤ÀÌ ÇÊ¿äÇÕ´Ï´Ù.
+        return @"UDP ï¿½ï¿½Îµï¿½Ä³ï¿½ï¿½Æ® ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Windows ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½Õ´Ï´ï¿½.
 
-¹æ¹ý 1: PowerShell (°ü¸®ÀÚ ±ÇÇÑ)
+ï¿½ï¿½ï¿½ 1: PowerShell (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 ---------------------------------------
 New-NetFirewallRule -DisplayName ""FDDC UDP Discovery"" `
     -Direction Inbound `
@@ -165,15 +167,15 @@ New-NetFirewallRule -DisplayName ""FDDC UDP Discovery"" `
     -LocalPort 1024-65535 `
     -Action Allow
 
-¹æ¹ý 2: Windows ¹æÈ­º® GUI
+ï¿½ï¿½ï¿½ 2: Windows ï¿½ï¿½È­ï¿½ï¿½ GUI
 ---------------------------------------
-1. Á¦¾îÆÇ ¡æ Windows Defender ¹æÈ­º®
-2. °í±Þ ¼³Á¤ ¡æ ÀÎ¹Ù¿îµå ±ÔÄ¢
-3. »õ ±ÔÄ¢ ¡æ ÇÁ·Î±×·¥
-4. ÀÌ ÇÁ·Î±×·¥ °æ·Î ¼±ÅÃ: FaceDeviceHttpPcServer.exe
-5. ¿¬°á Çã¿ë ¡æ ¿Ï·á
+1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Windows Defender ï¿½ï¿½È­ï¿½ï¿½
+2. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Î¹Ù¿ï¿½ï¿½ ï¿½ï¿½Ä¢
+3. ï¿½ï¿½ ï¿½ï¿½Ä¢ ï¿½ï¿½ ï¿½ï¿½ï¿½Î±×·ï¿½
+4. ï¿½ï¿½ ï¿½ï¿½ï¿½Î±×·ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: FaceDeviceHttpPcServer.exe
+5. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ï·ï¿½
 
-¹æ¹ý 3: netsh ¸í·É¾î
+ï¿½ï¿½ï¿½ 3: netsh ï¿½ï¿½ï¿½É¾ï¿½
 ---------------------------------------
 netsh advfirewall firewall add rule name=""FDDC UDP Discovery"" ^
     dir=in action=allow protocol=UDP ^

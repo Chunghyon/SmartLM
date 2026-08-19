@@ -2,7 +2,9 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+#if WINDOWS
 using FaceDeviceHttpPcServer.Forms;
+#endif
 using FaceDeviceHttpPcServer.Middleware;
 using FaceDeviceHttpPcServer.Models;
 using FaceDeviceHttpPcServer.Services;
@@ -12,10 +14,11 @@ using Microsoft.EntityFrameworkCore;
 const byte GzipMagicByte1 = 0x1F;
 const byte GzipMagicByte2 = 0x8B;
 
-// Windows Forms 초기화
+#if WINDOWS
 Application.EnableVisualStyles();
 Application.SetCompatibleTextRenderingDefault(false);
 Application.SetHighDpiMode(HighDpiMode.SystemAware);
+#endif
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -681,22 +684,8 @@ app.MapPost("/admin/devices/{sn}/pull-all-people", (string sn, MySqlStateStore s
         return Results.NotFound(new ApiResponse(404, "Device not found."));
 
     store.QueueRemoteCommand(sn, pushAllPeople: true);
-    tracker.MarkOwnedQueryReset(sn);
-    tracker.MarkImportToServer(sn);
     var job = tracker.Start(sn, "Remote", "단말기 사용자 가져오기 대기 중");
-    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 서버 사용자로 가져오기");
-    return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
-});
-
-app.MapPost("/admin/devices/{sn}/query-owned-people", (string sn, MySqlStateStore store, DeviceCommandTracker tracker) =>
-{
-    var device = store.GetDevice(sn);
-    if (device is null)
-        return Results.NotFound(new ApiResponse(404, "Device not found."));
-    store.QueueRemoteCommand(sn, pushAllPeople: true);
-    tracker.MarkOwnedQueryReset(sn);
-    var job = tracker.Start(sn, "Remote", "단말기 사용자 목록 조회 대기 중");
-    LogHub.Instance.Info($"[Query Owned] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 단말기 목록만 조회 (서버 사용자 덮어쓰지 않음)");
+    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 다음 RemoteCommand 폴링 시 실행");
     return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
 });
 
@@ -1145,13 +1134,12 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, MySqlStateStor
             var tracker = app.Services.GetRequiredService<DeviceCommandTracker>();
             if (tracker.ConsumeOwnedQueryReset(sn))
                 store.BeginOwnedPeopleQuery(sn);
-            var import = tracker.ConsumeImportToServer(sn);
-            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new(), updateServerPeople: import);
+            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new());
             success = s; fail = f;
             LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회 → OwnedPeople 동기화 완료");
 
             // 사진이 단말기 내부 경로인 경우 백그라운드에서 자동 다운로드
-            if (import && photoPathsToFetch.Count > 0)
+            if (photoPathsToFetch.Count > 0)
             {
                 var device = store.GetDevice(sn);
                 var ip = device?.IpAddress;
@@ -2077,7 +2065,7 @@ app.MapPost("/admin/devices/sync-time-all", (MySqlStateStore store) =>
 try
 {
     var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
-    if (!string.IsNullOrEmpty(exePath))
+    if (OperatingSystem.IsWindows() && !string.IsNullOrEmpty(exePath))
     {
         if (!FirewallHelper.CheckFirewallRule("FDDC UDP Discovery"))
         {
@@ -2113,19 +2101,22 @@ var rawUrl = urls.Length > 0 ? urls[0] : "http://localhost";
 // 0.0.0.0을 localhost로 변환 (브라우저에서 사용 가능하도록)
 var serverUrl = rawUrl.Replace("0.0.0.0", "localhost");
 
-// MainForm 생성 및 서버 URL 설정
+#if WINDOWS
 var mainForm = new MainForm();
 mainForm.SetServerUrl(serverUrl);
-mainForm.FormClosed += (_, _) =>
-{
-    cts.Cancel();
-};
-
-// Windows Forms 실행
+mainForm.FormClosed += (_, _) => cts.Cancel();
+Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
 Application.Run(mainForm);
-
-// 서버 종료 대기
 await serverTask;
+#else
+Console.WriteLine($"FaceDevice HTTP Server listening: {serverUrl}");
+Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+try
+{
+    await serverTask;
+}
+catch (OperationCanceledException) { }
+#endif
 
 
 static string ResolveConfiguredPath(string? configured, string contentRoot, string? fallback = null)
@@ -2135,6 +2126,8 @@ static string ResolveConfiguredPath(string? configured, string contentRoot, stri
         return contentRoot;
     path = Environment.ExpandEnvironmentVariables(path);
     var myDocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    if (string.IsNullOrWhiteSpace(myDocs))
+        myDocs = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     path = path.Replace("{MyDocuments}", myDocs, StringComparison.OrdinalIgnoreCase);
     if (!Path.IsPathRooted(path))
         path = Path.Combine(contentRoot, path);
