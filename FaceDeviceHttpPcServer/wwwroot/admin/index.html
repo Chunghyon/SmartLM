@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FaceDevice PC Client</title>
+<title>FaceDeviceWebClient</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Malgun Gothic,sans-serif;background:#f0f2f5;color:#333;font-size:13px}
@@ -68,8 +68,8 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
 <body>
 <div class="header">
   <div>
-    <h1>FaceDevice PC Client</h1>
-    <div class="subtitle">얼굴인식 단말기 관리 시스템</div>
+    <h1>FaceDeviceWebClient</h1>
+    <div class="subtitle">얼굴인식 관리 시스템</div>
   </div>
   <div style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.7)" id="headerTime"></div>
 </div>
@@ -159,7 +159,8 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
         <button class="btn-primary"   onclick="editSelectedPerson()">수정</button>
         <button class="btn-danger"    onclick="deleteSelectedPersonnel()">제거</button>
         <button class="btn-secondary" onclick="refreshPersonnel()">새로고침</button>
-        <button class="btn-info"      onclick="reloadFromFiles()">파일 불러오기</button>
+        <button class="btn-info"      onclick="reloadFromFiles()">파일에서 불러오기</button>
+        <button class="btn-secondary" onclick="saveToFiles()">파일로 저장</button>
         <button class="btn-warning"   onclick="distributePersonnel()">단말기로 배포</button>
       </div>
     </div>
@@ -195,8 +196,10 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
         <div class="form-group"><label>이름</label><input type="text" id="attName" placeholder="이름"></div>
         <div class="form-group"><label>단말기</label>
           <select id="attDevice"><option value="">전체 단말기</option></select></div>
-        <div class="form-group"><label>시작일시</label><input type="datetime-local" id="attStart"></div>
-        <div class="form-group"><label>종료일시</label><input type="datetime-local" id="attEnd"></div>
+        <div class="form-group"><label><input type="checkbox" id="attStartOn"> 시작일시</label>
+          <input type="datetime-local" id="attStart" disabled></div>
+        <div class="form-group"><label><input type="checkbox" id="attEndOn"> 종료일시</label>
+          <input type="datetime-local" id="attEnd" disabled></div>
       </div>
       <div class="btn-group">
         <button class="btn-success"   onclick="searchAttendance()">검색</button>
@@ -210,8 +213,8 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
     <div class="panel-body">
       <div class="table-wrap"><table>
         <thead><tr><th>시간</th><th>동</th><th>호</th><th>멤버#</th><th>이름</th>
-          <th>단말기 SN</th><th>기록 타입</th><th>체온</th><th>사진</th></tr></thead>
-        <tbody id="attBody"><tr><td colspan="9" class="empty-state">검색 조건을 입력하세요.</td></tr></tbody>
+          <th>단말기 SN</th><th>기록 타입</th></tr></thead>
+        <tbody id="attBody"><tr><td colspan="7" class="empty-state">검색 조건을 입력하세요.</td></tr></tbody>
       </table></div>
       <div id="attPager" class="btn-group" style="margin-top:8px"></div>
     </div>

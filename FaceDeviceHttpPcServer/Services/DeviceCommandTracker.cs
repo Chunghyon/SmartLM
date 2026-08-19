@@ -15,6 +15,8 @@ public sealed class DeviceCommandTracker
 {
     private readonly object _sync = new();
     private readonly Dictionary<string, DeviceCommandJob> _jobs = new();
+    private readonly HashSet<string> _ownedQueryReset = new(StringComparer.OrdinalIgnoreCase);
+
 
     public DeviceCommandJob Start(string deviceSn, string type, string? message = null)
     {
@@ -61,4 +63,16 @@ public sealed class DeviceCommandTracker
         CreatedAtUtc = j.CreatedAtUtc,
         CompletedAtUtc = j.CompletedAtUtc
     };
+
+    public void MarkOwnedQueryReset(string deviceSn)
+    {
+        lock (_sync)
+            _ownedQueryReset.Add(deviceSn);
+    }
+
+    public bool ConsumeOwnedQueryReset(string deviceSn)
+    {
+        lock (_sync)
+            return _ownedQueryReset.Remove(deviceSn);
+    }
 }

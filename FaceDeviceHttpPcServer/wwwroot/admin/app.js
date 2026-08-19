@@ -324,6 +324,18 @@ function renderPersonnel(){
 }
 function toggleAllPerson(c){document.querySelectorAll('.chkPerson').forEach(x=>x.checked=c.checked);}
 function getCheckedPersonUIDs(){return[...document.querySelectorAll('.chkPerson:checked')].map(c=>c.dataset.uid);}
+
+async function saveToFiles(){
+  const u=getCheckedPersonUIDs();
+  if(!u.length){setStatus('저장할 사용자를 선택하세요','err');return;}
+  if(!confirm('선택한 '+u.length+'명을 App_Data/people 폴더에 JSON으로 저장합니다.'))return;
+  try{
+    const r=await apiPost('/admin/people/save-to-files',{UserIds:u});
+    const saved=r.saved??r.Saved??0, skipped=r.skipped??r.Skipped??0, errors=r.errors??r.Errors??0;
+    setStatus('파일 저장: '+saved+'명 저장, '+skipped+'건 건너뜀, '+errors+'건 오류', errors>0?'err':'ok');
+    addLog('파일 저장: saved='+saved+', skipped='+skipped+', errors='+errors);
+  }catch(e){setStatus('파일 저장 실패: '+e.message,'err');}
+}
 async function reloadFromFiles(){
   try{const r=await apiPost('/admin/people/reload-from-files',{});setStatus('파일에서 불러오기 완료','ok');addLog('파일 불러오기: '+(r.Message??JSON.stringify(r)));await refreshPersonnel();}
   catch(e){setStatus('불러오기 실패: '+e.message,'err');}
@@ -422,7 +434,17 @@ function setDefaultAttendanceDates(){
   const n=new Date();const s=new Date(n);s.setHours(0,0,0,0);
   const pad=x=>String(x).padStart(2,'0');
   const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
-  document.getElementById('attEnd').value=fmt(n);document.getElementById('attStart').value=fmt(s);
+  document.getElementById('attStart').value=fmt(s);
+  document.getElementById('attEnd').value=fmt(n);
+  const bind=(chkId,inpId)=>{
+    const c=document.getElementById(chkId),i=document.getElementById(inpId);
+    if(!c||c.dataset.bound)return;
+    c.dataset.bound='1';
+    c.addEventListener('change',()=>{i.disabled=!c.checked;});
+    i.disabled=!c.checked;
+  };
+  bind('attStartOn','attStart');
+  bind('attEndOn','attEnd');
 }
 async function populateAttDeviceCombo(){
   const sel=document.getElementById('attDevice');const prev=sel.value;
@@ -447,8 +469,8 @@ async function searchAttendance(page=1){
   }
   if(name)req.UserName=name;
   if(sn)req.DeviceSN=sn;
-  if(st)req.StartTime=new Date(st).toISOString();
-  if(et)req.EndTime=new Date(et).toISOString();
+  if(document.getElementById('attStartOn')?.checked && st)req.StartTime=new Date(st).toISOString();
+  if(document.getElementById('attEndOn')?.checked && et)req.EndTime=new Date(et).toISOString();
   try{
     setStatus('출입기록 검색 중...');
     const r=await api('POST','/api/Attendance/Search',req,20000);
@@ -461,15 +483,19 @@ async function searchAttendance(page=1){
 }
 function renderAttendance(recs){
   const tb=document.getElementById('attBody');
-  if(!recs.length){tb.innerHTML='<tr><td colspan="9" class="empty-state">기록 없음</td></tr>';return;}
+  if(!recs.length){tb.innerHTML='<tr><td colspan="7" class="empty-state">기록 없음</td></tr>';return;}
   tb.innerHTML=recs.map(r=>{
-    const ph=r.PhotoUrl?'<img src="'+r.PhotoUrl+'" style="height:36px;border-radius:3px" onerror="this.style.display=\'none\'">'  :'-';
     const tl='<span class="badge '+rtBadge(r.RecordType)+'">'+rtLabel(r.RecordType)+'</span>';
     const{dong,ho,member}=parseDongHoMember(r.UserID??'');
-    return '<tr><td>'+esc(r.RecordTime??'')+'</td><td>'+esc(dong)+'</td><td>'+esc(ho)+'</td><td>'+esc(member)+'</td>'
+    return '<tr>'
+      +'<td>'+esc(r.RecordTime??'')+'</td>'
+      +'<td>'+esc(dong)+'</td>'
+      +'<td>'+esc(ho)+'</td>'
+      +'<td>'+esc(member)+'</td>'
       +'<td>'+esc(r.UserName??'')+'</td>'
-      +'<td style="font-size:11px">'+esc(r.DeviceSN??'')+'</td><td>'+tl+'</td>'
-      +'<td>'+(r.Temperature?r.Temperature+'℃':'-')+'</td><td>'+ph+'</td></tr>';
+      +'<td style="font-size:11px">'+esc(r.DeviceSN??'')+'</td>'
+      +'<td>'+tl+'</td>'
+      +'</tr>';
   }).join('');
 }
 function renderAttPager(){
@@ -484,8 +510,11 @@ function renderAttPager(){
 function clearAttSearch(){
   ['attDong','attHo','attMember','attName'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('attDevice').value='';
+  const so=document.getElementById('attStartOn'),eo=document.getElementById('attEndOn');
+  if(so){so.checked=false;document.getElementById('attStart').disabled=true;}
+  if(eo){eo.checked=false;document.getElementById('attEnd').disabled=true;}
   setDefaultAttendanceDates();
-  document.getElementById('attBody').innerHTML='<tr><td colspan="9" class="empty-state">검색 조건을 입력하세요.</td></tr>';
+  document.getElementById('attBody').innerHTML='<tr><td colspan="7" class="empty-state">검색 조건을 입력하세요.</td></tr>';
   document.getElementById('attHeader').textContent='출입 기록';document.getElementById('attPager').innerHTML='';
 }
 async function exportAttendance(){
@@ -503,14 +532,14 @@ async function exportAttendance(){
       else if(dong&&ho&&member){req.UserID=String(dongN*1000000+hoN*100+memberN);}
     }
     if(name)req.UserName=name;if(sn)req.DeviceSN=sn;
-    if(st)req.StartTime=new Date(st).toISOString();if(et)req.EndTime=new Date(et).toISOString();
+    if(document.getElementById('attStartOn')?.checked&&st)req.StartTime=new Date(st).toISOString();if(document.getElementById('attEndOn')?.checked&&et)req.EndTime=new Date(et).toISOString();
     const r=await api('POST','/api/Attendance/Search',req,30000);
     const data2=r.content??r.Data??{};
     const recs=data2.DataList??data2.Records??[];
-    const hdr=['시간','동','호','멤버','사용자ID','이름','단말기SN','기록타입','체온'];
+    const hdr=['시간','동','호','멤버','사용자ID','이름','단말기SN','기록타입'];
     const rows=recs.map(x=>{
       const{dong,ho,member}=parseDongHoMember(x.UserID??'');
-      return[x.RecordTime,dong,ho,member,x.UserID,x.UserName,x.DeviceSN,x.RecordType,x.Temperature??''].join('\t');
+      return[x.RecordTime,dong,ho,member,x.UserID,x.UserName,x.DeviceSN,x.RecordType].join('\t');
     });
     const text=[hdr.join('\t'),...rows].join('\n');
     const blob=new Blob(['\uFEFF'+text],{type:'text/tab-separated-values;charset=utf-8'});

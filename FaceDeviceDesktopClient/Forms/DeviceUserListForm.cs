@@ -4,8 +4,8 @@ using System.Text.Json;
 namespace FaceDeviceDesktopClient.Forms;
 
 /// <summary>
-/// ´Ü¸»±â¿¡ µî·ÏµÈ »ç¿ëÀÚ ¸ñ·ÏÀ» º¸¿©ÁÖ°í Ãß°¡/¼öÁ¤/»èÁ¦ÇÏ´Â Ã¢.
-/// ¿©±â¼­ÀÇ º¯°æÀº ÇØ´ç ´Ü¸»±â¿¡¸¸ ¿µÇâÀ» ÁÖ¸ç ¼­¹ö »ç¿ëÀÚ ¸ñ·Ï°ú´Â ¿ÏÀüÈ÷ µ¶¸³ÀûÀÔ´Ï´Ù.
+/// ë‹¨ë§ê¸°ì— ë“±ë¡ëœ ì‚¬ìš©ì ëª©ë¡ì„ ë³´ì—¬ì£¼ê³  ì¶”ê°€/ìˆ˜ì •/ì‚­ì œí•˜ëŠ” ì°½.
+/// ì—¬ê¸°ì„œì˜ ë³€ê²½ì€ í•´ë‹¹ ë‹¨ë§ê¸°ì—ë§Œ ì˜í–¥ì„ ì£¼ë©° ì„œë²„ ì‚¬ìš©ì ëª©ë¡ê³¼ëŠ” ì™„ì „íˆ ë…ë¦½ì ì…ë‹ˆë‹¤.
 /// </summary>
 public class DeviceUserListForm : Form
 {
@@ -21,26 +21,26 @@ public class DeviceUserListForm : Form
         _device     = device;
         _httpClient = httpClient;
         BuildUI();
-        _ = SyncAndLoadPeople();  // Ã¢ ¿­ ¶§ ´Ü¸»±â¿¡¼­ ÃÖ½Å ¸ñ·Ï µ¿±âÈ­
+        _ = SyncAndLoadPeople();  // ì°½ ì—´ ë•Œ ë‹¨ë§ê¸°ì—ì„œ ìµœì‹  ëª©ë¡ ë™ê¸°í™”
     }
 
     private void BuildUI()
     {
-        Text = $"»ç¿ëÀÚ Á¤º¸ - {_device.DeviceName ?? _device.SN}  (´Ü¸»±â Àü¿ë)";
+        Text = $"ì‚¬ìš©ì ì •ë³´ - {_device.DeviceName ?? _device.SN}  (ë‹¨ë§ê¸° ì „ìš©)";
         StartPosition = FormStartPosition.CenterParent;
         Size = new Size(900, 580);
         MinimumSize = new Size(750, 450);
         FormBorderStyle = FormBorderStyle.Sizable;
 
-        // ¦¡¦¡ ¹öÆ° ÆĞ³Î ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ ë²„íŠ¼ íŒ¨ë„ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var pnlTop = new Panel { Dock = DockStyle.Top, Height = 42, Padding = new Padding(8, 6, 8, 0) };
 
-        var btnAdd    = new Button { Text = "Ãß°¡",   Size = new Size(90, 28), Location = new Point(8,  6) };
-        var btnEdit   = new Button { Text = "¼öÁ¤",   Size = new Size(90, 28), Location = new Point(106, 6) };
-        var btnDelete = new Button { Text = "»èÁ¦",   Size = new Size(90, 28), Location = new Point(204, 6),
+        var btnAdd    = new Button { Text = "ì¶”ê°€",   Size = new Size(90, 28), Location = new Point(8,  6) };
+        var btnEdit   = new Button { Text = "ìˆ˜ì •",   Size = new Size(90, 28), Location = new Point(106, 6) };
+        var btnDelete = new Button { Text = "ì‚­ì œ",   Size = new Size(90, 28), Location = new Point(204, 6),
                                      ForeColor = System.Drawing.Color.DarkRed };
-        var btnRefresh = new Button { Text = "»õ·Î°íÄ§", Size = new Size(90, 28), Location = new Point(302, 6) };
-        var btnClose   = new Button { Text = "´İ±â",   Size = new Size(90, 28), Location = new Point(400, 6) };
+        var btnRefresh = new Button { Text = "ìƒˆë¡œê³ ì¹¨", Size = new Size(90, 28), Location = new Point(302, 6) };
+        var btnClose   = new Button { Text = "ë‹«ê¸°",   Size = new Size(90, 28), Location = new Point(400, 6) };
         btnClose.Click += (s, e) => this.Close();
 
         _lblStatus = new Label
@@ -52,7 +52,7 @@ public class DeviceUserListForm : Form
 
         var infoLabel = new Label
         {
-            Text = "? ÀÌ Ã¢ÀÇ º¯°æ»çÇ×Àº ÀÌ ´Ü¸»±â¿¡¸¸ Àû¿ëµË´Ï´Ù. ¼­¹ö »ç¿ëÀÚ ¸ñ·Ï¿¡´Â ¿µÇâÀ» ÁÖÁö ¾Ê½À´Ï´Ù.",
+            Text = "? ì´ ì°½ì˜ ë³€ê²½ì‚¬í•­ì€ ì´ ë‹¨ë§ê¸°ì—ë§Œ ì ìš©ë©ë‹ˆë‹¤. ì„œë²„ ì‚¬ìš©ì ëª©ë¡ì—ëŠ” ì˜í–¥ì„ ì£¼ì§€ ì•ŠìŠµë‹ˆë‹¤.",
             AutoSize = false, Dock = DockStyle.Bottom, Height = 22,
             TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
             ForeColor = System.Drawing.Color.DarkOrange,
@@ -66,7 +66,7 @@ public class DeviceUserListForm : Form
 
         pnlTop.Controls.AddRange(new Control[] { btnAdd, btnEdit, btnDelete, btnRefresh, btnClose, _lblStatus });
 
-        // ¦¡¦¡ ±×¸®µå ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ ê·¸ë¦¬ë“œ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _dgv = new DataGridView
         {
             Dock = DockStyle.Fill,
@@ -78,13 +78,13 @@ public class DeviceUserListForm : Form
             RowHeadersWidth = 30
         };
 
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColUserID",   HeaderText = "»ç¿ëÀÚID",  Width = 110 });
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",     HeaderText = "ÀÌ¸§",      Width = 130 });
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword", HeaderText = "ºñ¹Ğ¹øÈ£",  Width = 70  });
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",     HeaderText = "Ä«µå",      Width = 55  });
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFP",       HeaderText = "Áö¹®",      Width = 55  });
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPV",       HeaderText = "¼Õ¹Ù´Ú",    Width = 60  });
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFace",     HeaderText = "¾ó±¼",      Width = 55  });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColUserID",   HeaderText = "ì‚¬ìš©ìID",  Width = 110 });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColName",     HeaderText = "ì´ë¦„",      Width = 130 });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPassword", HeaderText = "ë¹„ë°€ë²ˆí˜¸",  Width = 70  });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColCard",     HeaderText = "ì¹´ë“œ",      Width = 55  });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFP",       HeaderText = "ì§€ë¬¸",      Width = 55  });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColPV",       HeaderText = "ì†ë°”ë‹¥",    Width = 60  });
+        _dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "ColFace",     HeaderText = "ì–¼êµ´",      Width = 55  });
 
         _dgv.CellFormatting += (s, e) =>
         {
@@ -123,41 +123,47 @@ public class DeviceUserListForm : Form
     {
         try
         {
-            SetStatus("´Ü¸»±â¿¡ ¸ñ·Ï ¿äÃ» Áß...");
+            SetStatus("ë‹¨ë§ê¸°ì— ëª©ë¡ ìš”ì²­ ì¤‘...");
 
-            // ´Ü¸»±â¿¡ QueryPeople(PushAllPeople) ¸í·É Àü¼Û
+            // ë‹¨ë§ê¸°ì— QueryPeople(PushAllPeople) ëª…ë ¹ ì „ì†¡
             var cmdResp = await _httpClient.PostAsync(
                 $"/admin/devices/{_device.SN}/pull-all-people", null);
 
             if (!cmdResp.IsSuccessStatusCode)
             {
-                // ¸í·É Àü¼Û ½ÇÆĞ ½Ã ¼­¹ö Ä³½Ã¿¡¼­ ·Îµå
-                SetStatus("´Ü¸»±â ¸í·É ½ÇÆĞ - Ä³½Ã¿¡¼­ ·Îµå");
+                // ëª…ë ¹ ì „ì†¡ ì‹¤íŒ¨ ì‹œ ì„œë²„ ìºì‹œì—ì„œ ë¡œë“œ
+                SetStatus("ë‹¨ë§ê¸° ëª…ë ¹ ì‹¤íŒ¨ - ìºì‹œì—ì„œ ë¡œë“œ");
                 await LoadPeople();
                 return;
             }
 
-            // ´Ü¸»±â°¡ PushPeople(PushType=4)·Î ÀÀ´äÇÒ ¶§±îÁö Æú¸µ (ÃÖ´ë 15ÃÊ)
-            SetStatus("´Ü¸»±â ÀÀ´ä ´ë±â Áß...");
-            int prevCount = _people.Count;
-            for (int i = 0; i < 15; i++)
+            // ë‹¨ë§ê¸°ê°€ PushPeople(PushType=4)ë¡œ ì‘ë‹µí•  ë•Œê¹Œì§€ í´ë§ (ìµœëŒ€ 15ì´ˆ)
+            SetStatus("ë‹¨ë§ê¸° ì‘ë‹µ ëŒ€ê¸° ì¤‘...");
+            int lastCount = -1;
+            int stable = 0;
+            for (int i = 0; i < 45; i++)
             {
                 await Task.Delay(1000);
                 await LoadPeople();
 
-                // ¸ñ·ÏÀÌ °»½ÅµÆ°Å³ª ºñ¾îÀÖ´Â °æ¿ì(»èÁ¦ ¹İ¿µ)µµ ¿Ï·á·Î Ã³¸®
-                // 2È¸ ÀÌ»ó °°Àº °á°ú¸é ¿Ï·á·Î °£ÁÖ
-                if (i >= 2)
+                if (_people.Count == lastCount)
+                    stable++;
+                else
+                    stable = 0;
+                lastCount = _people.Count;
+
+                // 1ëª… ì´ìƒ ìˆ˜ì‹ ëœ ë’¤ 2ì´ˆ ë™ì•ˆ ê±´ìˆ˜ê°€ ê°™ìœ¼ë©´ ì™„ë£Œ
+                if (_people.Count > 0 && i >= 2 && stable >= 2)
                 {
-                    SetStatus($"µ¿±âÈ­ ¿Ï·á: ÃÑ {_people.Count}¸í");
+                    SetStatus($"ë™ê¸°í™” ì™„ë£Œ: ì´ {_people.Count}ëª…");
                     return;
                 }
             }
-            SetStatus($"µ¿±âÈ­ ¿Ï·á: ÃÑ {_people.Count}¸í");
+            SetStatus($"ë™ê¸°í™” ì™„ë£Œ: ì´ {_people.Count}ëª…");
         }
         catch (Exception ex)
         {
-            SetStatus($"µ¿±âÈ­ ¿À·ù: {ex.Message}");
+            SetStatus($"ë™ê¸°í™” ì˜¤ë¥˜: {ex.Message}");
             await LoadPeople();
         }
     }
@@ -166,21 +172,21 @@ public class DeviceUserListForm : Form
     {
         try
         {
-            SetStatus("ºÒ·¯¿À´Â Áß...");
+            SetStatus("ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘...");
             var resp = await _httpClient.GetAsync($"/admin/devices/{_device.SN}/people");
             if (!resp.IsSuccessStatusCode)
             {
-                SetStatus($"¿À·ù: HTTP {resp.StatusCode}");
+                SetStatus($"ì˜¤ë¥˜: HTTP {resp.StatusCode}");
                 return;
             }
             _people = await resp.Content.ReadFromJsonAsync<List<PersonInfo>>()
                       ?? new List<PersonInfo>();
             PopulateGrid();
-            SetStatus($"ÃÑ {_people.Count}¸í (´Ü¸»±â µî·Ï »ç¿ëÀÚ)");
+            SetStatus($"ì´ {_people.Count}ëª… (ë‹¨ë§ê¸° ë“±ë¡ ì‚¬ìš©ì)");
         }
         catch (Exception ex)
         {
-            SetStatus($"¿À·ù: {ex.Message}");
+            SetStatus($"ì˜¤ë¥˜: {ex.Message}");
         }
     }
 
@@ -210,7 +216,7 @@ public class DeviceUserListForm : Form
         var person = form.Person;
         if (string.IsNullOrWhiteSpace(person.UserID))
         {
-            MessageBox.Show("UserID°¡ ºñ¾î ÀÖ½À´Ï´Ù.", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("UserIDê°€ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
 
@@ -219,23 +225,23 @@ public class DeviceUserListForm : Form
             var resp = await _httpClient.PostAsJsonAsync($"/admin/devices/{_device.SN}/people", person);
             if (resp.IsSuccessStatusCode)
             {
-                SetStatus($"»ç¿ëÀÚ {person.UserID} Ãß°¡ ¿Ï·á ¡æ ´Ü¸»±â Àü¼Û ¿¹¾à");
+                SetStatus($"ì‚¬ìš©ì {person.UserID} ì¶”ê°€ ì™„ë£Œ â†’ ë‹¨ë§ê¸° ì „ì†¡ ì˜ˆì•½");
                 await LoadPeople();
             }
             else
             {
-                MessageBox.Show($"Ãß°¡ ½ÇÆĞ: HTTP {resp.StatusCode}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"ì¶”ê°€ ì‹¤íŒ¨: HTTP {resp.StatusCode}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"¿À·ù: {ex.Message}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"ì˜¤ë¥˜: {ex.Message}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
     private async void BtnEdit_Click(object? sender, EventArgs e)
     {
-        if (_dgv.SelectedRows.Count == 0) { MessageBox.Show("¼öÁ¤ÇÒ »ç¿ëÀÚ¸¦ ¼±ÅÃÇÏ¼¼¿ä.", "¾È³»", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        if (_dgv.SelectedRows.Count == 0) { MessageBox.Show("ìˆ˜ì •í•  ì‚¬ìš©ìë¥¼ ì„ íƒí•˜ì„¸ìš”.", "ì•ˆë‚´", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
         var selectedPerson = _dgv.SelectedRows[0].Tag as PersonInfo;
         if (selectedPerson is null) return;
 
@@ -250,29 +256,29 @@ public class DeviceUserListForm : Form
             var resp = await _httpClient.PostAsJsonAsync($"/admin/devices/{_device.SN}/people", person);
             if (resp.IsSuccessStatusCode)
             {
-                SetStatus($"»ç¿ëÀÚ {person.UserID} ¼öÁ¤ ¿Ï·á ¡æ ´Ü¸»±â Àü¼Û ¿¹¾à");
+                SetStatus($"ì‚¬ìš©ì {person.UserID} ìˆ˜ì • ì™„ë£Œ â†’ ë‹¨ë§ê¸° ì „ì†¡ ì˜ˆì•½");
                 await LoadPeople();
             }
             else
             {
-                MessageBox.Show($"¼öÁ¤ ½ÇÆĞ: HTTP {resp.StatusCode}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"ìˆ˜ì • ì‹¤íŒ¨: HTTP {resp.StatusCode}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"¿À·ù: {ex.Message}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"ì˜¤ë¥˜: {ex.Message}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
     private async void BtnDelete_Click(object? sender, EventArgs e)
     {
-        if (_dgv.SelectedRows.Count == 0) { MessageBox.Show("»èÁ¦ÇÒ »ç¿ëÀÚ¸¦ ¼±ÅÃÇÏ¼¼¿ä.", "¾È³»", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        if (_dgv.SelectedRows.Count == 0) { MessageBox.Show("ì‚­ì œí•  ì‚¬ìš©ìë¥¼ ì„ íƒí•˜ì„¸ìš”.", "ì•ˆë‚´", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
         var selectedPerson = _dgv.SelectedRows[0].Tag as PersonInfo;
         if (selectedPerson is null) return;
 
         var confirm = MessageBox.Show(
-            $"»ç¿ëÀÚ [{selectedPerson.Name} ({selectedPerson.UserID})]¸¦ ÀÌ ´Ü¸»±â¿¡¼­ »èÁ¦ÇÏ½Ã°Ú½À´Ï±î?\n\n¼­¹ö »ç¿ëÀÚ ¸ñ·Ï¿¡´Â ¿µÇâÀ» ÁÖÁö ¾Ê½À´Ï´Ù.",
-            "»èÁ¦ È®ÀÎ", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            $"ì‚¬ìš©ì [{selectedPerson.Name} ({selectedPerson.UserID})]ë¥¼ ì´ ë‹¨ë§ê¸°ì—ì„œ ì‚­ì œí•˜ì‹œê² ìŠµë‹ˆê¹Œ?\n\nì„œë²„ ì‚¬ìš©ì ëª©ë¡ì—ëŠ” ì˜í–¥ì„ ì£¼ì§€ ì•ŠìŠµë‹ˆë‹¤.",
+            "ì‚­ì œ í™•ì¸", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (confirm != DialogResult.Yes) return;
 
         try
@@ -280,17 +286,17 @@ public class DeviceUserListForm : Form
             var resp = await _httpClient.DeleteAsync($"/admin/devices/{_device.SN}/people/{selectedPerson.UserID}");
             if (resp.IsSuccessStatusCode)
             {
-                SetStatus($"»ç¿ëÀÚ {selectedPerson.UserID} »èÁ¦ ¸í·É Àü¼Û ¿Ï·á");
+                SetStatus($"ì‚¬ìš©ì {selectedPerson.UserID} ì‚­ì œ ëª…ë ¹ ì „ì†¡ ì™„ë£Œ");
                 await LoadPeople();
             }
             else
             {
-                MessageBox.Show($"»èÁ¦ ½ÇÆĞ: HTTP {resp.StatusCode}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"ì‚­ì œ ì‹¤íŒ¨: HTTP {resp.StatusCode}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"¿À·ù: {ex.Message}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"ì˜¤ë¥˜: {ex.Message}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 

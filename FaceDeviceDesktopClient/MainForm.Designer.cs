@@ -61,6 +61,7 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshPersonnel = new System.Windows.Forms.Button();
             this.btnDistributePeople = new System.Windows.Forms.Button();
             this.btnReloadFromFiles  = new System.Windows.Forms.Button();
+            this.btnSaveToFiles = new System.Windows.Forms.Button();
             this.lblFilterDong = new System.Windows.Forms.Label();
             this.txtFilterDong = new System.Windows.Forms.TextBox();
             this.lblFilterHo   = new System.Windows.Forms.Label();
@@ -130,7 +131,7 @@ namespace FaceDeviceDesktopClient
             this.tabDashboard.Padding = new System.Windows.Forms.Padding(10);
             this.tabDashboard.Size = new System.Drawing.Size(1192, 572);
             this.tabDashboard.TabIndex = 0;
-            this.tabDashboard.Text = "Ω√Ω∫≈€ø‰æ‡";
+            this.tabDashboard.Text = "ÏãúÏä§ÌÖúÏöîÏïΩ";
             this.tabDashboard.UseVisualStyleBackColor = true;
 
             // 
@@ -154,7 +155,7 @@ namespace FaceDeviceDesktopClient
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(100, 15);
             this.label1.TabIndex = 0;
-            this.label1.Text = "¥‹∏ª±‚ ºˆ:";
+            this.label1.Text = "Îã®ÎßêÍ∏∞ Ïàò:";
 
             this.lblTotalDevices.AutoSize = true;
             this.lblTotalDevices.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -169,7 +170,7 @@ namespace FaceDeviceDesktopClient
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(100, 15);
             this.label2.TabIndex = 2;
-            this.label2.Text = "ªÁøÎ¿⁄ ºˆ:";
+            this.label2.Text = "ÏÇ¨Ïö©Ïûê Ïàò:";
 
             this.lblTotalPersonnel.AutoSize = true;
             this.lblTotalPersonnel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -184,7 +185,7 @@ namespace FaceDeviceDesktopClient
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(120, 15);
             this.label3.TabIndex = 4;
-            this.label3.Text = "∫Œº≠ ºˆ:";
+            this.label3.Text = "Î∂ÄÏÑú Ïàò:";
 
             this.lblTotalDepartments.AutoSize = true;
             this.lblTotalDepartments.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -199,7 +200,7 @@ namespace FaceDeviceDesktopClient
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(90, 15);
             this.label4.TabIndex = 6;
-            this.label4.Text = "¿Ã∫•∆Æ ºˆ:";
+            this.label4.Text = "Ïù¥Î≤§Ìä∏ Ïàò:";
 
             this.lblTotalRecords.AutoSize = true;
             this.lblTotalRecords.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -220,7 +221,7 @@ namespace FaceDeviceDesktopClient
             this.tabDevices.Padding = new System.Windows.Forms.Padding(10);
             this.tabDevices.Size = new System.Drawing.Size(1192, 572);
             this.tabDevices.TabIndex = 1;
-            this.tabDevices.Text = "¥‹∏ª±‚";
+            this.tabDevices.Text = "Îã®ÎßêÍ∏∞";
             this.tabDevices.UseVisualStyleBackColor = true;
 
             // 
@@ -235,13 +236,13 @@ namespace FaceDeviceDesktopClient
             this.grpDeviceSearch.Size = new System.Drawing.Size(1172, 250);
             this.grpDeviceSearch.TabIndex = 0;
             this.grpDeviceSearch.TabStop = false;
-            this.grpDeviceSearch.Text = "√ﬂ∞°";
+            this.grpDeviceSearch.Text = "Ï∂îÍ∞Ä";
 
             this.btnAutoSearch.Location = new System.Drawing.Point(10, 25);
             this.btnAutoSearch.Name = "btnAutoSearch";
             this.btnAutoSearch.Size = new System.Drawing.Size(120, 30);
             this.btnAutoSearch.TabIndex = 0;
-            this.btnAutoSearch.Text = "∞Àªˆ";
+            this.btnAutoSearch.Text = "Í≤ÄÏÉâ";
             this.btnAutoSearch.UseVisualStyleBackColor = true;
             this.btnAutoSearch.Click += new System.EventHandler(this.btnAutoSearch_Click);
 
@@ -249,7 +250,7 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshDevices.Name = "btnRefreshDevices";
             this.btnRefreshDevices.Size = new System.Drawing.Size(120, 30);
             this.btnRefreshDevices.TabIndex = 1;
-            this.btnRefreshDevices.Text = "ªı∑Œ∞Ìƒß";
+            this.btnRefreshDevices.Text = "ÏÉàÎ°úÍ≥†Ïπ®";
             this.btnRefreshDevices.UseVisualStyleBackColor = true;
             this.btnRefreshDevices.Click += new System.EventHandler(this.btnRefreshDevices_Click);
 
@@ -257,7 +258,7 @@ namespace FaceDeviceDesktopClient
             this.btnConnectDevice.Name = "btnConnectDevice";
             this.btnConnectDevice.Size = new System.Drawing.Size(120, 30);
             this.btnConnectDevice.TabIndex = 1;
-            this.btnConnectDevice.Text = "µÓ∑œ";
+            this.btnConnectDevice.Text = "Îì±Î°ù";
             this.btnConnectDevice.UseVisualStyleBackColor = true;
             this.btnConnectDevice.Click += new System.EventHandler(this.btnConnectDevice_Click);
 
@@ -300,13 +301,13 @@ namespace FaceDeviceDesktopClient
             this.grpDeviceManagement.Size = new System.Drawing.Size(1172, 75);
             this.grpDeviceManagement.TabIndex = 2;
             this.grpDeviceManagement.TabStop = false;
-            this.grpDeviceManagement.Text = "∞¸∏Æ";
+            this.grpDeviceManagement.Text = "Í¥ÄÎ¶¨";
 
             this.btnRemoteControl.Location = new System.Drawing.Point(10, 25);
             this.btnRemoteControl.Name = "btnRemoteControl";
             this.btnRemoteControl.Size = new System.Drawing.Size(150, 35);
             this.btnRemoteControl.TabIndex = 0;
-            this.btnRemoteControl.Text = "º≥¡§";
+            this.btnRemoteControl.Text = "ÏÑ§Ï†ï";
             this.btnRemoteControl.UseVisualStyleBackColor = true;
             this.btnRemoteControl.Click += new System.EventHandler(this.btnRemoteControl_Click);
 
@@ -314,7 +315,7 @@ namespace FaceDeviceDesktopClient
             this.btnRemoveDevice.Name = "btnRemoveDevice";
             this.btnRemoveDevice.Size = new System.Drawing.Size(150, 35);
             this.btnRemoveDevice.TabIndex = 1;
-            this.btnRemoveDevice.Text = "¡¶∞≈";
+            this.btnRemoveDevice.Text = "Ï†úÍ±∞";
             this.btnRemoveDevice.ForeColor = System.Drawing.Color.DarkRed;
             this.btnRemoveDevice.UseVisualStyleBackColor = true;
             this.btnRemoveDevice.Click += new System.EventHandler(this.btnRemoveDevice_Click);
@@ -323,7 +324,7 @@ namespace FaceDeviceDesktopClient
             this.btnPullPeople.Name = "btnPullPeople";
             this.btnPullPeople.Size = new System.Drawing.Size(170, 35);
             this.btnPullPeople.TabIndex = 2;
-            this.btnPullPeople.Text = "ªÁøÎ¿⁄ ∞°¡Æø¿±‚";
+            this.btnPullPeople.Text = "ÏÇ¨Ïö©Ïûê Í∞ÄÏ†∏Ïò§Í∏∞";
             this.btnPullPeople.UseVisualStyleBackColor = true;
             this.btnPullPeople.Click += new System.EventHandler(this.btnPullPeople_Click);
 
@@ -338,7 +339,7 @@ namespace FaceDeviceDesktopClient
             this.tabDepartments.Padding = new System.Windows.Forms.Padding(10);
             this.tabDepartments.Size = new System.Drawing.Size(1192, 572);
             this.tabDepartments.TabIndex = 2;
-            this.tabDepartments.Text = "∫Œº≠";
+            this.tabDepartments.Text = "Î∂ÄÏÑú";
             this.tabDepartments.UseVisualStyleBackColor = true;
 
             this.btnAddDepartment.Location = new System.Drawing.Point(10, 10);
@@ -379,6 +380,7 @@ namespace FaceDeviceDesktopClient
             this.tabPersonnel.Controls.Add(this.btnRefreshPersonnel);
             this.tabPersonnel.Controls.Add(this.btnDistributePeople);
             this.tabPersonnel.Controls.Add(this.btnReloadFromFiles);
+            this.tabPersonnel.Controls.Add(this.btnSaveToFiles);
             this.tabPersonnel.Controls.Add(this.lblFilterDong);
             this.tabPersonnel.Controls.Add(this.txtFilterDong);
             this.tabPersonnel.Controls.Add(this.lblFilterHo);
@@ -390,14 +392,14 @@ namespace FaceDeviceDesktopClient
             this.tabPersonnel.Padding = new System.Windows.Forms.Padding(10);
             this.tabPersonnel.Size = new System.Drawing.Size(1192, 572);
             this.tabPersonnel.TabIndex = 3;
-            this.tabPersonnel.Text = "ªÁøÎ¿⁄";
+            this.tabPersonnel.Text = "ÏÇ¨Ïö©Ïûê";
             this.tabPersonnel.UseVisualStyleBackColor = true;
 
             this.btnAddPerson.Location = new System.Drawing.Point(10, 10);
             this.btnAddPerson.Name = "btnAddPerson";
             this.btnAddPerson.Size = new System.Drawing.Size(100, 30);
             this.btnAddPerson.TabIndex = 0;
-            this.btnAddPerson.Text = "√ﬂ∞°";
+            this.btnAddPerson.Text = "Ï∂îÍ∞Ä";
             this.btnAddPerson.UseVisualStyleBackColor = true;
             this.btnAddPerson.Click += new System.EventHandler(this.btnAddPerson_Click);
 
@@ -405,7 +407,7 @@ namespace FaceDeviceDesktopClient
             this.btnEditPerson.Name = "btnEditPerson";
             this.btnEditPerson.Size = new System.Drawing.Size(100, 30);
             this.btnEditPerson.TabIndex = 1;
-            this.btnEditPerson.Text = "ºˆ¡§";
+            this.btnEditPerson.Text = "ÏàòÏ†ï";
             this.btnEditPerson.UseVisualStyleBackColor = true;
             this.btnEditPerson.Click += new System.EventHandler(this.btnEditPerson_Click);
 
@@ -413,7 +415,7 @@ namespace FaceDeviceDesktopClient
             this.btnDeletePerson.Name = "btnDeletePerson";
             this.btnDeletePerson.Size = new System.Drawing.Size(100, 30);
             this.btnDeletePerson.TabIndex = 2;
-            this.btnDeletePerson.Text = "¡¶∞≈";
+            this.btnDeletePerson.Text = "Ï†úÍ±∞";
             this.btnDeletePerson.ForeColor = System.Drawing.Color.DarkRed;
             this.btnDeletePerson.UseVisualStyleBackColor = true;
             this.btnDeletePerson.Click += new System.EventHandler(this.btnDeletePerson_Click);
@@ -422,7 +424,7 @@ namespace FaceDeviceDesktopClient
             this.btnRefreshPersonnel.Name = "btnRefreshPersonnel";
             this.btnRefreshPersonnel.Size = new System.Drawing.Size(100, 30);
             this.btnRefreshPersonnel.TabIndex = 3;
-            this.btnRefreshPersonnel.Text = "ªı∑Œ∞Ìƒß";
+            this.btnRefreshPersonnel.Text = "ÏÉàÎ°úÍ≥†Ïπ®";
             this.btnRefreshPersonnel.UseVisualStyleBackColor = true;
             this.btnRefreshPersonnel.Click += new System.EventHandler(this.btnRefreshPersonnel_Click);
 
@@ -430,45 +432,53 @@ namespace FaceDeviceDesktopClient
             this.btnDistributePeople.Name = "btnDistributePeople";
             this.btnDistributePeople.Size = new System.Drawing.Size(150, 30);
             this.btnDistributePeople.TabIndex = 4;
-            this.btnDistributePeople.Text = "¥‹∏ª±‚∑Œ πË∆˜";
+            this.btnDistributePeople.Text = "Îã®ÎßêÍ∏∞Î°ú Î∞∞Ìè¨";
             this.btnDistributePeople.UseVisualStyleBackColor = true;
             this.btnDistributePeople.Click += new System.EventHandler(this.btnDistributePeople_Click);
 
-            this.btnReloadFromFiles.Location = new System.Drawing.Point(620, 10);
+            this.btnReloadFromFiles.Location = new System.Drawing.Point(10, 46);
             this.btnReloadFromFiles.Name = "btnReloadFromFiles";
             this.btnReloadFromFiles.Size = new System.Drawing.Size(160, 30);
             this.btnReloadFromFiles.TabIndex = 5;
-            this.btnReloadFromFiles.Text = "∆ƒ¿œø°º≠ ∫“∑Øø¿±‚";
+            this.btnReloadFromFiles.Text = "ÌååÏùºÏóêÏÑú Î∂àÎü¨Ïò§Í∏∞";
             this.btnReloadFromFiles.UseVisualStyleBackColor = true;
             this.btnReloadFromFiles.Click += new System.EventHandler(this.btnReloadFromFiles_Click);
 
-            this.lblFilterDong.AutoSize = true;
-            this.lblFilterDong.Location = new System.Drawing.Point(800, 17);
-            this.lblFilterDong.Name = "lblFilterDong";
-            this.lblFilterDong.Text = "µø";
+            this.btnSaveToFiles.Location = new System.Drawing.Point(180, 46);
+            this.btnSaveToFiles.Name = "btnSaveToFiles";
+            this.btnSaveToFiles.Size = new System.Drawing.Size(130, 30);
+            this.btnSaveToFiles.TabIndex = 6;
+            this.btnSaveToFiles.Text = "ÌååÏùºÎ°ú Ï†ÄÏû•";
+            this.btnSaveToFiles.UseVisualStyleBackColor = true;
+            this.btnSaveToFiles.Click += new System.EventHandler(this.btnSaveToFiles_Click);
 
-            this.txtFilterDong.Location = new System.Drawing.Point(825, 12);
+            this.lblFilterDong.AutoSize = true;
+            this.lblFilterDong.Location = new System.Drawing.Point(330, 53);
+            this.lblFilterDong.Name = "lblFilterDong";
+            this.lblFilterDong.Text = "Îèô";
+
+            this.txtFilterDong.Location = new System.Drawing.Point(355, 48);
             this.txtFilterDong.Name = "txtFilterDong";
             this.txtFilterDong.Size = new System.Drawing.Size(60, 23);
             this.txtFilterDong.TabIndex = 6;
 
             this.lblFilterHo.AutoSize = true;
-            this.lblFilterHo.Location = new System.Drawing.Point(895, 17);
+            this.lblFilterHo.Location = new System.Drawing.Point(425, 53);
             this.lblFilterHo.Name = "lblFilterHo";
-            this.lblFilterHo.Text = "»£";
+            this.lblFilterHo.Text = "Ìò∏";
             this.lblFilterHo.Enabled = false;
 
-            this.txtFilterHo.Location = new System.Drawing.Point(920, 12);
+            this.txtFilterHo.Location = new System.Drawing.Point(450, 48);
             this.txtFilterHo.Name = "txtFilterHo";
             this.txtFilterHo.Size = new System.Drawing.Size(60, 23);
             this.txtFilterHo.TabIndex = 7;
             this.txtFilterHo.Enabled = false;
 
-            this.btnSelectByFilter.Location = new System.Drawing.Point(990, 10);
+            this.btnSelectByFilter.Location = new System.Drawing.Point(520, 46);
             this.btnSelectByFilter.Name = "btnSelectByFilter";
             this.btnSelectByFilter.Size = new System.Drawing.Size(75, 30);
             this.btnSelectByFilter.TabIndex = 8;
-            this.btnSelectByFilter.Text = "º±≈√";
+            this.btnSelectByFilter.Text = "ÏÑ†ÌÉù";
             this.btnSelectByFilter.UseVisualStyleBackColor = true;
             this.btnSelectByFilter.Click += new System.EventHandler(this.btnSelectByFilter_Click);
 
@@ -477,11 +487,11 @@ namespace FaceDeviceDesktopClient
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dgvPersonnel.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvPersonnel.Location = new System.Drawing.Point(10, 50);
+            this.dgvPersonnel.Location = new System.Drawing.Point(10, 86);
             this.dgvPersonnel.Name = "dgvPersonnel";
             this.dgvPersonnel.ReadOnly = true;
             this.dgvPersonnel.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvPersonnel.Size = new System.Drawing.Size(1172, 512);
+            this.dgvPersonnel.Size = new System.Drawing.Size(1172, 476);
             this.dgvPersonnel.TabIndex = 2;
 
             // 
@@ -495,7 +505,7 @@ namespace FaceDeviceDesktopClient
             this.tabAttendance.Padding = new System.Windows.Forms.Padding(10);
             this.tabAttendance.Size = new System.Drawing.Size(1192, 572);
             this.tabAttendance.TabIndex = 4;
-            this.tabAttendance.Text = "¿Ã∫•∆Æ¡∂»∏";
+            this.tabAttendance.Text = "Ïù¥Î≤§Ìä∏Ï°∞Ìöå";
             this.tabAttendance.UseVisualStyleBackColor = true;
 
             // 
@@ -523,73 +533,73 @@ namespace FaceDeviceDesktopClient
             this.grpAttendanceSearch.Size = new System.Drawing.Size(1172, 120);
             this.grpAttendanceSearch.TabIndex = 0;
             this.grpAttendanceSearch.TabStop = false;
-            this.grpAttendanceSearch.Text = "¿Ã∫•∆Æ¡∂»∏";
+            this.grpAttendanceSearch.Text = "Ïù¥Î≤§Ìä∏Ï°∞Ìöå";
 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(10, 27);
+            this.label5.Location = new System.Drawing.Point(12, 26);
             this.label5.Name = "label5";
             this.label5.TabIndex = 0;
-            this.label5.Text = "µø:";
+            this.label5.Text = "Îèô:";
 
-            this.txtAttDong.Location = new System.Drawing.Point(45, 23);
+            this.txtAttDong.Location = new System.Drawing.Point(38, 22);
             this.txtAttDong.Name = "txtAttDong";
-            this.txtAttDong.Size = new System.Drawing.Size(55, 23);
+            this.txtAttDong.Size = new System.Drawing.Size(60, 23);
             this.txtAttDong.TabIndex = 1;
             this.txtAttDong.TextChanged += new System.EventHandler(this.txtAttDong_TextChanged);
 
             this.lblAttHo.AutoSize = true;
-            this.lblAttHo.Location = new System.Drawing.Point(108, 27);
+            this.lblAttHo.Location = new System.Drawing.Point(108, 26);
             this.lblAttHo.Name = "lblAttHo";
-            this.lblAttHo.Text = "»£:";
+            this.lblAttHo.Text = "Ìò∏:";
 
-            this.txtAttHo.Location = new System.Drawing.Point(133, 23);
+            this.txtAttHo.Location = new System.Drawing.Point(130, 22);
             this.txtAttHo.Name = "txtAttHo";
-            this.txtAttHo.Size = new System.Drawing.Size(55, 23);
+            this.txtAttHo.Size = new System.Drawing.Size(60, 23);
             this.txtAttHo.TabIndex = 2;
             this.txtAttHo.Enabled = false;
             this.txtAttHo.TextChanged += new System.EventHandler(this.txtAttHo_TextChanged);
 
             this.lblAttMember.AutoSize = true;
-            this.lblAttMember.Location = new System.Drawing.Point(196, 27);
+            this.lblAttMember.Location = new System.Drawing.Point(200, 26);
             this.lblAttMember.Name = "lblAttMember";
-            this.lblAttMember.Text = "∏‚πˆ#:";
+            this.lblAttMember.Text = "Î©§Î≤Ñ#:";
 
-            this.txtAttMember.Location = new System.Drawing.Point(230, 23);
+            this.txtAttMember.Location = new System.Drawing.Point(250, 22);
             this.txtAttMember.Name = "txtAttMember";
-            this.txtAttMember.Size = new System.Drawing.Size(50, 23);
+            this.txtAttMember.Size = new System.Drawing.Size(60, 23);
             this.txtAttMember.TabIndex = 3;
             this.txtAttMember.Enabled = false;
 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(295, 27);
+            this.label6.Location = new System.Drawing.Point(324, 26);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(55, 15);
             this.label6.TabIndex = 2;
-            this.label6.Text = "ªÁøÎ¿⁄∏Ì:";
+            this.label6.Text = "ÏÇ¨Ïö©ÏûêÎ™Ö:";
 
-            this.txtAttendanceUserName.Location = new System.Drawing.Point(360, 23);
+            this.txtAttendanceUserName.Location = new System.Drawing.Point(386, 22);
             this.txtAttendanceUserName.Name = "txtAttendanceUserName";
-            this.txtAttendanceUserName.Size = new System.Drawing.Size(150, 23);
+            this.txtAttendanceUserName.Size = new System.Drawing.Size(140, 23);
             this.txtAttendanceUserName.TabIndex = 5;
 
             this.lblAttDevice.AutoSize = true;
-            this.lblAttDevice.Location = new System.Drawing.Point(525, 27);
+            this.lblAttDevice.Location = new System.Drawing.Point(540, 26);
             this.lblAttDevice.Name = "lblAttDevice";
             this.lblAttDevice.TabIndex = 6;
-            this.lblAttDevice.Text = "¥‹∏ª±‚:";
+            this.lblAttDevice.Text = "Îã®ÎßêÍ∏∞:";
 
-            this.cmbAttDevice.Location = new System.Drawing.Point(580, 23);
+            this.cmbAttDevice.Location = new System.Drawing.Point(590, 22);
             this.cmbAttDevice.Name = "cmbAttDevice";
-            this.cmbAttDevice.Size = new System.Drawing.Size(160, 23);
+            this.cmbAttDevice.Size = new System.Drawing.Size(200, 23);
             this.cmbAttDevice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbAttDevice.TabIndex = 7;
 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(10, 60);
+            this.label8.Location = new System.Drawing.Point(12, 61);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(55, 15);
             this.label8.TabIndex = 6;
-            this.label8.Text = "Ω√¿€¿œΩ√:";
+            this.label8.Text = "ÏãúÏûëÏùºÏãú:";
 
             this.dtpAttendanceStart.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpAttendanceStart.CustomFormat = "yyyy-MM-dd HH:mm";
@@ -598,19 +608,19 @@ namespace FaceDeviceDesktopClient
             this.dtpAttendanceStart.ShowCheckBox = true;
             this.dtpAttendanceStart.ShowUpDown = true;
             this.dtpAttendanceStart.Checked = false;
-            this.dtpAttendanceStart.Size = new System.Drawing.Size(185, 23);
+            this.dtpAttendanceStart.Size = new System.Drawing.Size(200, 23);
             this.dtpAttendanceStart.TabIndex = 7;
 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(270, 60);
+            this.label9.Location = new System.Drawing.Point(288, 61);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(55, 15);
             this.label9.TabIndex = 8;
-            this.label9.Text = "¡æ∑·¿œΩ√:";
+            this.label9.Text = "Ï¢ÖÎ£åÏùºÏãú:";
 
             this.dtpAttendanceEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpAttendanceEnd.CustomFormat = "yyyy-MM-dd HH:mm";
-            this.dtpAttendanceEnd.Location = new System.Drawing.Point(332, 57);
+            this.dtpAttendanceEnd.Location = new System.Drawing.Point(352, 57);
             this.dtpAttendanceEnd.Name = "dtpAttendanceEnd";
             this.dtpAttendanceEnd.ShowCheckBox = true;
             this.dtpAttendanceEnd.ShowUpDown = true;
@@ -618,19 +628,19 @@ namespace FaceDeviceDesktopClient
             this.dtpAttendanceEnd.Size = new System.Drawing.Size(200, 23);
             this.dtpAttendanceEnd.TabIndex = 9;
 
-            this.btnSearchAttendance.Location = new System.Drawing.Point(760, 55);
+            this.btnSearchAttendance.Location = new System.Drawing.Point(570, 54);
             this.btnSearchAttendance.Name = "btnSearchAttendance";
             this.btnSearchAttendance.Size = new System.Drawing.Size(100, 30);
             this.btnSearchAttendance.TabIndex = 10;
-            this.btnSearchAttendance.Text = "¡∂»∏";
+            this.btnSearchAttendance.Text = "Ï°∞Ìöå";
             this.btnSearchAttendance.UseVisualStyleBackColor = true;
             this.btnSearchAttendance.Click += new System.EventHandler(this.btnSearchAttendance_Click);
 
-            this.btnRealTimeView.Location = new System.Drawing.Point(870, 55);
+            this.btnRealTimeView.Location = new System.Drawing.Point(680, 54);
             this.btnRealTimeView.Name = "btnRealTimeView";
             this.btnRealTimeView.Size = new System.Drawing.Size(120, 30);
             this.btnRealTimeView.TabIndex = 11;
-            this.btnRealTimeView.Text = "Ω«Ω√∞£∫∏±‚";
+            this.btnRealTimeView.Text = "Ïã§ÏãúÍ∞ÑÎ≥¥Í∏∞";
             this.btnRealTimeView.UseVisualStyleBackColor = true;
             this.btnRealTimeView.Click += new System.EventHandler(this.btnRealTimeView_Click);
 
@@ -744,6 +754,7 @@ namespace FaceDeviceDesktopClient
         private System.Windows.Forms.Button btnRefreshPersonnel;
         private System.Windows.Forms.Button btnDistributePeople;
         private System.Windows.Forms.Button btnReloadFromFiles;
+        private System.Windows.Forms.Button btnSaveToFiles;
         private System.Windows.Forms.Label lblFilterDong;
         private System.Windows.Forms.TextBox txtFilterDong;
         private System.Windows.Forms.Label lblFilterHo;

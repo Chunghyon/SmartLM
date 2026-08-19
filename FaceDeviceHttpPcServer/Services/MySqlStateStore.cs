@@ -12,6 +12,7 @@ public sealed class MySqlStateStore
     private static readonly HashSet<char> InvalidFileNameChars = Path.GetInvalidFileNameChars().ToHashSet();
     private readonly IDbContextFactory<FaceDeviceDbContext> _dbFactory;
     private readonly string _photosPath;
+    private readonly string _peoplePath;
     private readonly JsonSerializerOptions _json = new()
     {
         WriteIndented = false,
@@ -24,6 +25,8 @@ public sealed class MySqlStateStore
         Directory.CreateDirectory(storagePath);
         _photosPath = Path.Combine(storagePath, "photos");
         Directory.CreateDirectory(_photosPath);
+        _peoplePath = Path.Combine(storagePath, "people");
+        Directory.CreateDirectory(_peoplePath);
     }
 
     private FaceDeviceDbContext CreateDb() => _dbFactory.CreateDbContext();
@@ -183,26 +186,17 @@ public sealed class MySqlStateStore
 
         var batchSize = limit > 0 ? Math.Min(limit, 1000) : 1000;
         var staged = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged).Select(x => x.UserId).ToList();
-        var downloaded = db.DevicePeople
-            .Where(x => x.DeviceSn == deviceSn && x.Downloaded)
-            .Select(x => x.UserId)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var downloaded = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Downloaded).Select(x => x.UserId).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var query = db.People.AsQueryable();
         if (staged.Count > 0)
             query = query.Where(p => staged.Contains(p.UserId));
 
-        var people = query.AsEnumerable()
+        return query.AsEnumerable()
             .Where(p => !downloaded.Contains(p.UserId))
             .Take(batchSize)
             .Select(ToPersonInfo)
-            .ToList();
-
-        foreach (var person in people)
-            UpsertDevicePerson(db, deviceSn, person.UserID, downloaded: true, owned: true);
-
-        db.SaveChanges();
-        return people;
+            .ToArray();
     }
 
     public IReadOnlyCollection<string> GetDeletePeople(string deviceSn)
@@ -215,21 +209,11 @@ public sealed class MySqlStateStore
     {
         using var db = CreateDb();
         var device = GetOrCreateDevice(db, deviceSn);
-
-        var staged = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged).Select(x => x.UserId).ToList();
-        var targetIds = staged.Count > 0
-            ? staged
-            : db.People.Select(p => p.UserId).ToList();
-
-        var downloaded = db.DevicePeople
-            .Where(x => x.DeviceSn == deviceSn && x.Downloaded)
-            .Select(x => x.UserId)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var remaining = targetIds.Count(id => !downloaded.Contains(id));
+        var pending = db.People.Select(p => p.UserId).ToList();
+        var downloaded = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Downloaded).Select(x => x.UserId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var remaining = pending.Count(id => !downloaded.Contains(id));
         if (remaining == 0)
             device.PendingAddPeopleCount = 0;
-
         db.SaveChanges();
     }
 
@@ -490,13 +474,9 @@ public sealed class MySqlStateStore
         {
             try
             {
-                var existing = db.People.Find(person.UserID);
-                if (existing == null)
-                    db.People.Add(ToEntity(person));
-                else if (!addOnly)
-                    CopyToEntity(person, existing);
-
-                UpsertDevicePerson(db, deviceSn, person.UserID, downloaded: true, owned: true);
+                // 서버 마스터 사용자는 '사용자 가져오기'(Query)에서만 변경한다.
+                // 단말기의 개별 추가/수정 Push는 단말기 소유 목록만 갱신한다.
+                UpsertDevicePerson(db, deviceSn, person.UserID, downloaded: true, owned: true, person: person);
                 success++;
             }
             catch
@@ -508,13 +488,22 @@ public sealed class MySqlStateStore
         return (success, fail);
     }
 
+    public void BeginOwnedPeopleQuery(string deviceSn)
+    {
+        using var db = CreateDb();
+        GetOrCreateDevice(db, deviceSn);
+        var rows = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Owned).ToList();
+        foreach (var row in rows)
+            row.Owned = false;
+        db.SaveChanges();
+    }
+
     public (int success, int fail, List<(string userId, string photoPath)> photoPathsToFetch) ReplaceDeviceOwnedPeople(string deviceSn, List<PersonInfo> people)
     {
         int success = 0, fail = 0;
         var photoPaths = new List<(string, string)>();
         using var db = CreateDb();
         GetOrCreateDevice(db, deviceSn);
-        db.DevicePeople.RemoveRange(db.DevicePeople.Where(x => x.DeviceSn == deviceSn));
         foreach (var person in people)
         {
             try
@@ -525,14 +514,15 @@ public sealed class MySqlStateStore
                 else
                     CopyToEntity(person, existing);
                 UpsertDevicePerson(db, deviceSn, person.UserID, downloaded: true, owned: true);
+                db.SaveChanges();
                 success++;
             }
-            catch
+            catch (Exception ex)
             {
+                LogHub.Instance.Error($"[PushPeople-Query] 저장 실패 UserID={person.UserID}: {ex.Message}");
                 fail++;
             }
         }
-        db.SaveChanges();
         return (success, fail, photoPaths);
     }
 
@@ -570,9 +560,11 @@ public sealed class MySqlStateStore
         using var db = CreateDb();
         GetOrCreateDevice(db, deviceSn);
 
+        // 이번 배포 대상만 staged로 남긴다
         foreach (var row in db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Staged))
             row.Staged = false;
 
+        var targetIds = serverPeople.Select(p => p.UserID).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var person in serverPeople)
             UpsertDevicePerson(db, deviceSn, person.UserID, staged: true, downloaded: false);
 
@@ -609,7 +601,89 @@ public sealed class MySqlStateStore
         return true;
     }
 
-    public (int loaded, int skipped, int errors) ReloadPeopleFromFiles() => (0, 0, 0);
+
+    public (int saved, int skipped, int errors) SavePeopleToFiles(IEnumerable<string>? userIds)
+    {
+        int saved = 0, skipped = 0, errors = 0;
+        Directory.CreateDirectory(_peoplePath);
+
+        using var db = CreateDb();
+        IEnumerable<PersonEntity> query;
+        var ids = userIds?.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList() ?? new List<string>();
+        if (ids.Count == 0)
+        {
+            skipped = 0;
+            return (0, 0, 0);
+        }
+
+        var people = db.People.AsNoTracking().Where(p => ids.Contains(p.UserId)).ToList();
+        var found = people.Select(p => p.UserId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        skipped = ids.Count(id => !found.Contains(id));
+
+        var opts = new JsonSerializerOptions(_json) { WriteIndented = true };
+        foreach (var entity in people)
+        {
+            try
+            {
+                var fileName = SanitizeForFileName(entity.UserId);
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    skipped++;
+                    continue;
+                }
+                var path = Path.Combine(_peoplePath, fileName + ".json");
+                var json = JsonSerializer.Serialize(ToPersonInfo(entity), opts);
+                File.WriteAllText(path, json);
+                saved++;
+            }
+            catch
+            {
+                errors++;
+            }
+        }
+
+        return (saved, skipped, errors);
+    }
+
+    public (int loaded, int skipped, int errors) ReloadPeopleFromFiles()
+    {
+        int loaded = 0, skipped = 0, errors = 0;
+        if (!Directory.Exists(_peoplePath))
+            return (0, 0, 0);
+
+        var files = Directory.GetFiles(_peoplePath, "*.json", SearchOption.TopDirectoryOnly);
+        using var db = CreateDb();
+        foreach (var file in files)
+        {
+            try
+            {
+                var json = File.ReadAllText(file);
+                var person = JsonSerializer.Deserialize<PersonInfo>(json, _json);
+                if (person == null || string.IsNullOrWhiteSpace(person.UserID))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                person.Fingerprints ??= new();
+                person.Palmveins ??= new();
+
+                var existing = db.People.Find(person.UserID);
+                if (existing == null)
+                    db.People.Add(ToEntity(person));
+                else
+                    CopyToEntity(person, existing);
+                loaded++;
+            }
+            catch
+            {
+                errors++;
+            }
+        }
+
+        db.SaveChanges();
+        return (loaded, skipped, errors);
+    }
 
     public string? GetPersonFilePath(string userId) => null;
 
@@ -648,7 +722,7 @@ public sealed class MySqlStateStore
             db.People.Add(ToEntity(person));
         else
             CopyToEntity(person, existing);
-        UpsertDevicePerson(db, deviceSn, person.UserID, owned: true, downloaded: true);
+        UpsertDevicePerson(db, deviceSn, person.UserID, owned: true, downloaded: true, person: person);
         db.SaveChanges();
     }
 
@@ -718,7 +792,7 @@ public sealed class MySqlStateStore
     }
 
     private static void UpsertDevicePerson(FaceDeviceDbContext db, string deviceSn, string userId,
-        bool? downloaded = null, bool? staged = null, bool? owned = null)
+        bool? downloaded = null, bool? staged = null, bool? owned = null, PersonInfo? person = null)
     {
         var row = db.DevicePeople.FirstOrDefault(x => x.DeviceSn == deviceSn && x.UserId == userId);
         if (row == null)
@@ -730,6 +804,59 @@ public sealed class MySqlStateStore
         if (staged.HasValue) row.Staged = staged.Value;
         if (owned.HasValue) row.Owned = owned.Value;
         row.UpdatedAt = DateTime.UtcNow;
+    }
+
+
+    public IReadOnlyList<RecordSnapshot> GetAllRecords()
+    {
+        using var db = CreateDb();
+        return db.IdentifyRecords.AsNoTracking()
+            .OrderByDescending(r => r.ReceivedAt)
+            .ToList()
+            .Select(ToRecordSnapshot)
+            .ToList();
+    }
+
+    private static RecordSnapshot ToRecordSnapshot(IdentifyRecordEntity e)
+    {
+        JsonNode? detail = null;
+        if (!string.IsNullOrWhiteSpace(e.RawJson))
+        {
+            try { detail = JsonNode.Parse(e.RawJson); }
+            catch { detail = null; }
+        }
+        if (detail is null)
+        {
+            detail = new JsonObject
+            {
+                ["DeviceSN"] = e.DeviceSn,
+                ["UserID"] = e.UserId,
+                ["Name"] = e.UserName,
+                ["RecordType"] = e.RecordType,
+                ["RecordID"] = e.RecordId,
+                ["Temperature"] = e.Temperature
+            };
+            if (e.RecordTime.HasValue)
+            {
+                var local = DateTime.SpecifyKind(e.RecordTime.Value, DateTimeKind.Utc).ToLocalTime();
+                detail["RecordTime"] = local.ToString("yyyy-MM-dd HH:mm:ss");
+                detail["RecordDate"] = new DateTimeOffset(DateTime.SpecifyKind(e.RecordTime.Value, DateTimeKind.Utc)).ToUnixTimeSeconds();
+            }
+        }
+        else if (detail is JsonObject obj)
+        {
+            if (obj["DeviceSN"] is null) obj["DeviceSN"] = e.DeviceSn;
+            if (obj["RecordType"] is null && e.RecordType.HasValue) obj["RecordType"] = e.RecordType;
+        }
+
+        return new RecordSnapshot
+        {
+            Id = e.Id.ToString(),
+            ReceivedAtUtc = new DateTimeOffset(DateTime.SpecifyKind(e.ReceivedAt, DateTimeKind.Utc)),
+            RecordJsonPath = e.PhotoPath ?? string.Empty,
+            PhotoPath = e.PhotoPath,
+            RecordDetail = detail
+        };
     }
 
     private DeviceSnapshot ToSnapshot(FaceDeviceDbContext db, DeviceEntity d)

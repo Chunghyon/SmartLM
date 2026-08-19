@@ -2029,6 +2029,51 @@ public partial class MainForm : Form
         btnSelectByFilter.Text = deselect ? "선택" : "해제";
     }
 
+
+    private async void btnSaveToFiles_Click(object sender, EventArgs e)
+    {
+        var selectedUserIds = dgvPersonnel.Rows
+            .Cast<DataGridViewRow>()
+            .Where(r => r.Cells["ColSelect"].Value is true)
+            .Select(r => (r.Tag as PersonInfo)?.UserID)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
+            .ToList();
+
+        if (selectedUserIds.Count == 0)
+        {
+            MessageBox.Show("저장할 사용자를 하나 이상 선택하세요.", "안내",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var confirm = MessageBox.Show(
+            $"선택한 {selectedUserIds.Count}명을 App_Data/people 폴더에 JSON으로 저장합니다.\n이미 있는 파일은 덮어씁니다.\n\n계속하시겠습니까?",
+            "파일로 저장", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (confirm != DialogResult.Yes) return;
+
+        try
+        {
+            var resp = await _httpClient.PostAsJsonAsync("/admin/people/save-to-files", new { UserIds = selectedUserIds });
+            if (!resp.IsSuccessStatusCode)
+            {
+                ShowError($"파일 저장 실패: HTTP {resp.StatusCode}");
+                return;
+            }
+            var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.Nodes.JsonObject>();
+            int saved   = result?["saved"]?.GetValue<int>()   ?? 0;
+            int skipped = result?["skipped"]?.GetValue<int>() ?? 0;
+            int errors  = result?["errors"]?.GetValue<int>()  ?? 0;
+            lblStatus.Text = $"파일 저장: {saved}명 저장, {skipped}건 건너뜀, {errors}건 오류";
+            MessageBox.Show($"저장 {saved}명, 건너뜀 {skipped}건, 오류 {errors}건", "파일로 저장",
+                MessageBoxButtons.OK, errors > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"파일 저장 실패: {ex.Message}");
+        }
+    }
+
     private async void btnReloadFromFiles_Click(object sender, EventArgs e)
     {
         var confirm = MessageBox.Show(

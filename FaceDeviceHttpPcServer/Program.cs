@@ -291,6 +291,18 @@ app.MapGet("/admin/people/device-assignments", (MySqlStateStore store) =>
 });
 
 // POST /admin/people/reload-from-files  →  people 폴더 JSON 파일에서 사용자 목록 재로드
+
+app.MapPost("/admin/people/save-to-files", (JsonNode? body, MySqlStateStore store) =>
+{
+    var ids = body?["UserIds"]?.AsArray()
+        ?.Select(n => n?.GetValue<string>() ?? "")
+        .Where(id => id.Length > 0)
+        .ToList() ?? new List<string>();
+    var (saved, skipped, errors) = store.SavePeopleToFiles(ids);
+    LogHub.Instance.Info($"[SaveToFiles] {saved}명 저장, {skipped}건 건너뜀, {errors}건 오류");
+    return Results.Ok(new { saved, skipped, errors });
+});
+
 app.MapPost("/admin/people/reload-from-files", (MySqlStateStore store) =>
 {
     var (loaded, skipped, errors) = store.ReloadPeopleFromFiles();
@@ -835,6 +847,9 @@ app.MapPost("/Device/RemoteCommand", (RemoteCommandRequest request, MySqlStateSt
     if (cmd is null)
         return Results.Ok(new RemoteCommandResponse());
 
+    if (cmd.PushAllPeople == 1)
+        app.Services.GetRequiredService<DeviceCommandTracker>().MarkOwnedQueryReset(request.SN);
+
     app.Services.GetRequiredService<DeviceCommandTracker>()
         .CompleteLatest(request.SN, "Remote", true, "원격 명령이 단말기에 전달되었습니다.");
 
@@ -1077,6 +1092,9 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, MySqlStateStor
 
         case 4: // Query - 단말기 현재 사용자 전체 목록으로 OwnedPeople 전면 교체
         {
+            var tracker = app.Services.GetRequiredService<DeviceCommandTracker>();
+            if (tracker.ConsumeOwnedQueryReset(sn))
+                store.BeginOwnedPeopleQuery(sn);
             var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new());
             success = s; fail = f;
             LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회 → OwnedPeople 동기화 완료");
@@ -1750,8 +1768,7 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, MySqlStateSt
 {
     try
     {
-    var records = store.GetDeviceSummaries()
-        .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
+    var records = store.GetAllRecords()
         .Where(r => r.RecordDetail?["RecordType"] is not null)
         .AsEnumerable();
 
@@ -1890,8 +1907,7 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, MySqlStateSt
 
 app.MapPost("/api/Attendance/Statistics", (AttendanceSearchRequest req, MySqlStateStore store) =>
 {
-    var records = store.GetDeviceSummaries()
-        .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
+    var records = store.GetAllRecords()
         .Where(r => r.RecordDetail?["RecordType"] is not null)
         .AsEnumerable();
 
@@ -1928,8 +1944,7 @@ app.MapPost("/api/Attendance/Statistics", (AttendanceSearchRequest req, MySqlSta
 // ── /api/Record/* ─────────────────────────────────────────────────────────────
 app.MapPost("/api/Record/Identify/Search", (RecordSearchRequest req, MySqlStateStore store) =>
 {
-    var all = store.GetDeviceSummaries()
-        .SelectMany(d => store.GetDevice(d.SN)?.Records ?? new())
+    var all = store.GetAllRecords()
         .Where(r => r.RecordDetail?["RecordType"] is not null)
         .AsEnumerable();
 
