@@ -22,10 +22,13 @@ Name: "{userdocs}\SmartLM"
 Name: "{userdocs}\SmartLM\App_Data"
 
 [Files]
-Source: "dist\FDHS\*"; DestDir: "{app}\FDHS"; Flags: ignoreversion recursesubdirs
+Source: "dist\FDHS\*"; DestDir: "{app}\FDHS"; Excludes: "App_Data,App_Data\*"; Flags: ignoreversion recursesubdirs
 Source: "dist\FDDC\*";  DestDir: "{app}\FDDC";  Flags: ignoreversion recursesubdirs
 Source: "FaceDeviceSettings.xml"; DestDir: "{userdocs}\SmartLM"; Flags: onlyifdoesntexist
 Source: "appsettings.installed.json"; DestDir: "{app}\FDHS"; DestName: "appsettings.json"; Flags: ignoreversion
+
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\FDHS\App_Data"
 
 [Icons]
 Name: "{group}\Face Device HTTP Server"; Filename: "{app}\FDHS\FaceDeviceHttpServer.exe"; WorkingDir: "{app}\FDHS"

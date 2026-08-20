@@ -68,8 +68,7 @@ builder.Services.AddDbContextFactory<FaceDeviceDbContext>(options =>
 builder.Services.AddSingleton(sp =>
 {
     var env = sp.GetRequiredService<IHostEnvironment>();
-    var storagePath = ResolveConfiguredPath(builder.Configuration["StoragePath"], env.ContentRootPath,
-        Path.Combine(env.ContentRootPath, "App_Data"));
+    var storagePath = ResolveConfiguredPath(builder.Configuration["StoragePath"], env.ContentRootPath);
     Directory.CreateDirectory(storagePath);
     var factory = sp.GetRequiredService<IDbContextFactory<FaceDeviceDbContext>>();
     return new MySqlStateStore(factory, storagePath);
@@ -78,8 +77,7 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton(sp =>
 {
     var env = sp.GetRequiredService<IHostEnvironment>();
-    var storagePath = ResolveConfiguredPath(builder.Configuration["StoragePath"], env.ContentRootPath,
-        Path.Combine(env.ContentRootPath, "App_Data"));
+    var storagePath = ResolveConfiguredPath(builder.Configuration["StoragePath"], env.ContentRootPath);
     var settingsPath = ResolveConfiguredPath(builder.Configuration["SettingsPath"], env.ContentRootPath,
         Path.Combine(storagePath, "FaceDeviceSettings.xml"));
     Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
@@ -857,10 +855,9 @@ app.MapPost("/admin/people/distribute-to-devices", (JsonNode? body, MySqlStateSt
 // ── Admin: 단말기별 사용자 목록 조회 (단말기에 실제 등록된 사용자) ─────────────────
 app.MapGet("/admin/devices/{sn}/people", (string sn, MySqlStateStore store) =>
 {
-    var queried = store.GetLastDevicePeopleQuery(sn);
-    if (queried != null)
-        return Results.Ok(queried);
-    return Results.Ok(store.GetDeviceOwnedPeople(sn));
+    // 단말기 사용자 정보 창은 이번 조회(PushType=4) 누적 결과만 표시한다.
+    // DB device_people 캐시로 폴백하면 단말기에서 지운 사용자가 다시 나타난다.
+    return Results.Ok(store.GetLastDevicePeopleQuery(sn) ?? Array.Empty<PersonInfo>());
 });
 
 // ── Admin: 단말기별 사용자 추가/수정 ─────────────────────────────────────────────
@@ -2110,13 +2107,38 @@ catch (Exception ex)
     LogHub.Instance.Warn($"방화벽 체크 실패: {ex.Message}");
 }
 
-var serverTask = app.RunAsync(cts.Token);
+var configuredListen = builder.Configuration["Urls"] ?? "http://0.0.0.0:80";
+var serverUrl = configuredListen.Split(';')[0].Replace("0.0.0.0", "localhost");
 
-// 서버 URL 가져오기 및 브라우저용으로 변환
-var urls = app.Urls.ToArray();
-var rawUrl = urls.Length > 0 ? urls[0] : "http://localhost";
-// 0.0.0.0을 localhost로 변환 (브라우저에서 사용 가능하도록)
-var serverUrl = rawUrl.Replace("0.0.0.0", "localhost");
+Task serverTask;
+try
+{
+    serverTask = app.RunAsync(cts.Token);
+    // 바인딩 실패 시 RunAsync가 바로 fault 된다.
+    var started = await Task.WhenAny(serverTask, Task.Delay(500));
+    if (serverTask.IsFaulted)
+        throw serverTask.Exception?.GetBaseException() ?? new InvalidOperationException("서버 시작 실패");
+
+    try
+    {
+        if (app.Urls.Count > 0)
+            serverUrl = app.Urls.First().Replace("0.0.0.0", "localhost");
+    }
+    catch (ObjectDisposedException)
+    {
+        // 시작 직후 종료된 경우 설정 URL 사용
+    }
+}
+catch (Exception ex)
+{
+    var msg = $"서버 시작 실패: {ex.Message}\n"
+        + "80 포트는 관리자 권한이 필요하거나 다른 프로그램이 사용 중일 수 있습니다.";
+    LogHub.Instance.Error(msg);
+    Console.Error.WriteLine(msg);
+    Console.WriteLine("아무 키나 누르면 종료합니다...");
+    try { Console.ReadKey(); } catch { }
+    return;
+}
 
 #if WINDOWS
 var mainForm = new MainForm();
@@ -2133,22 +2155,82 @@ try
     await serverTask;
 }
 catch (OperationCanceledException) { }
+catch (Exception ex)
+{
+    LogHub.Instance.Error($"서버 종료: {ex.Message}");
+    Console.Error.WriteLine(ex);
+}
 #endif
 
 
+static string GetSmartLmDocumentsRoot()
+{
+    var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    if (string.IsNullOrWhiteSpace(docs))
+        docs = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    if (string.IsNullOrWhiteSpace(docs))
+        docs = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments);
+    return Path.Combine(docs, "SmartLM");
+}
+
+static string GetSmartLmAppData()
+{
+    var dir = Path.Combine(GetSmartLmDocumentsRoot(), "App_Data");
+    Directory.CreateDirectory(dir);
+    return dir;
+}
+
+static bool IsInstallDirectory(string path)
+{
+    if (string.IsNullOrWhiteSpace(path)) return false;
+    var full = Path.GetFullPath(path);
+    var markers = new[]
+    {
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), ""),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), ""),
+        "/opt/",
+        "/usr/local/"
+    };
+    foreach (var marker in markers)
+    {
+        if (string.IsNullOrWhiteSpace(marker)) continue;
+        if (full.StartsWith(marker, StringComparison.OrdinalIgnoreCase))
+            return true;
+    }
+    return full.Contains($"{Path.DirectorySeparatorChar}Program Files{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+        || full.Contains($"{Path.DirectorySeparatorChar}Program Files (x86){Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+}
+
 static string ResolveConfiguredPath(string? configured, string contentRoot, string? fallback = null)
 {
+    var defaultData = GetSmartLmAppData();
     var path = string.IsNullOrWhiteSpace(configured) ? fallback : configured;
     if (string.IsNullOrWhiteSpace(path))
-        return contentRoot;
+        return defaultData;
+
     path = Environment.ExpandEnvironmentVariables(path);
     var myDocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     if (string.IsNullOrWhiteSpace(myDocs))
         myDocs = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     path = path.Replace("{MyDocuments}", myDocs, StringComparison.OrdinalIgnoreCase);
+
+    var rel = path.Replace('/', Path.DirectorySeparatorChar).Trim();
+    if (rel.Equals("App_Data", StringComparison.OrdinalIgnoreCase)
+        || rel.StartsWith("App_Data" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+    {
+        var rest = rel.Length <= 8 ? "" : rel[8..].TrimStart(Path.DirectorySeparatorChar);
+        path = string.IsNullOrEmpty(rest) ? defaultData : Path.Combine(defaultData, rest);
+        return Path.GetFullPath(path);
+    }
+
     if (!Path.IsPathRooted(path))
         path = Path.Combine(contentRoot, path);
-    return Path.GetFullPath(path);
+    path = Path.GetFullPath(path);
+
+    // 설치 폴더 안으로 해석된 경우에만 내 문서로 옮긴다.
+    if (IsInstallDirectory(path))
+        return defaultData;
+    return path;
 }
 
 static string? FirstNonEmpty(params string?[] values) =>
@@ -2220,7 +2302,8 @@ static IResult DownloadPeopleList(DownloadPeopleListRequest request, MySqlStateS
         // Save full JSON to file for debugging
         if (people.Count > 0)
         {
-            var debugPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "last_download_payload.json");
+            var debugDir = GetSmartLmAppData();
+            var debugPath = Path.Combine(debugDir, "last_download_payload.json");
             File.WriteAllText(debugPath, json);
             LogHub.Instance.Info($"[디버그] 전체 JSON을 파일로 저장: {debugPath}");
         }

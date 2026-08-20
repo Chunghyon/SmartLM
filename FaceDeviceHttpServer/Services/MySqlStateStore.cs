@@ -745,18 +745,20 @@ public sealed class MySqlStateStore
 
     public void ClearLastDevicePeopleQuery(string deviceSn)
     {
-        _lastDevicePeopleQuery.TryRemove(deviceSn, out _);
+        // 빈 목록을 넣어 두어, 조회 중에 DB의 예전 사용자를 보여주지 않는다.
+        _lastDevicePeopleQuery[deviceSn] = new List<PersonInfo>();
     }
 
     public void SetLastDevicePeopleQuery(string deviceSn, IEnumerable<PersonInfo> people)
     {
-        var incoming = people.ToList();
+        var incoming = people?.ToList() ?? new List<PersonInfo>();
         _lastDevicePeopleQuery.AddOrUpdate(
             deviceSn,
             incoming,
             (_, existing) =>
             {
-                var map = existing
+                // 한 명씩 올라오는 PushType=4를 UserID 기준으로 누적
+                var map = (existing ?? new List<PersonInfo>())
                     .Where(x => !string.IsNullOrWhiteSpace(x.UserID))
                     .ToDictionary(x => x.UserID, x => x, StringComparer.OrdinalIgnoreCase);
                 foreach (var person in incoming)

@@ -36,8 +36,10 @@ public class UdpPacketSniffer : IDisposable
             byte[] byTrue = new byte[4] { 1, 0, 0, 0 };
             byte[] byOut = new byte[4];
 
-            // IOControl로 promiscuous mode 활성화
-            _socket.IOControl(IOControlCode.ReceiveAll, byTrue, byOut);
+            if (OperatingSystem.IsWindows())
+            {   // IOControl로 promiscuous mode 활성화
+                _socket.IOControl(IOControlCode.ReceiveAll, byTrue, byOut);
+            }
 
             _isRunning = true;
             _receiveThread = new Thread(ReceivePackets);
