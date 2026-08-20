@@ -1,14 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <OutputType>WinExe</OutputType>
-    <UseWindowsForms>true</UseWindowsForms>
-    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    <OutputType>Exe</OutputType>
     <DefaultItemExcludes>$(DefaultItemExcludes);FaceDeviceDesktopClient\**</DefaultItemExcludes>
+    <AssemblyName>FaceDeviceHttpServer</AssemblyName>
+    <RootNamespace>FaceDeviceHttpPcServer</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Forms\**" />
+    <EmbeddedResource Remove="Forms\**" />
+    <None Remove="Forms\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Update="wwwroot\**\*" CopyToOutputDirectory="Always" />

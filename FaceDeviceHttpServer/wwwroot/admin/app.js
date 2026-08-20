@@ -398,21 +398,127 @@ function renderPersonnel(){
 function toggleAllPerson(c){document.querySelectorAll('.chkPerson').forEach(x=>x.checked=c.checked);}
 function getCheckedPersonUIDs(){return[...document.querySelectorAll('.chkPerson:checked')].map(c=>c.dataset.uid);}
 
+function personFileName(uid){
+  return String(uid||'user').replace(/[\\/:*?"<>|]/g,'_')+'.json';
+}
+function canUseDirectoryPicker(){
+  return window.isSecureContext===true && typeof window.showDirectoryPicker==='function';
+}
+function ensurePeopleFileInputs(){
+  if(document.getElementById('peopleDirInput'))return;
+  const dir=document.createElement('input');
+  dir.type='file'; dir.id='peopleDirInput'; dir.style.display='none';
+  dir.setAttribute('webkitdirectory',''); dir.setAttribute('directory',''); dir.multiple=true;
+  dir.addEventListener('change',()=>importPeopleFromFileList(dir.files));
+  const files=document.createElement('input');
+  files.type='file'; files.id='peopleFileInput'; files.style.display='none';
+  files.multiple=true; files.accept='.json,application/json';
+  files.addEventListener('change',()=>importPeopleFromFileList(files.files));
+  document.body.appendChild(dir);
+  document.body.appendChild(files);
+}
+function downloadTextFile(name,text){
+  const blob=new Blob([text],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=name; a.style.display='none';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+}
+async function upsertPersonFromJson(p){
+  const uid=p.UserID||p.userId||p.user_id;
+  if(!uid)throw new Error('UserID 없음');
+  p.UserID=String(uid);
+  const r=await fetch('/admin/people',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+  if(r.status===409){
+    const u=await fetch('/api/People/Update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!u.ok)throw new Error('수정 실패 HTTP '+u.status);
+    return 'updated';
+  }
+  if(!r.ok)throw new Error('추가 실패 HTTP '+r.status);
+  return 'added';
+}
+async function importPeopleFromFileList(fileList){
+  const files=[...fileList||[]].filter(f=>f.name.toLowerCase().endsWith('.json'));
+  if(!files.length){setStatus('선택한 항목에 JSON 파일이 없습니다','err');return;}
+  let added=0, updated=0, errors=0;
+  setStatus('로컬 파일에서 불러오는 중...','ok');
+  for(const file of files){
+    try{
+      const parsed=JSON.parse(await file.text());
+      const list=Array.isArray(parsed)?parsed:[parsed];
+      for(const p of list){
+        const kind=await upsertPersonFromJson(p);
+        if(kind==='updated')updated++; else added++;
+      }
+    }catch(e){
+      errors++; addLog('불러오기 실패 '+file.name+': '+e.message);
+    }
+  }
+  setStatus('파일 불러오기: 추가 '+added+', 수정 '+updated+', 오류 '+errors,'ok');
+  addLog('로컬 파일 불러오기: added='+added+', updated='+updated+', errors='+errors);
+  await refreshPersonnel();
+}
 async function saveToFiles(){
   const u=getCheckedPersonUIDs();
   if(!u.length){setStatus('저장할 사용자를 선택하세요','err');return;}
-  if(!confirm('선택한 '+u.length+'명을 App_Data/people 폴더에 JSON으로 저장합니다.'))return;
-  try{
-    const r=await apiPost('/admin/people/save-to-files',{UserIds:u});
-    const saved=r.saved??r.Saved??0, skipped=r.skipped??r.Skipped??0, errors=r.errors??r.Errors??0;
-    setStatus('파일 저장: '+saved+'명 저장, '+skipped+'건 건너뜀, '+errors+'건 오류', errors>0?'err':'ok');
-    addLog('파일 저장: saved='+saved+', skipped='+skipped+', errors='+errors);
-  }catch(e){setStatus('파일 저장 실패: '+e.message,'err');}
+  let saved=0, errors=0;
+  setStatus('사용자 JSON 저장 중...','ok');
+  if(canUseDirectoryPicker()){
+    try{
+      const dir=await window.showDirectoryPicker({mode:'readwrite'});
+      for(const uid of u){
+        try{
+          const r=await fetch('/admin/people/'+encodeURIComponent(uid)+'/export');
+          if(!r.ok)throw new Error('HTTP '+r.status);
+          const json=await r.text();
+          const handle=await dir.getFileHandle(personFileName(uid),{create:true});
+          const w=await handle.createWritable();
+          await w.write(json); await w.close();
+          saved++;
+        }catch(e){errors++; addLog('저장 실패 '+uid+': '+e.message);}
+      }
+      setStatus('파일 저장: '+saved+'명 → 선택한 폴더'+(errors? ', 오류 '+errors+'건':''), errors?'err':'ok');
+      return;
+    }catch(e){
+      if(e&&e.name==='AbortError')return;
+      addLog('폴더 선택 불가, 다운로드로 전환: '+e.message);
+    }
+  }
+  for(const uid of u){
+    try{
+      const r=await fetch('/admin/people/'+encodeURIComponent(uid)+'/export');
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      downloadTextFile(personFileName(uid), await r.text());
+      saved++;
+      await new Promise(x=>setTimeout(x,150));
+    }catch(e){errors++; addLog('저장 실패 '+uid+': '+e.message);}
+  }
+  setStatus('파일 저장: '+saved+'명을 브라우저 다운로드 폴더에 저장'+(errors? ', 오류 '+errors+'건':''), errors?'err':'ok');
+  addLog('로컬 저장: saved='+saved+', errors='+errors);
 }
 async function reloadFromFiles(){
-  try{const r=await apiPost('/admin/people/reload-from-files',{});setStatus('파일에서 불러오기 완료','ok');addLog('파일 불러오기: '+(r.Message??JSON.stringify(r)));await refreshPersonnel();}
-  catch(e){setStatus('불러오기 실패: '+e.message,'err');}
+  if(canUseDirectoryPicker()){
+    try{
+      const dir=await window.showDirectoryPicker({mode:'read'});
+      const files=[];
+      for await (const [name, handle] of dir.entries()){
+        if(handle.kind==='file' && name.toLowerCase().endsWith('.json'))
+          files.push(await handle.getFile());
+      }
+      await importPeopleFromFileList(files);
+      return;
+    }catch(e){
+      if(e&&e.name==='AbortError')return;
+      addLog('폴더 선택 불가, 파일 선택으로 전환: '+e.message);
+    }
+  }
+  ensurePeopleFileInputs();
+  const useDir=confirm('JSON이 들어 있는 폴더를 선택할까요?\n\n취소를 누르면 JSON 파일만 여러 개 선택합니다.');
+  if(useDir) document.getElementById('peopleDirInput').click();
+  else document.getElementById('peopleFileInput').click();
 }
+
 async function distributePersonnel(){
   const u=getCheckedPersonUIDs();if(!u.length){setStatus('배포할 사용자를 선택하세요','err');return;}
   if(!devices.length)await refreshDevices();showDistributeModal(u);

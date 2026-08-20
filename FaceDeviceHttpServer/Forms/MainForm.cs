@@ -5,45 +5,49 @@ namespace FaceDeviceHttpPcServer.Forms;
 
 public sealed class MainForm : Form
 {
-    // ¦¡¦¡ Controls ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private readonly RichTextBox _logBox;
     private readonly StatusStrip _status;
     private readonly ToolStripStatusLabel _statusLabel;
     private readonly ToolStripStatusLabel _countLabel;
     private readonly ToolStrip _toolbar;
 
-    // ¦¡¦¡ State ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private int _totalRequests;
     private bool _paused;
     private const int MaxLines = 2000;
     private string _serverUrl = string.Empty;
+    private readonly NotifyIcon _tray;
+    private bool _exitRequested;
+    private readonly List<string> _plainLog = new();
+
 
     public MainForm()
     {
-        // ¦¡¦¡ Form ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
-        Text = "FaceDevice HTTP Server ? ½Ç½Ã°£ ·Î±×";
+        // â”€â”€ Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        Text = "FaceDevice HTTP Server - ì‹¤ì‹œê°„ ë¡œê·¸";
         Size = new Size(1100, 720);
         MinimumSize = new Size(700, 400);
         StartPosition = FormStartPosition.CenterScreen;
 
-        // ¦¡¦¡ Toolbar ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ Toolbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _toolbar = new ToolStrip { Dock = DockStyle.Top };
 
-        var btnClear = new ToolStripButton("?? Áö¿ì±â") { ToolTipText = "·Î±× Ã¢ Áö¿ì±â (Ctrl+L)" };
-        var btnPause = new ToolStripButton("? ÀÏ½ÃÁ¤Áö") { ToolTipText = "·Î±× ÀÏ½ÃÁ¤Áö/Àç°³", CheckOnClick = true };
-        var btnCopy = new ToolStripButton("?? º¹»ç") { ToolTipText = "¼±ÅÃÇÑ ³»¿ë º¹»ç (Ctrl+C)" };
-        var btnSave = new ToolStripButton("?? ÀúÀå") { ToolTipText = "·Î±× ÆÄÀÏ·Î ÀúÀå" };
-        var btnWebAdmin = new ToolStripButton("?? À¥ °ü¸®ÀÚ") { ToolTipText = "ºê¶ó¿ìÀú¿¡¼­ °ü¸®ÀÚ ÀÎÅÍÆäÀÌ½º ¿­±â" };
+        var btnClear = new ToolStripButton("ì§€ìš°ê¸°") { ToolTipText = "ë¡œê·¸ ì°½ ì§€ìš°ê¸° (Ctrl+L)" };
+        var btnPause = new ToolStripButton("ì¼ì‹œì •ì§€") { ToolTipText = "ë¡œê·¸ ì¼ì‹œì •ì§€/ì¬ê°œ", CheckOnClick = true };
+        var btnCopy = new ToolStripButton("ë³µì‚¬") { ToolTipText = "ì„ íƒí•œ ë‚´ìš© ë³µì‚¬ (Ctrl+C)" };
+        var btnSave = new ToolStripButton("ì €ì¥") { ToolTipText = "ë¡œê·¸ íŒŒì¼ë¡œ ì €ì¥" };
+        var btnWebAdmin = new ToolStripButton("ì›¹ ê´€ë¦¬ì") { ToolTipText = "ë¸Œë¼ìš°ì €ì—ì„œ ê´€ë¦¬ì ì¸í„°í˜ì´ìŠ¤ ì—´ê¸°" };
 
         var sepFilter = new ToolStripSeparator();
-        var lblFilter = new ToolStripLabel("ÇÊÅÍ: ");
+        var lblFilter = new ToolStripLabel("í•„í„°: ");
         var cbFilter = new ToolStripComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
             AutoSize = false,
             Width = 130
         };
-        cbFilter.Items.AddRange(["ÀüÃ¼", "Request", "Info", "Warn", "Error"]);
+        cbFilter.Items.AddRange(["ì „ì²´", "Request", "Info", "Warn", "Error"]);
         cbFilter.SelectedIndex = 0;
 
         _toolbar.Items.AddRange([
@@ -52,19 +56,17 @@ public sealed class MainForm : Form
         ]);
 
         btnClear.Click += (_, _) => ClearLog();
-        btnPause.Click += (_, _) => { _paused = btnPause.Checked; btnPause.Text = _paused ? "¢º Àç°³" : "? ÀÏ½ÃÁ¤Áö"; };
-        btnCopy.Click += (_, _) =>
+        btnPause.Click += (_, _) =>
         {
-            if (_logBox?.SelectionLength <= 0) return;
-            var selectedText = _logBox?.SelectedText;
-            if (!string.IsNullOrEmpty(selectedText))
-                Clipboard.SetText(selectedText);
+            _paused = btnPause.Checked;
+            btnPause.Text = _paused ? "ì¬ê°œ" : "ì¼ì‹œì •ì§€";
         };
+        btnCopy.Click += (_, _) => CopyLog();
         btnSave.Click += (_, _) => SaveLog();
         btnWebAdmin.Click += (_, _) => OpenWebAdmin();
-        cbFilter.SelectedIndexChanged += (_, _) => ApplyFilter(cbFilter.SelectedItem?.ToString() ?? "ÀüÃ¼");
+        cbFilter.SelectedIndexChanged += (_, _) => ApplyFilter(cbFilter.SelectedItem?.ToString() ?? "ì „ì²´");
 
-        // ¦¡¦¡ Log RichTextBox ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ Log RichTextBox â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _logBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -81,19 +83,19 @@ public sealed class MainForm : Form
             if (e.Control && e.KeyCode == Keys.L) { ClearLog(); e.Handled = true; }
         };
 
-        // ¦¡¦¡ Status bar ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ Status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _status = new StatusStrip();
-        _statusLabel = new ToolStripStatusLabel("¼­¹ö ½ÃÀÛ Áß¡¦") { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
-        _countLabel = new ToolStripStatusLabel("¿äÃ»: 0") { BorderSides = ToolStripStatusLabelBorderSides.Left };
+        _statusLabel = new ToolStripStatusLabel("ì„œë²„ ì‹œì‘ ì¤‘â€¦") { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
+        _countLabel = new ToolStripStatusLabel("ìš”ì²­: 0") { BorderSides = ToolStripStatusLabelBorderSides.Left };
         _status.Items.AddRange([_statusLabel, _countLabel]);
 
-        // ¦¡¦¡ Layout ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         Controls.AddRange([_logBox, _toolbar, _status]);
 
-        // ¦¡¦¡ Subscribe to LogHub ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ Subscribe to LogHub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         LogHub.Instance.EntryAdded += OnEntryAdded;
 
-        // ¦¡¦¡ Keyboard shortcuts ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+        // â”€â”€ Keyboard shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         KeyPreview = true;
         KeyDown += (_, e) =>
         {
@@ -101,11 +103,54 @@ public sealed class MainForm : Form
         };
 
         FormClosed += (_, _) => LogHub.Instance.EntryAdded -= OnEntryAdded;
+
+        var trayMenu = new ContextMenuStrip();
+        trayMenu.Items.Add("ë¡œê·¸ ì°½ ì—´ê¸°", null, (_, _) => ShowFromTray());
+        trayMenu.Items.Add("ì¢…ë£Œ", null, (_, _) => ExitFromTray());
+        _tray = new NotifyIcon
+        {
+            Text = "SmartLM FDHS",
+            Icon = SystemIcons.Application,
+            Visible = true,
+            ContextMenuStrip = trayMenu
+        };
+        _tray.DoubleClick += (_, _) => ShowFromTray();
+
+        ShowInTaskbar = false;
+        WindowState = FormWindowState.Minimized;
+        Load += (_, _) => { Hide(); };
+        FormClosing += OnFormClosing;
     }
 
-    // ¦¡¦¡ LogHub callback (may arrive on any thread) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    private void OnFormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (_exitRequested || e.CloseReason != CloseReason.UserClosing)
+            return;
+        e.Cancel = true;
+        Hide();
+        ShowInTaskbar = false;
+        if (_tray != null) _tray.Visible = true;
+    }
 
-    private string _currentFilter = "ÀüÃ¼";
+    private void ShowFromTray()
+    {
+        Show();
+        WindowState = FormWindowState.Normal;
+        ShowInTaskbar = true;
+        Activate();
+    }
+
+    private void ExitFromTray()
+    {
+        _exitRequested = true;
+        if (_tray != null) _tray.Visible = false;
+        Close();
+    }
+
+
+    // â”€â”€ LogHub callback (may arrive on any thread) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    private string _currentFilter = "ì „ì²´";
 
     private void OnEntryAdded(LogEntry entry)
     {
@@ -121,35 +166,42 @@ public sealed class MainForm : Form
 
         AppendEntry(entry);
         Interlocked.Increment(ref _totalRequests);
-        _countLabel.Text = $"¿äÃ»: {_totalRequests:N0}";
-        _statusLabel.Text = $"¸¶Áö¸·: {entry.Timestamp:HH:mm:ss}  {entry.Message}";
+        _countLabel.Text = $"ìš”ì²­: {_totalRequests:N0}";
+        _statusLabel.Text = $"ë§ˆì§€ë§‰: {entry.Timestamp:HH:mm:ss}  {entry.Message}";
     }
 
     private bool _InvokeRequired() => InvokeRequired;
 
-    // ¦¡¦¡ Append a single entry ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ Append a single entry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void AppendEntry(LogEntry entry)
     {
         _logBox.SuspendLayout();
 
-        // ÃÖ´ë ÁÙ ¼ö À¯Áö
+        // ìµœëŒ€ ì¤„ ìˆ˜ ìœ ì§€
         TrimLines();
 
         var (color, prefix) = entry.Level switch
         {
-            FaceDeviceLogLevel.Request => (Color.FromArgb(100, 200, 255), "?"),
-            FaceDeviceLogLevel.Warn => (Color.FromArgb(255, 220, 80), "?"),
-            FaceDeviceLogLevel.Error => (Color.FromArgb(255, 90, 90), "?"),
-            _ => (Color.FromArgb(160, 255, 160), "¡¤")
+            FaceDeviceLogLevel.Request => (Color.FromArgb(100, 200, 255), ">"),
+            FaceDeviceLogLevel.Warn => (Color.FromArgb(255, 220, 80), "!"),
+            FaceDeviceLogLevel.Error => (Color.FromArgb(255, 90, 90), "X"),
+            _ => (Color.FromArgb(160, 255, 160), "Â·")
         };
 
-        // Å¸ÀÓ½ºÅÆÇÁ
+        // íƒ€ì„ìŠ¤íƒ¬í”„
         AppendColored($"[{entry.Timestamp:HH:mm:ss.fff}] ", Color.FromArgb(120, 120, 120));
         AppendColored($"{prefix} ", color);
         AppendColored(entry.Message + "\n", color);
+        var plain = $"[{entry.Timestamp:HH:mm:ss.fff}] {prefix} {entry.Message}";
+        if (!string.IsNullOrWhiteSpace(entry.Detail))
+            plain += Environment.NewLine + string.Join(Environment.NewLine,
+                entry.Detail.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => "    " + x.TrimEnd()));
+        _plainLog.Add(plain);
+        if (_plainLog.Count > MaxLines)
+            _plainLog.RemoveRange(0, _plainLog.Count - MaxLines / 2);
 
-        // »ó¼¼ º»¹® (µé¿©¾²±â)
+        // ìƒì„¸ ë³¸ë¬¸ (ë“¤ì—¬ì“°ê¸°)
         if (!string.IsNullOrWhiteSpace(entry.Detail))
         {
             foreach (var line in entry.Detail.Split('\n'))
@@ -173,15 +225,37 @@ public sealed class MainForm : Form
 
     private void TrimLines()
     {
-        // ÁÙ ¼ö°¡ MaxLines¸¦ ÃÊ°úÇÏ¸é ¾ÕÂÊ Àı¹İ Á¦°Å
-        if (_logBox.Lines.Length <= MaxLines) return;
-        var keep = MaxLines / 2;
-        var start = _logBox.GetFirstCharIndexFromLine(_logBox.Lines.Length - keep);
+        var lastLine = _logBox.GetLineFromCharIndex(Math.Max(0, _logBox.TextLength - 1));
+        if (lastLine < MaxLines) return;
+        var start = _logBox.GetFirstCharIndexFromLine(Math.Max(0, lastLine - MaxLines / 2));
+        if (start <= 0) return;
         _logBox.Select(0, start);
         _logBox.SelectedText = string.Empty;
+        _logBox.SelectionLength = 0;
+        _logBox.SelectionStart = _logBox.TextLength;
     }
 
-    // ¦¡¦¡ Filter ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    private void CopyLog()
+    {
+        try
+        {
+            if (_logBox.SelectionLength > 0)
+                _logBox.Copy();
+            else if (_logBox.TextLength > 0)
+            {
+                _logBox.SelectAll();
+                _logBox.Copy();
+                _logBox.SelectionLength = 0;
+                _logBox.SelectionStart = _logBox.TextLength;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("í´ë¦½ë³´ë“œ ë³µì‚¬ ì‹¤íŒ¨: " + ex.Message, "ë³µì‚¬", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    // â”€â”€ Filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static bool PassesFilter(LogEntry entry, string filter) => filter switch
     {
@@ -195,49 +269,63 @@ public sealed class MainForm : Form
     private void ApplyFilter(string filter)
     {
         _currentFilter = filter;
-        // ÇÊÅÍ º¯°æ ½Ã Ã¢ ÃÊ±âÈ­ (ÀçÇ¥½Ã´Â »õ ¿äÃ»ºÎÅÍ Àû¿ë)
+        // í•„í„° ë³€ê²½ ì‹œ ì°½ ì´ˆê¸°í™” (ì¬í‘œì‹œëŠ” ìƒˆ ìš”ì²­ë¶€í„° ì ìš©)
         ClearLog();
-        LogHub.Instance.Info($"ÇÊÅÍ º¯°æ: {filter}");
+        LogHub.Instance.Info($"í•„í„° ë³€ê²½: {filter}");
     }
 
-    // ¦¡¦¡ Clear / Save ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ Clear / Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void ClearLog()
     {
         _logBox.Clear();
-        LogHub.Instance.Info("·Î±× Ã¢ ÃÊ±âÈ­");
+        _plainLog.Clear();
+        LogHub.Instance.Info("ë¡œê·¸ ì°½ ì´ˆê¸°í™”");
+    }
+
+    private static string GetLogFolder()
+    {
+        var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        if (string.IsNullOrWhiteSpace(docs))
+            docs = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var dir = Path.Combine(docs, "SmartLM_Data", "FDHS_Log");
+        Directory.CreateDirectory(dir);
+        return dir;
     }
 
     private void SaveLog()
     {
-        using var dlg = new SaveFileDialog
+        var dir = GetLogFolder();
+        var path = Path.Combine(dir, $"FaceDevice_Log_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
+        try
         {
-            Title = "·Î±× ÀúÀå",
-            Filter = "ÅØ½ºÆ® ÆÄÀÏ (*.txt)|*.txt|¸ğµç ÆÄÀÏ|*.*",
-            FileName = $"FaceDevice_Log_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
-        };
-
-        if (dlg.ShowDialog() != DialogResult.OK) return;
-
-        File.WriteAllText(dlg.FileName, _logBox.Text);
-        LogHub.Instance.Info($"·Î±× ÀúÀå ¿Ï·á: {dlg.FileName}");
+            var text = _plainLog.Count > 0
+                ? string.Join(Environment.NewLine, _plainLog)
+                : (_logBox.Text ?? string.Empty);
+            File.WriteAllText(path, text);
+            _statusLabel.Text = "ë¡œê·¸ ì €ì¥ ì™„ë£Œ: " + path;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("ì €ì¥ ì‹¤íŒ¨: " + ex.Message, "ì €ì¥", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
-    // ¦¡¦¡ Public: server status ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+    // â”€â”€ Public: server status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public void SetServerUrl(string url)
     {
         if (InvokeRequired) { Invoke(() => SetServerUrl(url)); return; }
         _serverUrl = url;
-        _statusLabel.Text = $"¼­¹ö ½ÇÇà Áß: {url}";
-        LogHub.Instance.Info($"¼­¹ö ½ÃÀÛµÊ ¡æ {url}");
+        _statusLabel.Text = $"ì„œë²„ ì‹¤í–‰ ì¤‘: {url}";
+        LogHub.Instance.Info($"ì„œë²„ ì‹œì‘ë¨ â†’ {url}");
     }
 
     private void OpenWebAdmin()
     {
         if (string.IsNullOrWhiteSpace(_serverUrl))
         {
-            MessageBox.Show("¼­¹ö URLÀÌ ¾ÆÁ÷ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("ì„œë²„ URLì´ ì•„ì§ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -250,12 +338,12 @@ public sealed class MainForm : Form
                 UseShellExecute = true
             };
             System.Diagnostics.Process.Start(psi);
-            LogHub.Instance.Info($"À¥ °ü¸®ÀÚ ¿­±â: {adminUrl}");
+            LogHub.Instance.Info($"ì›¹ ê´€ë¦¬ì ì—´ê¸°: {adminUrl}");
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"ºê¶ó¿ìÀú¸¦ ¿­ ¼ö ¾ø½À´Ï´Ù: {ex.Message}", "¿À·ù", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LogHub.Instance.Error($"À¥ °ü¸®ÀÚ ¿­±â ½ÇÆĞ", ex.Message);
+            MessageBox.Show($"ë¸Œë¼ìš°ì €ë¥¼ ì—´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: {ex.Message}", "ì˜¤ë¥˜", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            LogHub.Instance.Error($"ì›¹ ê´€ë¦¬ì ì—´ê¸° ì‹¤íŒ¨", ex.Message);
         }
     }
 }

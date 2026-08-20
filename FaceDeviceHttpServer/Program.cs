@@ -22,6 +22,24 @@ Application.SetHighDpiMode(HighDpiMode.SystemAware);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// HTTP(80/8080) + 자체서명 HTTPS(8443). Urls 중복 바인딩 방지.
+builder.WebHost.UseSetting(WebHostDefaults.ServerUrlsKey, "");
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(80);
+    options.ListenAnyIP(8080);
+    try
+    {
+        var cert = FdhsHttpsCertificate.Ensure();
+        // 443은 관리자 권한 없으면 프로세스 전체가 실패하므로 8443만 연다.
+        options.ListenAnyIP(8443, listen => listen.UseHttps(cert));
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine("HTTPS 인증서/바인딩 준비 실패: " + ex.Message);
+    }
+});
+
 // ContentRootPath를 현재 실행 디렉토리로 설정
 var contentRoot = AppDomain.CurrentDomain.BaseDirectory;
 builder.Environment.ContentRootPath = contentRoot;
