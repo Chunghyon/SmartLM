@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>fdhs.ico</ApplicationIcon>
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     <DefaultItemExcludes>$(DefaultItemExcludes);FaceDeviceDesktopClient\**</DefaultItemExcludes>
   </PropertyGroup>

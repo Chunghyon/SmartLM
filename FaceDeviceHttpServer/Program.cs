@@ -2188,7 +2188,7 @@ static string GetSmartLmDocumentsRoot()
         docs = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     if (string.IsNullOrWhiteSpace(docs))
         docs = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments);
-    return Path.Combine(docs, "SmartLM");
+    return Path.Combine(docs, "SmartLM_Data");
 }
 
 static string GetSmartLmAppData()

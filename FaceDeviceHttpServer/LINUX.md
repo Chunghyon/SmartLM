@@ -38,4 +38,4 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now smartlm-fdhs
 ```
 
-데이터/설정 기본 위치: `~/SmartLM/` (`{MyDocuments}`)
+데이터/설정 기본 위치: `~/SmartLM_Data/` (`{MyDocuments}`)
