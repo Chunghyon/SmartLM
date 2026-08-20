@@ -309,11 +309,20 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
 
 <!-- 단말기 사용자 목록 모달 -->
 <div class="modal-overlay" id="devUsersModal">
-  <div class="modal" style="min-width:640px">
+  <div class="modal" style="min-width:760px">
     <h2 id="devUsersTitle">단말기 사용자 정보</h2>
+    <p style="margin:0 0 8px;color:#c27800;font-size:12px">이 창의 변경은 이 단말기에만 적용됩니다. 서버 사용자 목록에는 영향을 주지 않습니다.</p>
+    <div class="btn-group" style="margin-bottom:8px">
+      <button class="btn-success" onclick="devUserAdd()">추가</button>
+      <button onclick="devUserEdit()">수정</button>
+      <button class="btn-danger" onclick="devUserDelete()">삭제</button>
+      <button class="btn-info" onclick="openDeviceUserList()">새로고침</button>
+    </div>
     <div class="table-wrap" style="max-height:380px;overflow-y:auto"><table>
-      <thead><tr><th>UserID</th><th>이름</th><th>카드</th><th>얼굴</th><th>손바닥</th><th>만료일</th></tr></thead>
-      <tbody id="devUsersBody"><tr><td colspan="6" class="empty-state">로딩 중...</td></tr></tbody>
+      <thead><tr>
+        <th>사용자ID</th><th>이름</th><th>비밀번호</th><th>카드</th><th>지문</th><th>손바닥</th><th>얼굴</th>
+      </tr></thead>
+      <tbody id="devUsersBody"><tr><td colspan="7" class="empty-state">로딩 중...</td></tr></tbody>
     </table></div>
     <div class="btn-group" style="justify-content:flex-end;margin-top:10px">
       <button class="btn-secondary" onclick="closeDevUsers()">닫기</button>
@@ -334,6 +343,6 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
 </div>
 
 <div class="status-bar" id="statusBar">준비</div>
-<script src="app.js"></script>
+<script src="app.js?v=20260820b"></script>
 </body>
 </html>

@@ -283,20 +283,65 @@ async function openDeviceUserList(){
   const sn=_currentDeviceSN;
   document.getElementById('devUsersTitle').textContent='단말기 사용자 정보 - '+sn;
   document.getElementById('devUsersModal').classList.add('open');
-  document.getElementById('devUsersBody').innerHTML='<tr><td colspan="6" class="empty-state">로딩 중...</td></tr>';
+  document.getElementById('devUsersBody').innerHTML='<tr><td colspan="7" class="empty-state">단말기에 목록 요청 중...</td></tr>';
   try{
-    const l=await apiGet('/admin/devices/'+sn+'/people');
-    const arr=Array.isArray(l)?l:(l.Data??[]);
-    if(!arr.length){document.getElementById('devUsersBody').innerHTML='<tr><td colspan="6" class="empty-state">사용자 없음</td></tr>';return;}
+    await apiPost('/admin/devices/'+sn+'/query-owned-people',{});
+    let arr=[];
+    let last=-1, stable=0;
+    for(let i=0;i<45;i++){
+      await new Promise(r=>setTimeout(r,1000));
+      const l=await apiGet('/admin/devices/'+sn+'/people');
+      arr=Array.isArray(l)?l:(l.Data??[]);
+      if(arr.length===last) stable++; else stable=0;
+      last=arr.length;
+      if(arr.length>0 && stable>=3) break;
+    }
+    window._devUsers=arr;
+    if(!arr.length){
+      document.getElementById('devUsersBody').innerHTML='<tr><td colspan="7" class="empty-state">단말기 응답 없음 (Keepalive 후 다시 열어보세요)</td></tr>';
+      return;
+    }
     document.getElementById('devUsersBody').innerHTML=arr.map(p=>{
-      const exp=p.ExpirationDate>0?new Date(p.ExpirationDate*1000).toLocaleDateString('ko-KR'):'무제한';
-      return '<tr><td>'+esc(p.UserID)+'</td><td>'+esc(p.Name)+'</td>'
-        +'<td>'+(p.CardNum&&p.CardNum!=='0'?'O':'-')+'</td>'
-        +'<td>'+(p.Photo?'O':'-')+'</td>'
-        +'<td>'+((p.Palmveins&&p.Palmveins.length>0)?'O':'-')+'</td>'
-        +'<td>'+exp+'</td></tr>';
+      const pw=p.Password?('●'.repeat(Math.min(String(p.Password).length,8))):'';
+      const fp=(p.Fingerprints&&p.Fingerprints.length)?p.Fingerprints.length:0;
+      const pv=(p.Palmveins&&p.Palmveins.length)?p.Palmveins.length:0;
+      const face=p.FaceFeature||p.Photo;
+      return '<tr onclick="selectDevUser(\''+esc(p.UserID)+'\')" data-uid="'+esc(p.UserID)+'">'
+        +'<td>'+esc(p.UserID)+'</td><td>'+esc(p.Name||'')+'</td>'
+        +'<td>'+pw+'</td>'
+        +'<td>'+(p.CardNum&&p.CardNum!=='0'?'O':'X')+'</td>'
+        +'<td>'+(fp?'O':'X')+'</td>'
+        +'<td>'+(pv?'O':'X')+'</td>'
+        +'<td>'+(face?'O':'X')+'</td></tr>';
     }).join('');
-  }catch(e){document.getElementById('devUsersBody').innerHTML='<tr><td colspan="6" class="empty-state">로드 실패: '+e.message+'</td></tr>';}
+  }catch(e){
+    document.getElementById('devUsersBody').innerHTML='<tr><td colspan="7" class="empty-state">로드 실패: '+e.message+'</td></tr>';
+  }
+}
+function selectDevUser(uid){
+  window._selectedDevUserId=uid;
+  document.querySelectorAll('#devUsersBody tr').forEach(tr=>{
+    tr.style.background=tr.getAttribute('data-uid')===uid?'#e8f1ff':'';
+  });
+}
+function devUserAdd(){
+  window._devicePeopleSn=_currentDeviceSN;
+  showAddPersonModal();
+}
+async function devUserEdit(){
+  const uid=window._selectedDevUserId;
+  if(!uid){alert('수정할 사용자를 선택하세요.');return;}
+  window._devicePeopleSn=_currentDeviceSN;
+  await openEditPerson(uid);
+}
+async function devUserDelete(){
+  const uid=window._selectedDevUserId;
+  if(!uid){alert('삭제할 사용자를 선택하세요.');return;}
+  const p=(window._devUsers||[]).find(x=>x.UserID===uid);
+  if(!confirm('사용자 ['+(p&&p.Name?p.Name:'')+' ('+uid+')]를 이 단말기에서 삭제하시겠습니까?\n\n서버 사용자 목록에는 영향을 주지 않습니다.'))return;
+  const r=await fetch('/admin/devices/'+_currentDeviceSN+'/people/'+encodeURIComponent(uid),{method:'DELETE'});
+  if(!r.ok){alert('삭제 실패: HTTP '+r.status);return;}
+  await openDeviceUserList();
 }
 function closeDevUsers(){document.getElementById('devUsersModal').classList.remove('open');}
 
@@ -416,7 +461,7 @@ function clearPersonModal(){
   const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}
   updateUidPreview();
 }
-function closePersonModal(){document.getElementById('personModal').classList.remove('open');}
+function closePersonModal(){document.getElementById('personModal').classList.remove('open');window._devicePeopleSn=null;}
 function updateUidPreview(){
   const d=parseInt(document.getElementById('mDong')?.value||'0')||0;
   const h=parseInt(document.getElementById('mHo')?.value||'0')||0;
@@ -442,6 +487,14 @@ async function savePerson(){
   let exp=0;const ev=document.getElementById('mExpiry').value;if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
   const p={UserID:uid,Name:name,Department:dongStr,Job:hoStr,IdentityCard:memberStr,CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:parseInt(document.getElementById('mAccess').value)||0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??''};
   try{
+    if(window._devicePeopleSn){
+      await apiPost('/admin/devices/'+window._devicePeopleSn+'/people',p);
+      setStatus('단말기 사용자 저장 예약','ok');
+      window._devicePeopleSn=null;
+      closePersonModal();
+      await openDeviceUserList();
+      return;
+    }
     if(_editingUserId){const r=await apiPost('/api/People/Update',p);if(!r.result)throw new Error(r.error??'수정 실패');setStatus('사용자 수정 완료','ok');addLog('사용자 수정: '+uid);}
     else{const r=await apiPost('/api/People/New',p);if(!r.result)throw new Error(r.error??'추가 실패');setStatus('사용자 추가 완료','ok');addLog('사용자 추가: '+uid);}
     closePersonModal();await refreshPersonnel();

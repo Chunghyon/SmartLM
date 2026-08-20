@@ -1,8 +1,9 @@
-#define MyAppName "SmartLM"
 #define MyAppVersion "1.0.0"
+#define MyAppName "SmartLM"
+#define MyAppPublisher "Illitek Co., Ltd."
 
 [Setup]
-AppPublisher="Illitek Co., Ltd."
+AppPublisher={#MyAppPublisher}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\SmartLM

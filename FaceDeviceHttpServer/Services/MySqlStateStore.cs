@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FaceDeviceHttpPcServer.Data;
@@ -13,6 +14,7 @@ public sealed class MySqlStateStore
     private readonly IDbContextFactory<FaceDeviceDbContext> _dbFactory;
     private readonly string _photosPath;
     private readonly string _peoplePath;
+    private readonly ConcurrentDictionary<string, List<PersonInfo>> _lastDevicePeopleQuery = new(StringComparer.OrdinalIgnoreCase);
     private readonly JsonSerializerOptions _json = new()
     {
         WriteIndented = false,
@@ -741,10 +743,41 @@ public sealed class MySqlStateStore
         db.SaveChanges();
     }
 
+    public void ClearLastDevicePeopleQuery(string deviceSn)
+    {
+        _lastDevicePeopleQuery.TryRemove(deviceSn, out _);
+    }
+
+    public void SetLastDevicePeopleQuery(string deviceSn, IEnumerable<PersonInfo> people)
+    {
+        var incoming = people.ToList();
+        _lastDevicePeopleQuery.AddOrUpdate(
+            deviceSn,
+            incoming,
+            (_, existing) =>
+            {
+                var map = existing
+                    .Where(x => !string.IsNullOrWhiteSpace(x.UserID))
+                    .ToDictionary(x => x.UserID, x => x, StringComparer.OrdinalIgnoreCase);
+                foreach (var person in incoming)
+                {
+                    if (string.IsNullOrWhiteSpace(person.UserID)) continue;
+                    map[person.UserID] = person;
+                }
+                return map.Values.ToList();
+            });
+    }
+
+    public IReadOnlyCollection<PersonInfo>? GetLastDevicePeopleQuery(string deviceSn)
+    {
+        return _lastDevicePeopleQuery.TryGetValue(deviceSn, out var list) ? list : null;
+    }
+
     public IReadOnlyCollection<PersonInfo> GetDeviceOwnedPeople(string deviceSn)
     {
         using var db = CreateDb();
-        var ids = db.DevicePeople.Where(x => x.DeviceSn == deviceSn && x.Owned).Select(x => x.UserId).ToList();
+        // Owned 여부와 관계 없이 이 단말기에 연결된 사용자를 반환
+        var ids = db.DevicePeople.Where(x => x.DeviceSn == deviceSn).Select(x => x.UserId).ToList();
         return db.People.Where(p => ids.Contains(p.UserId)).AsEnumerable().Select(ToPersonInfo).ToArray();
     }
 

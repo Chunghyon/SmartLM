@@ -684,8 +684,23 @@ app.MapPost("/admin/devices/{sn}/pull-all-people", (string sn, MySqlStateStore s
         return Results.NotFound(new ApiResponse(404, "Device not found."));
 
     store.QueueRemoteCommand(sn, pushAllPeople: true);
+    tracker.MarkOwnedQueryReset(sn);
+    tracker.MarkImportToServer(sn);
     var job = tracker.Start(sn, "Remote", "단말기 사용자 가져오기 대기 중");
-    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 다음 RemoteCommand 폴링 시 실행");
+    LogHub.Instance.Info($"[Pull People] 단말기 {sn}에게 PushAllPeople 명령 전송 -> 서버 사용자로 가져오기");
+    return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
+});
+
+app.MapPost("/admin/devices/{sn}/query-owned-people", (string sn, MySqlStateStore store, DeviceCommandTracker tracker) =>
+{
+    var device = store.GetDevice(sn);
+    if (device is null)
+        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    store.QueueRemoteCommand(sn, pushAllPeople: true);
+    tracker.MarkOwnedQueryReset(sn);
+    store.ClearLastDevicePeopleQuery(sn);
+    var job = tracker.Start(sn, "Remote", "단말기 사용자 목록 조회 대기 중");
+    LogHub.Instance.Info($"[Query Device People] {sn} PushAllPeople 예약 (표시용)");
     return Results.Ok(ApiResponseWithContent.Ok(new { JobId = job.Id }));
 });
 
@@ -842,9 +857,9 @@ app.MapPost("/admin/people/distribute-to-devices", (JsonNode? body, MySqlStateSt
 // ── Admin: 단말기별 사용자 목록 조회 (단말기에 실제 등록된 사용자) ─────────────────
 app.MapGet("/admin/devices/{sn}/people", (string sn, MySqlStateStore store) =>
 {
-    var device = store.GetDevice(sn);
-    if (device is null)
-        return Results.NotFound(new ApiResponse(404, "Device not found."));
+    var queried = store.GetLastDevicePeopleQuery(sn);
+    if (queried != null)
+        return Results.Ok(queried);
     return Results.Ok(store.GetDeviceOwnedPeople(sn));
 });
 
@@ -1134,7 +1149,9 @@ app.MapPost("/People/PushPeople", async (HttpRequest httpRequest, MySqlStateStor
             var tracker = app.Services.GetRequiredService<DeviceCommandTracker>();
             if (tracker.ConsumeOwnedQueryReset(sn))
                 store.BeginOwnedPeopleQuery(sn);
-            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new());
+            var import = tracker.ConsumeImportToServer(sn);
+            store.SetLastDevicePeopleQuery(sn, people ?? new());
+            var (s, f, photoPathsToFetch) = store.ReplaceDeviceOwnedPeople(sn, people ?? new(), updateServerPeople: import);
             success = s; fail = f;
             LogHub.Instance.Info($"[PushPeople-Query] 단말기 {sn}에서 {success}명 조회 → OwnedPeople 동기화 완료");
 
