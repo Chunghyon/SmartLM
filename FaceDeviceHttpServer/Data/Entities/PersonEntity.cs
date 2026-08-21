@@ -19,22 +19,6 @@ public class PersonEntity
     [MaxLength(100)]
     public string? Name { get; set; }
 
-    [Column("job")]
-    [MaxLength(100)]
-    public string? Job { get; set; }
-
-    [Column("department")]
-    [MaxLength(100)]
-    public string? Department { get; set; }
-
-    [Column("identity_card")]
-    [MaxLength(50)]
-    public string? IdentityCard { get; set; }
-
-    [Column("attachment")]
-    [MaxLength(255)]
-    public string? Attachment { get; set; }
-
     [Column("photo")]
     public string? Photo { get; set; }
 
@@ -65,20 +49,6 @@ public class PersonEntity
 
     [Column("open_times")]
     public int OpenTimes { get; set; } = 65535;
-
-    [Column("keep_open")]
-    public int KeepOpen { get; set; }
-
-    [Column("timegroup")]
-    public int Timegroup { get; set; } = 1;
-
-    [Column("holidays")]
-    [MaxLength(255)]
-    public string? Holidays { get; set; }
-
-    [Column("elevators")]
-    [MaxLength(255)]
-    public string? Elevators { get; set; }
 
     [Column("face_feature")]
     public string? FaceFeature { get; set; }

@@ -117,8 +117,6 @@ public sealed class MainForm : Form
         _tray.DoubleClick += (_, _) => ShowFromTray();
 
         ShowInTaskbar = false;
-        WindowState = FormWindowState.Minimized;
-        Load += (_, _) => { Hide(); };
         FormClosing += OnFormClosing;
     }
 
@@ -137,6 +135,7 @@ public sealed class MainForm : Form
         Show();
         WindowState = FormWindowState.Normal;
         ShowInTaskbar = true;
+        RebuildLogBoxFromBuffer();
         Activate();
     }
 
@@ -155,14 +154,22 @@ public sealed class MainForm : Form
     private void OnEntryAdded(LogEntry entry)
     {
         if (_paused) return;
+        if (!PassesFilter(entry, _currentFilter)) return;
 
-        if (_InvokeRequired())
+        // 창이 없거나 숨김이면 RichTextBox를 건드리지 않는다.
+        // 숨은 창에서 Select/Trim 하면 나중에 로그마다 시스템 비프가 난다.
+        if (!IsHandleCreated || !Visible)
+        {
+            AddPlain(entry);
+            Interlocked.Increment(ref _totalRequests);
+            return;
+        }
+
+        if (InvokeRequired)
         {
             BeginInvoke(() => OnEntryAdded(entry));
             return;
         }
-
-        if (!PassesFilter(entry, _currentFilter)) return;
 
         AppendEntry(entry);
         Interlocked.Increment(ref _totalRequests);
@@ -170,12 +177,53 @@ public sealed class MainForm : Form
         _statusLabel.Text = $"마지막: {entry.Timestamp:HH:mm:ss}  {entry.Message}";
     }
 
-    private bool _InvokeRequired() => InvokeRequired;
-
     // ── Append a single entry ─────────────────────────────────────────────
+
+    private static string FormatPlain(LogEntry entry, string prefix="·")
+    {
+        var msg = entry.Message ?? "";
+        var detail = entry.Detail;
+        if (!string.IsNullOrEmpty(detail) && detail.Length > 400)
+            detail = detail[..400] + " …";
+        var plain = $"[{entry.Timestamp:HH:mm:ss.fff}] {prefix} {msg}";
+        if (!string.IsNullOrWhiteSpace(detail))
+            plain += Environment.NewLine + "    " + detail.Replace("\n", " ").Trim();
+        return plain;
+    }
+
+    private void AddPlain(LogEntry entry)
+    {
+        var prefix = entry.Level switch
+        {
+            FaceDeviceLogLevel.Request => ">",
+            FaceDeviceLogLevel.Warn => "!",
+            FaceDeviceLogLevel.Error => "X",
+            _ => "·"
+        };
+        _plainLog.Add(FormatPlain(entry, prefix));
+        if (_plainLog.Count > MaxLines)
+            _plainLog.RemoveRange(0, _plainLog.Count - MaxLines / 2);
+    }
+
+    private void RebuildLogBoxFromBuffer()
+    {
+        try
+        {
+            _logBox.Clear();
+            foreach (var line in _plainLog.TakeLast(500))
+                _logBox.AppendText(line + Environment.NewLine);
+            _logBox.SelectionStart = _logBox.TextLength;
+            _logBox.ScrollToCaret();
+        }
+        catch { }
+    }
 
     private void AppendEntry(LogEntry entry)
     {
+        AddPlain(entry);
+        if (!Visible) return;
+        try
+        {
         _logBox.SuspendLayout();
 
         // 최대 줄 수 유지
@@ -193,26 +241,17 @@ public sealed class MainForm : Form
         AppendColored($"[{entry.Timestamp:HH:mm:ss.fff}] ", Color.FromArgb(120, 120, 120));
         AppendColored($"{prefix} ", color);
         AppendColored(entry.Message + "\n", color);
-        var plain = $"[{entry.Timestamp:HH:mm:ss.fff}] {prefix} {entry.Message}";
-        if (!string.IsNullOrWhiteSpace(entry.Detail))
-            plain += Environment.NewLine + string.Join(Environment.NewLine,
-                entry.Detail.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => "    " + x.TrimEnd()));
-        _plainLog.Add(plain);
-        if (_plainLog.Count > MaxLines)
-            _plainLog.RemoveRange(0, _plainLog.Count - MaxLines / 2);
 
-        // 상세 본문 (들여쓰기)
         if (!string.IsNullOrWhiteSpace(entry.Detail))
         {
-            foreach (var line in entry.Detail.Split('\n'))
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-                AppendColored("    " + line.TrimEnd() + "\n", Color.FromArgb(200, 200, 200));
-            }
+            var d = entry.Detail.Length > 400 ? entry.Detail[..400] + " …" : entry.Detail;
+            AppendColored("    " + d.Replace("\n", " ").Trim() + "\n", Color.FromArgb(200, 200, 200));
         }
 
         _logBox.ResumeLayout();
         _logBox.ScrollToCaret();
+        }
+        catch { }
     }
 
     private void AppendColored(string text, Color color)

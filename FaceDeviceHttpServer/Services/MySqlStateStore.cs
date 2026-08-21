@@ -115,14 +115,27 @@ public sealed class MySqlStateStore
         return true;
     }
 
-    public int FixTimegroupForAllPeople()
+    public int FixTimegroupForAllPeople() => 0;
+
+    public void DropUnusedPeopleColumns()
     {
         using var db = CreateDb();
-        var list = db.People.Where(p => p.Timegroup == 0).ToList();
-        foreach (var p in list)
-            p.Timegroup = 1;
-        db.SaveChanges();
-        return list.Count;
+        string[] sqls =
+        {
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `job`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `department`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `identity_card`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `attachment`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `keep_open`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `timegroup`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `holidays`",
+        "ALTER TABLE `people` DROP COLUMN IF EXISTS `elevators`"
+    };
+        foreach (var sql in sqls)
+        {
+            try { db.Database.ExecuteSqlRaw(sql); }
+            catch { }
+        }
     }
 
     public bool DeletePerson(string userId)
@@ -990,10 +1003,10 @@ public sealed class MySqlStateStore
         UserID = e.UserId,
         Code = e.Code ?? e.UserId,
         Name = e.Name ?? string.Empty,
-        Job = e.Job ?? string.Empty,
-        Department = e.Department ?? string.Empty,
-        IdentityCard = e.IdentityCard ?? string.Empty,
-        Attachment = e.Attachment ?? string.Empty,
+        Job = string.Empty,
+        Department = string.Empty,
+        IdentityCard = string.Empty,
+        Attachment = string.Empty,
         Photo = e.Photo ?? string.Empty,
         PhotoMD5 = e.PhotoMd5 ?? string.Empty,
         PhotoLen = e.PhotoLen,
@@ -1003,10 +1016,10 @@ public sealed class MySqlStateStore
         AccessType = e.AccessType,
         ExpirationDate = e.ExpirationDate,
         OpenTimes = e.OpenTimes,
-        KeepOpen = e.KeepOpen,
-        Timegroup = e.Timegroup,
-        Holidays = e.Holidays ?? string.Empty,
-        Elevators = e.Elevators ?? string.Empty,
+        KeepOpen = 0,
+        Timegroup = 1,
+        Holidays = string.Empty,
+        Elevators = string.Empty,
         FaceFeature = e.FaceFeature ?? string.Empty,
         FaceFeatureMD5 = e.FaceFeatureMd5 ?? string.Empty,
         Fingerprints = string.IsNullOrWhiteSpace(e.FingerprintsJson)
@@ -1028,10 +1041,6 @@ public sealed class MySqlStateStore
     {
         e.Code = string.IsNullOrWhiteSpace(p.Code) ? p.UserID : p.Code;
         e.Name = p.Name;
-        e.Job = p.Job;
-        e.Department = p.Department;
-        e.IdentityCard = p.IdentityCard;
-        e.Attachment = p.Attachment;
         e.Photo = p.Photo;
         e.PhotoMd5 = p.PhotoMD5;
         e.PhotoLen = p.PhotoLen;
@@ -1041,10 +1050,6 @@ public sealed class MySqlStateStore
         e.AccessType = p.AccessType;
         e.ExpirationDate = p.ExpirationDate;
         e.OpenTimes = p.OpenTimes;
-        e.KeepOpen = p.KeepOpen;
-        e.Timegroup = p.Timegroup == 0 ? 1 : p.Timegroup;
-        e.Holidays = p.Holidays;
-        e.Elevators = p.Elevators;
         e.FaceFeature = p.FaceFeature;
         e.FaceFeatureMd5 = p.FaceFeatureMD5;
         e.FingerprintsJson = JsonSerializer.Serialize(p.Fingerprints ?? new(), _json);

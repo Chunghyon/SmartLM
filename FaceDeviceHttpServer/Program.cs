@@ -2163,7 +2163,8 @@ var mainForm = new MainForm();
 mainForm.SetServerUrl(serverUrl);
 mainForm.FormClosed += (_, _) => cts.Cancel();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
-Application.Run(mainForm);
+// 시작 시 폼을 Show하지 않음 (트레이만). Hide()+Minimized는 Win32 87 유발.
+Application.Run(new FdhsTrayContext(mainForm));
 await serverTask;
 #else
 Console.WriteLine($"FaceDevice HTTP Server listening: {serverUrl}");
