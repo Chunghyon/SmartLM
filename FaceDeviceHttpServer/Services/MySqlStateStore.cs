@@ -1,3 +1,4 @@
+using System.Net;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -40,6 +41,7 @@ public sealed class MySqlStateStore
 
         device.LastKeepaliveJson = JsonSerializer.Serialize(request, _json);
         device.LastKeepaliveAt = DateTime.UtcNow;
+        deviceIp = NormalizeIpAddress(deviceIp);
         if (!string.IsNullOrWhiteSpace(deviceIp))
         {
             if (string.IsNullOrWhiteSpace(device.IpAddress) || device.IpAddress != deviceIp)
@@ -344,7 +346,7 @@ public sealed class MySqlStateStore
         return db.Devices.AsNoTracking().Select(d => new DeviceSummary
         {
             SN = d.Sn,
-            IpAddress = d.IpAddress,
+            IpAddress = NormalizeIpAddress(d.IpAddress),
             HttpPort = d.HttpPort,
             DeviceName = d.DeviceName,
             TagName = d.TagName,
@@ -639,7 +641,7 @@ public sealed class MySqlStateStore
     {
         using var db = CreateDb();
         var device = GetOrCreateDevice(db, deviceSn);
-        device.IpAddress = ipAddress;
+        device.IpAddress = NormalizeIpAddress(ipAddress);
         device.HttpPort = httpPort;
         if (deviceName != null) device.DeviceName = deviceName;
         if (tagName != null) device.TagName = tagName;
@@ -960,7 +962,7 @@ public sealed class MySqlStateStore
         return new DeviceSnapshot
         {
             SN = d.Sn,
-            IpAddress = d.IpAddress,
+            IpAddress = NormalizeIpAddress(d.IpAddress),
             HttpPort = d.HttpPort,
             DeviceName = d.DeviceName,
             TagName = d.TagName,
@@ -1055,5 +1057,23 @@ public sealed class MySqlStateStore
         e.FingerprintsJson = JsonSerializer.Serialize(p.Fingerprints ?? new(), _json);
         e.PalmveinsJson = JsonSerializer.Serialize(p.Palmveins ?? new(), _json);
         e.UpdatedAt = DateTime.UtcNow;
+    }
+
+    public static string? NormalizeIpAddress(string? ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return ip;
+        ip = ip.Trim().Trim('[', ']');
+        var mapped = ip.IndexOf("ffff:", StringComparison.OrdinalIgnoreCase);
+        if (mapped >= 0 && mapped <= 2)
+            ip = ip[(mapped + 5)..];
+        if (IPAddress.TryParse(ip, out var addr))
+        {
+            if (addr.IsIPv4MappedToIPv6)
+                addr = addr.MapToIPv4();
+            if (addr.Equals(IPAddress.IPv6Loopback))
+                return "127.0.0.1";
+            return addr.ToString();
+        }
+        return ip;
     }
 }

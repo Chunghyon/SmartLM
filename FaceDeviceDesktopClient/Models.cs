@@ -147,6 +147,7 @@ public class AttendanceRecord
     public string DepartmentName { get; set; } = string.Empty;
     public string RecordTime { get; set; } = string.Empty;
     public string DeviceSN { get; set; } = string.Empty;
+    public string? DeviceName { get; set; }
     public int RecordType { get; set; }
     public string? Temperature { get; set; }
     public string? PhotoUrl { get; set; }

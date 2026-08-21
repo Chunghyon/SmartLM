@@ -247,14 +247,29 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
       <div class="form-group"><label style="color:#aaa;font-size:10px">사용자 ID (자동)</label><input type="text" id="mUid" maxlength="32" readonly style="background:#f5f5f5;color:#999;font-size:11px"></div>
       <div class="form-group"><label>카드번호</label><input type="text" id="mCard" maxlength="64"></div>
       <div class="form-group"><label>비밀번호</label><input type="password" id="mPass" maxlength="8"></div>
-      <div class="form-group"><label>출입 타입</label>
-        <select id="mAccess">
-          <option value="0">일반 사용자</option>
-          <option value="1">관리자</option>
-          <option value="2">블랙리스트</option>
-        </select>
+      <div class="form-group">
+        <label>만료 일시</label>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:500;margin-bottom:4px">
+          <input type="checkbox" id="mExpiryUnlimited" checked onchange="onExpiryUnlimitedChange()"> 무제한
+        </label>
+        <input type="datetime-local" id="mExpiry" disabled>
       </div>
-      <div class="form-group"><label>만료 일시</label><input type="datetime-local" id="mExpiry"></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label>지문</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="mFpStatus">없음</span>
+          <button type="button" class="btn-danger" onclick="clearFingerprints()">제거</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>정맥</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="mPalmStatus">없음</span>
+          <button type="button" class="btn-danger" onclick="clearPalmveins()">제거</button>
+        </div>
+      </div>
     </div>
     <div style="margin-bottom:12px">
       <label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:6px">얼굴 사진</label>
@@ -341,6 +356,6 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
 </div>
 
 <div class="status-bar" id="statusBar">준비</div>
-<script src="app.js?v=20260820folder2"></script>
+<script src="app.js?v=20260821person"></script>
 </body>
 </html>

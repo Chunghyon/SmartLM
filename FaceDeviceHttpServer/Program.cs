@@ -199,7 +199,11 @@ app.MapPost("/Device/Keepalive", (KeepaliveRequest request, HttpContext httpCont
     }
 
     // 디바이스 IP 주소 추출
-    var deviceIp = httpContext.Connection.RemoteIpAddress?.ToString();
+    var remoteIp = httpContext.Connection.RemoteIpAddress;
+    if (remoteIp is not null && remoteIp.IsIPv4MappedToIPv6)
+        remoteIp = remoteIp.MapToIPv4();
+    var deviceIp = MySqlStateStore.NormalizeIpAddress(remoteIp?.ToString());
+
     if (deviceIp == "::1" || deviceIp == "127.0.0.1")
     {
         deviceIp = null; // 로컬 연결은 IP 저장 안 함
@@ -1919,8 +1923,9 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, MySqlStateSt
                 devSn = match.Groups[1].Value;
         }
         var devSnapshot = store.GetDevice(devSn);
-        var devDisplay = devSnapshot?.DeviceName is string dn && !string.IsNullOrWhiteSpace(dn)
-            ? $"{dn} ({devSn})" : devSn;
+        var devDisplay = !string.IsNullOrWhiteSpace(devSnapshot?.DeviceName)
+            ? devSnapshot!.DeviceName!
+            : devSn;
 
         // RecordDate -> RecordTime conversion
         string? recordTime = r.RecordDetail?["RecordTime"]?.GetValue<string>();
@@ -1951,7 +1956,8 @@ app.MapPost("/api/Attendance/Search", (AttendanceSearchRequest req, MySqlStateSt
                           ?? r.RecordDetail?["Department"]?.GetValue<string>() ?? "",
             DepartmentName = r.RecordDetail?["DepartmentName"]?.GetValue<string>() ?? "",
             RecordTime     = recordTime,
-            DeviceSN       = devDisplay,
+            DeviceSN       = devSn,
+            DeviceName     = devDisplay,
             RecordType     = r.RecordDetail?["RecordType"]?.GetValue<int>() ?? 0,
             Temperature    = tempStr,
             PhotoUrl       = r.RecordDetail?["PhotoUrl"]?.GetValue<string>()

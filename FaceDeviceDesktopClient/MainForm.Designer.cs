@@ -212,7 +212,7 @@ namespace FaceDeviceDesktopClient
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(90, 15);
             this.label4.TabIndex = 6;
-            this.label4.Text = "이벤트 수:";
+            this.label4.Text = "출입기록 수:";
 
             this.lblTotalRecords.AutoSize = true;
             this.lblTotalRecords.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
@@ -551,7 +551,7 @@ namespace FaceDeviceDesktopClient
             this.tabAttendance.Padding = new System.Windows.Forms.Padding(10);
             this.tabAttendance.Size = new System.Drawing.Size(1192, 572);
             this.tabAttendance.TabIndex = 4;
-            this.tabAttendance.Text = "이벤트조회";
+            this.tabAttendance.Text = "출입기록";
             this.tabAttendance.UseVisualStyleBackColor = true;
 
             // 
@@ -579,7 +579,7 @@ namespace FaceDeviceDesktopClient
             this.grpAttendanceSearch.Size = new System.Drawing.Size(1172, 120);
             this.grpAttendanceSearch.TabIndex = 0;
             this.grpAttendanceSearch.TabStop = false;
-            this.grpAttendanceSearch.Text = "이벤트조회";
+            this.grpAttendanceSearch.Text = "출입기록";
 
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(12, 26);

@@ -275,7 +275,7 @@ public partial class MainForm : Form
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttHo",     HeaderText = "호",       DataPropertyName = "UserID",      Width = 65  });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttMember", HeaderText = "멤버#",   DataPropertyName = "UserID",      Width = 55  });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttName",   HeaderText = "사용자명", DataPropertyName = "UserName",    Width = 130 });
-        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDevice", HeaderText = "단말기",   DataPropertyName = "DeviceSN",    Width = 130 });
+        dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttDevice", HeaderText = "단말기",   DataPropertyName = "DeviceName",    Width = 130 });
         dgvAttendance.Columns.Add(new DataGridViewTextBoxColumn { Name = "AttEvent",  HeaderText = "이벤트",    DataPropertyName = "RecordType",  Width = 100 });
 
         dgvAttendance.CellFormatting += DgvAttendance_CellFormatting;

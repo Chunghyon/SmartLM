@@ -554,8 +554,14 @@ async function openEditPerson(uid){
     document.getElementById('mName').value=p.Name??'';
     document.getElementById('mCard').value=(p.CardNum&&p.CardNum!=='0')?p.CardNum:'';
     document.getElementById('mPass').value=(p.Password&&p.Password!=='0000')?p.Password:'';
-    document.getElementById('mAccess').value=p.AccessType??0;
-    if(p.ExpirationDate>0&&p.ExpirationDate<4102412399)document.getElementById('mExpiry').value=new Date(p.ExpirationDate*1000).toISOString().slice(0,16);
+    _editFingerprints=p.Fingerprints||[];
+    _editPalmveins=p.Palmveins||[];
+    updateBiometricStatus();
+    const unlimited=!p.ExpirationDate||p.ExpirationDate>=4102412399;
+    document.getElementById('mExpiryUnlimited').checked=unlimited;
+    document.getElementById('mExpiry').disabled=unlimited;
+    if(!unlimited)document.getElementById('mExpiry').value=new Date(p.ExpirationDate*1000).toISOString().slice(0,16);
+
     if(p.Photo){_photoBase64=p.Photo;const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src='data:image/jpeg;base64,'+p.Photo;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent='기존 사진 있음';}
   }catch(e){setStatus('사용자 정보 로드 실패: '+e.message,'err');return;}
   document.getElementById('personModal').classList.add('open');
@@ -563,7 +569,11 @@ async function openEditPerson(uid){
 function editSelectedPerson(){openEditPerson(null);}
 function clearPersonModal(){
   ['mUid','mName','mDong','mHo','mMember','mCard','mPass','mExpiry'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.readOnly=false;}});
-  document.getElementById('mAccess').value='0';document.getElementById('mPhotoStatus').textContent='';document.getElementById('mPhotoFile').value='';_photoBase64=null;
+  document.getElementById('mExpiryUnlimited').checked=true;
+  document.getElementById('mExpiry').disabled=true;
+  _editFingerprints=[];_editPalmveins=[];
+  updateBiometricStatus();
+  document.getElementById('mPhotoStatus').textContent='';document.getElementById('mPhotoFile').value='';_photoBase64=null;
   const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}
   updateUidPreview();
 }
@@ -580,6 +590,29 @@ function previewPhoto(ev){
   const r=new FileReader();r.onload=e=>{const data=e.target.result;_photoBase64=data.split(',')[1];const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src=data;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent=f.name+' ('+(f.size/1024).toFixed(1)+'KB)';};r.readAsDataURL(f);
 }
 function clearPhoto(){_photoBase64=null;document.getElementById('mPhotoFile').value='';document.getElementById('mPhotoStatus').textContent='';const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}}
+
+function updateBiometricStatus(){
+  const fp=(_editFingerprints&&_editFingerprints.length)||0;
+  const pv=(_editPalmveins&&_editPalmveins.length)||0;
+  const fs=document.getElementById('mFpStatus');
+  const ps=document.getElementById('mPalmStatus');
+  if(fs)fs.textContent=fp?fp+'개 등록':'없음';
+  if(ps)ps.textContent=pv?pv+'개 등록':'없음';
+}
+function clearFingerprints(){
+  _editFingerprints=[];
+  updateBiometricStatus();
+}
+function clearPalmveins(){
+  _editPalmveins=[];
+  updateBiometricStatus();
+}
+function onExpiryUnlimitedChange(){
+  const u=document.getElementById('mExpiryUnlimited').checked;
+  const el=document.getElementById('mExpiry');
+  el.disabled=u;
+  if(u)el.value='';
+}
 async function savePerson(){
   const name=document.getElementById('mName').value.trim();
   const dongStr=document.getElementById('mDong').value.trim();
@@ -590,8 +623,12 @@ async function savePerson(){
   if(isNaN(dN)||isNaN(hN)||isNaN(mN)||!dongStr||!hoStr||!memberStr){setStatus('동/호/멤버# 동시 입력 필수 (모두 숫자)','err');return;}
   let uid;
   if(_editingUserId){uid=_editingUserId;}else{uid=String(dN*1000000+hN*100+mN);}
-  let exp=0;const ev=document.getElementById('mExpiry').value;if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
-  const p={UserID:uid,Name:name,Department:dongStr,Job:hoStr,IdentityCard:memberStr,CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:parseInt(document.getElementById('mAccess').value)||0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??''};
+  let exp=4102412399;
+  if(!document.getElementById('mExpiryUnlimited').checked){
+    const ev=document.getElementById('mExpiry').value;
+    if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
+  }
+  const p={UserID:uid,Name:name,Department:dongStr,Job:hoStr,IdentityCard:memberStr,CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??'',Fingerprints:_editFingerprints||[],Palmveins:_editPalmveins||[]};
   try{
     if(window._devicePeopleSn){
       await apiPost('/admin/devices/'+window._devicePeopleSn+'/people',p);
