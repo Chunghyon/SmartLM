@@ -32,7 +32,7 @@ public static class FacePhotoValidator
                 scaleFactor: 1.1,
                 minNeighbors: 5,
                 flags: HaarDetectionTypes.ScaleImage,
-                minSize: new Size(80, 80));
+                minSize: new OpenCvSharp.Size(80, 80));
 
             if (faces.Length == 0)
                 return (false, 0, "얼굴을 찾지 못했습니다. 가이드 안에 얼굴이 크게 오도록 조정하세요.");

@@ -12,8 +12,10 @@ dotnet publish ..\FaceDeviceDesktopClient\FaceDeviceDesktopClient.csproj -c Rele
 if errorlevel 1 goto :fail
 
 echo OK. Next: compile SmartLM.iss with Inno Setup.
+timeout /t 3
 exit /b 0
 
 :fail
 echo PUBLISH FAILED
+pause
 exit /b 1

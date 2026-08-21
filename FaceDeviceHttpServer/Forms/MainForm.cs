@@ -19,6 +19,9 @@ public sealed class MainForm : Form
     private string _serverUrl = string.Empty;
     private readonly NotifyIcon _tray;
     private bool _exitRequested;
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public Action? RequestShutdown { get; set; }
     private readonly List<string> _plainLog = new();
 
 
@@ -71,6 +74,7 @@ public sealed class MainForm : Form
         {
             Dock = DockStyle.Fill,
             ReadOnly = true,
+            HideSelection = true,
             BackColor = Color.FromArgb(18, 18, 18),
             ForeColor = Color.LightGray,
             Font = new Font("Consolas", 9.5f),
@@ -142,8 +146,16 @@ public sealed class MainForm : Form
     private void ExitFromTray()
     {
         _exitRequested = true;
-        if (_tray != null) _tray.Visible = false;
-        Close();
+        try
+        {
+            if (_tray != null)
+            {
+                _tray.Visible = false;
+                _tray.Dispose();
+            }
+        }
+        catch { }
+        RequestShutdown?.Invoke();
     }
 
 
@@ -224,32 +236,31 @@ public sealed class MainForm : Form
         if (!Visible) return;
         try
         {
-        _logBox.SuspendLayout();
+            if (_plainLog.Count >= MaxLines)
+            {
+                RebuildLogBoxFromBuffer();
+                return;
+            }
 
-        // 최대 줄 수 유지
-        TrimLines();
+            var (color, prefix) = entry.Level switch
+            {
+                FaceDeviceLogLevel.Request => (Color.FromArgb(100, 200, 255), ">"),
+                FaceDeviceLogLevel.Warn => (Color.FromArgb(255, 220, 80), "!"),
+                FaceDeviceLogLevel.Error => (Color.FromArgb(255, 90, 90), "X"),
+                _ => (Color.FromArgb(160, 255, 160), "·")
+            };
 
-        var (color, prefix) = entry.Level switch
-        {
-            FaceDeviceLogLevel.Request => (Color.FromArgb(100, 200, 255), ">"),
-            FaceDeviceLogLevel.Warn => (Color.FromArgb(255, 220, 80), "!"),
-            FaceDeviceLogLevel.Error => (Color.FromArgb(255, 90, 90), "X"),
-            _ => (Color.FromArgb(160, 255, 160), "·")
-        };
-
-        // 타임스탬프
-        AppendColored($"[{entry.Timestamp:HH:mm:ss.fff}] ", Color.FromArgb(120, 120, 120));
-        AppendColored($"{prefix} ", color);
-        AppendColored(entry.Message + "\n", color);
-
-        if (!string.IsNullOrWhiteSpace(entry.Detail))
-        {
-            var d = entry.Detail.Length > 400 ? entry.Detail[..400] + " …" : entry.Detail;
-            AppendColored("    " + d.Replace("\n", " ").Trim() + "\n", Color.FromArgb(200, 200, 200));
-        }
-
-        _logBox.ResumeLayout();
-        _logBox.ScrollToCaret();
+            AppendColored($"[{entry.Timestamp:HH:mm:ss.fff}] ", Color.FromArgb(120, 120, 120));
+            AppendColored($"{prefix} ", color);
+            AppendColored(entry.Message + "\n", color);
+            if (!string.IsNullOrWhiteSpace(entry.Detail))
+            {
+                var d = entry.Detail.Length > 400 ? entry.Detail[..400] + " …" : entry.Detail;
+                AppendColored("    " + d.Replace("\n", " ").Trim() + "\n", Color.FromArgb(200, 200, 200));
+            }
+            _logBox.SelectionStart = _logBox.TextLength;
+            _logBox.SelectionLength = 0;
+            _logBox.ScrollToCaret();
         }
         catch { }
     }
@@ -260,18 +271,6 @@ public sealed class MainForm : Form
         _logBox.SelectionLength = 0;
         _logBox.SelectionColor = color;
         _logBox.AppendText(text);
-    }
-
-    private void TrimLines()
-    {
-        var lastLine = _logBox.GetLineFromCharIndex(Math.Max(0, _logBox.TextLength - 1));
-        if (lastLine < MaxLines) return;
-        var start = _logBox.GetFirstCharIndexFromLine(Math.Max(0, lastLine - MaxLines / 2));
-        if (start <= 0) return;
-        _logBox.Select(0, start);
-        _logBox.SelectedText = string.Empty;
-        _logBox.SelectionLength = 0;
-        _logBox.SelectionStart = _logBox.TextLength;
     }
 
     private void CopyLog()

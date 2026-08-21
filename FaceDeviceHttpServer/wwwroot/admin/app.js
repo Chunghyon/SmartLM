@@ -553,7 +553,7 @@ async function openEditPerson(uid){
     document.getElementById('mMember').readOnly=true;
     document.getElementById('mName').value=p.Name??'';
     document.getElementById('mCard').value=(p.CardNum&&p.CardNum!=='0')?p.CardNum:'';
-    document.getElementById('mPass').value=(p.Password&&p.Password!=='0000')?p.Password:'';
+    document.getElementById('mPass').value=p.Password??'';
     _editFingerprints=p.Fingerprints||[];
     _editPalmveins=p.Palmveins||[];
     updateBiometricStatus();
@@ -682,6 +682,11 @@ async function applyPhotoEditor(){
   closePhotoEditor();
 }
 
+function togglePassVisible(){
+  const el=document.getElementById('mPass');
+  const show=document.getElementById('mPassShow')?.checked;
+  if(el)el.type=show?'text':'password';
+}
 function previewPhoto(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{const data=e.target.result;_photoBase64=data.split(',')[1];const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src=data;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent=f.name+' ('+(f.size/1024).toFixed(1)+'KB)';};r.readAsDataURL(f);

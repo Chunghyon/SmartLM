@@ -2193,11 +2193,20 @@ catch (Exception ex)
 #if WINDOWS
 var mainForm = new MainForm();
 mainForm.SetServerUrl(serverUrl);
-mainForm.FormClosed += (_, _) => cts.Cancel();
-Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
-// 시작 시 폼을 Show하지 않음 (트레이만). Hide()+Minimized는 Win32 87 유발.
+void ShutdownFdhs()
+{
+    try { cts.Cancel(); } catch { }
+    try { app.StopAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult(); } catch { }
+    try { Application.Exit(); } catch { }
+    Environment.Exit(0);
+}
+mainForm.RequestShutdown = ShutdownFdhs;
+mainForm.FormClosed += (_, _) => ShutdownFdhs();
+Console.CancelKeyPress += (_, e) => { e.Cancel = true; ShutdownFdhs(); };
 Application.Run(new FdhsTrayContext(mainForm));
-await serverTask;
+try { await app.StopAsync(TimeSpan.FromSeconds(2)); } catch { }
+try { await serverTask.WaitAsync(TimeSpan.FromSeconds(2)); } catch { }
+Environment.Exit(0);
 #else
 Console.WriteLine($"FaceDevice HTTP Server listening: {serverUrl}");
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
