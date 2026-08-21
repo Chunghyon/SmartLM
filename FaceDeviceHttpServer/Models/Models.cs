@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace FaceDeviceHttpPcServer.Models;
@@ -326,11 +328,31 @@ public sealed class DownloadPeopleListResultRequest
     public List<PeopleImportFailItem> FailList { get; set; } = new();
 }
 
+
+public sealed class FlexibleStringConverter : JsonConverter<string>
+{
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return reader.TokenType switch
+        {
+            JsonTokenType.Number when reader.TryGetInt64(out var n) => n.ToString(),
+            JsonTokenType.Number => reader.GetDouble().ToString(),
+            JsonTokenType.String => reader.GetString() ?? "",
+            JsonTokenType.Null => "",
+            _ => reader.GetString() ?? ""
+        };
+    }
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        => writer.WriteStringValue(value);
+}
+
 public sealed class PeopleImportFailItem
 {
+    [JsonConverter(typeof(FlexibleStringConverter))]
     public string UserID { get; set; } = string.Empty;
     public int ErrorCode { get; set; }
-    public string? RepeatID { get; set; }
+    [JsonConverter(typeof(FlexibleStringConverter))]
+    public string RepeatID { get; set; } = string.Empty;
     public string? ErrMsg { get; set; }
 }
 

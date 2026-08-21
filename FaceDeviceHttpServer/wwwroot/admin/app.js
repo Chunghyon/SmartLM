@@ -531,7 +531,7 @@ function showAddPersonModal(){
 }
 async function openEditPerson(uid){
   if(!uid){const u=getCheckedPersonUIDs();if(u.length!==1){setStatus('수정할 사용자를 1명 선택하세요','err');return;}uid=u[0];}
-  _editingUserId=uid;_photoBase64=null;clearPersonModal();
+  _editingUserId=uid;_photoBase64=null;_photoCleared=false;clearPersonModal();
   document.getElementById('personModalTitle').textContent='사용자 수정';
   document.getElementById('mUid').disabled=true;
   try{
@@ -585,11 +585,108 @@ function updateUidPreview(){
   const el=document.getElementById('mUid');
   if(el&&!el.readOnly){el.value=(d||h||m)?String(d*1000000+h*100+m):'';}
 }
+
+const PE_VIEW=400, PE_OUT=640;
+let _peImg=null,_peScale=1,_peX=0,_peY=0,_peDrag=false,_peLast={x:0,y:0};
+
+function openPhotoEditorFromFile(ev){
+  const f=ev.target.files&&ev.target.files[0];
+  if(!f)return;
+  const img=new Image();
+  img.onload=()=>{
+    _peImg=img;
+    _peScale=Math.min(1.5, Math.max(0.10, Math.max(PE_VIEW/img.width, PE_VIEW/img.height)));
+    _peX=(PE_VIEW-img.width*_peScale)/2;
+    _peY=(PE_VIEW-img.height*_peScale)/2;
+    const z=document.getElementById('peZoom');
+    if(z)z.value=String(Math.round(_peScale*100));
+    document.getElementById('photoEditorModal').classList.add('open');
+    bindPeCanvas();
+    drawPhotoEditor();
+  };
+  img.src=URL.createObjectURL(f);
+}
+function bindPeCanvas(){
+  const c=document.getElementById('peCanvas');
+  if(!c||c._peBound)return;
+  c._peBound=true;
+  c.addEventListener('mousedown',e=>{_peDrag=true;_peLast={x:e.offsetX,y:e.offsetY};c.style.cursor='grabbing';});
+  window.addEventListener('mouseup',()=>{_peDrag=false;const c2=document.getElementById('peCanvas');if(c2)c2.style.cursor='grab';});
+  c.addEventListener('mousemove',e=>{
+    if(!_peDrag||!_peImg)return;
+    _peX+=e.offsetX-_peLast.x; _peY+=e.offsetY-_peLast.y;
+    _peLast={x:e.offsetX,y:e.offsetY};
+    drawPhotoEditor();
+  });
+  c.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const n=_peScale*(e.deltaY<0?1.08:0.92);
+    onPeZoom(n*100);
+    const z=document.getElementById('peZoom'); if(z)z.value=String(Math.round(n*100));
+  },{passive:false});
+}
+function onPeZoom(v){
+  const ns=Math.min(1.5, Math.max(0.10, Number(v)/100));
+  if(!_peImg)return;
+  const cx=PE_VIEW/2, cy=PE_VIEW/2;
+  const ix=(cx-_peX)/_peScale, iy=(cy-_peY)/_peScale;
+  _peScale=ns;
+  _peX=cx-ix*_peScale; _peY=cy-iy*_peScale;
+  drawPhotoEditor();
+}
+function drawPhotoEditor(){
+  const c=document.getElementById('peCanvas'); if(!c)return;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#1a1a1a'; ctx.fillRect(0,0,PE_VIEW,PE_VIEW);
+  if(_peImg) ctx.drawImage(_peImg,_peX,_peY,_peImg.width*_peScale,_peImg.height*_peScale);
+  ctx.strokeStyle='rgba(80,220,120,.85)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.ellipse(200,190,95,125,0,0,Math.PI*2); ctx.stroke();
+}
+function closePhotoEditor(){
+  document.getElementById('photoEditorModal').classList.remove('open');
+}
+function renderPeOutput(){
+  const out=document.createElement('canvas');
+  out.width=out.height=PE_OUT;
+  const ctx=out.getContext('2d');
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,PE_OUT,PE_OUT);
+  const k=PE_OUT/PE_VIEW;
+  if(_peImg) ctx.drawImage(_peImg,_peX*k,_peY*k,_peImg.width*_peScale*k,_peImg.height*_peScale*k);
+  return out;
+}
+async function applyPhotoEditor(){
+  if(!_peImg){closePhotoEditor();return;}
+  const out=renderPeOutput();
+  const msg=document.getElementById('peFaceMsg');
+  if(msg)msg.textContent='얼굴 검사 중...';
+  try{
+    const data=out.toDataURL('image/jpeg',0.85);
+    const r=await fetch('/admin/people/validate-photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Photo:data})});
+    const txt=await r.text();
+    if(!txt){if(msg)msg.textContent='얼굴 검사 API가 없습니다. FDHS를 ServerFaceValidate 적용 후 다시 빌드하세요.';return;}
+    let j; try{j=JSON.parse(txt);}catch(e){if(msg)msg.textContent='얼굴 검사 응답이 JSON이 아닙니다. FDHS를 다시 빌드하세요.';return;}
+    if(!j.ok){if(msg)msg.textContent=j.message||'얼굴을 인식할 수 없습니다.';return;}
+  }catch(e){
+    if(msg)msg.textContent='얼굴 검사 실패: '+(e.message||e);
+    return;
+  }
+  const data=out.toDataURL('image/jpeg',0.85);
+  _photoBase64=data.split(',')[1];
+  _photoCleared=false;
+  const w=document.getElementById('mPhotoWrap');
+  const img=document.createElement('img');
+  img.id='mPhotoWrap'; img.className='photo-preview'; img.src=data;
+  if(w)w.replaceWith(img);
+  const st=document.getElementById('mPhotoStatus');
+  if(st)st.textContent='편집된 사진 ('+Math.round(_photoBase64.length*0.75/1024)+'KB)';
+  closePhotoEditor();
+}
+
 function previewPhoto(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{const data=e.target.result;_photoBase64=data.split(',')[1];const w=document.getElementById('mPhotoWrap');const img=document.createElement('img');img.id='mPhotoWrap';img.className='photo-preview';img.src=data;w.replaceWith(img);document.getElementById('mPhotoStatus').textContent=f.name+' ('+(f.size/1024).toFixed(1)+'KB)';};r.readAsDataURL(f);
 }
-function clearPhoto(){_photoBase64=null;document.getElementById('mPhotoFile').value='';document.getElementById('mPhotoStatus').textContent='';const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}}
+function clearPhoto(){_photoBase64=null;_photoCleared=true;document.getElementById('mPhotoFile').value='';document.getElementById('mPhotoStatus').textContent='';const w=document.getElementById('mPhotoWrap');if(w){const ph=document.createElement('div');ph.id='mPhotoWrap';ph.className='photo-placeholder';ph.textContent='?';w.replaceWith(ph);}}
 
 function updateBiometricStatus(){
   const fp=(_editFingerprints&&_editFingerprints.length)||0;
@@ -628,7 +725,7 @@ async function savePerson(){
     const ev=document.getElementById('mExpiry').value;
     if(ev)exp=Math.floor(new Date(ev).getTime()/1000);
   }
-  const p={UserID:uid,Name:name,Department:dongStr,Job:hoStr,IdentityCard:memberStr,CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoBase64??'',Fingerprints:_editFingerprints||[],Palmveins:_editPalmveins||[]};
+  const p={UserID:uid,Name:name,Department:dongStr,Job:hoStr,IdentityCard:memberStr,CardNum:document.getElementById('mCard').value.trim()||'0',Password:document.getElementById('mPass').value.trim(),AccessType:0,ExpirationDate:exp,OpenTimes:65535,Timegroup:1,Photo:_photoCleared?'':(_photoBase64??undefined),PhotoLen:_photoCleared?-1:undefined,Fingerprints:_editFingerprints||[],Palmveins:_editPalmveins||[]};
   try{
     if(window._devicePeopleSn){
       await apiPost('/admin/devices/'+window._devicePeopleSn+'/people',p);

@@ -55,6 +55,7 @@ tbody tr:hover{background:#f5f8ff}
 .log-box{background:#1a1a2e;color:#a8d8ea;font-family:Consolas,monospace;font-size:11px;padding:9px;border-radius:4px;height:180px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;justify-content:center;align-items:flex-start;padding-top:60px}
 .modal-overlay.open{display:flex}
+#photoEditorModal{z-index:4000}
 .modal{background:white;border-radius:8px;padding:20px;min-width:460px;max-width:96vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
 .modal h2{font-size:16px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:9px}
 .photo-placeholder{width:72px;height:72px;background:#f0f0f0;border-radius:4px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:22px;color:#ccc;flex-shrink:0}
@@ -235,27 +236,49 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
 
 </div><!-- /container -->
 
+<div class="modal-overlay" id="photoEditorModal">
+  <div class="modal" style="min-width:440px">
+    <h2>얼굴 사진 편집</h2>
+    <p style="font-size:12px;color:#666;margin:0 0 8px">드래그로 위치, 슬라이더로 크기 조정. 얼굴이 안내선 안에 오도록 맞추세요.</p>
+    <canvas id="peCanvas" width="400" height="400" style="width:400px;height:400px;background:#222;border:1px solid #ccc;cursor:grab;display:block;margin:0 auto"></canvas>
+    <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+      <span style="font-size:12px;width:40px">축소</span>
+      <input type="range" id="peZoom" min="10" max="150" value="100" style="flex:1" oninput="onPeZoom(this.value)">
+      <span style="font-size:12px;width:40px">확대</span>
+    </div>
+    <div id="peFaceMsg" style="font-size:12px;color:#888;min-height:18px"></div>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn-success" onclick="applyPhotoEditor()">적용</button>
+      <button class="btn-secondary" onclick="closePhotoEditor()">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- 사용자 모달 -->
 <div class="modal-overlay" id="personModal">
   <div class="modal">
     <h2 id="personModalTitle">사용자 추가</h2>
     <div class="form-grid">
-      <div class="form-group"><label>동 *</label><input type="text" id="mDong" maxlength="10" placeholder="동 번호 (숫자)"></div>
-      <div class="form-group"><label>호 *</label><input type="text" id="mHo" maxlength="10" placeholder="호 번호 (숫자)"></div>
-      <div class="form-group"><label>멤버# *</label><input type="text" id="mMember" maxlength="5" placeholder="멤버 번호 (숫자)"></div>
-      <div class="form-group"><label>이름 *</label><input type="text" id="mName" maxlength="64"></div>
-      <div class="form-group"><label style="color:#aaa;font-size:10px">사용자 ID (자동)</label><input type="text" id="mUid" maxlength="32" readonly style="background:#f5f5f5;color:#999;font-size:11px"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>사용자명 *</label>
+        <input type="text" id="mName" maxlength="64">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>동 / 호 / 멤버# *</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="mDong" maxlength="10" placeholder="동" style="flex:1">
+          <input type="text" id="mHo" maxlength="10" placeholder="호" style="flex:1">
+          <input type="text" id="mMember" maxlength="5" placeholder="멤버#" style="flex:1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="color:#aaa;font-size:10px">사용자 ID (자동)</label>
+        <input type="text" id="mUid" maxlength="32" readonly style="background:#f5f5f5;color:#999;font-size:11px">
+      </div>
       <div class="form-group"><label>카드번호</label><input type="text" id="mCard" maxlength="64"></div>
       <div class="form-group"><label>비밀번호</label><input type="password" id="mPass" maxlength="8"></div>
-      <div class="form-group">
-        <label>만료 일시</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:500;margin-bottom:4px">
-          <input type="checkbox" id="mExpiryUnlimited" checked onchange="onExpiryUnlimitedChange()"> 무제한
-        </label>
-        <input type="datetime-local" id="mExpiry" disabled>
-      </div>
     </div>
-    <div class="form-grid" style="margin-bottom:12px">
+    <div class="form-grid" style="margin:8px 0 12px">
       <div class="form-group">
         <label>지문</label>
         <div style="display:flex;align-items:center;gap:8px">
@@ -276,17 +299,24 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
       <div style="display:flex;align-items:center;gap:12px">
         <div id="mPhotoWrap" class="photo-placeholder">?</div>
         <div>
-          <input type="file" id="mPhotoFile" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+          <input type="file" id="mPhotoFile" accept="image/*" style="display:none" onchange="openPhotoEditorFromFile(event)">
           <div class="btn-group" style="flex-direction:column;gap:4px;align-items:flex-start">
             <button class="btn-secondary" onclick="document.getElementById('mPhotoFile').click()">사진 선택</button>
-            <button class="btn-danger"    onclick="clearPhoto()">사진 제거</button>
+            <button class="btn-danger" onclick="clearPhoto()">사진 제거</button>
           </div>
           <div id="mPhotoStatus" style="font-size:11px;color:#888;margin-top:5px"></div>
         </div>
       </div>
     </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>만료 일시</label>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:500;margin-bottom:4px">
+        <input type="checkbox" id="mExpiryUnlimited" checked onchange="onExpiryUnlimitedChange()"> 무제한
+      </label>
+      <input type="datetime-local" id="mExpiry" disabled>
+    </div>
     <div class="btn-group" style="justify-content:flex-end">
-      <button class="btn-success"   onclick="savePerson()">저장</button>
+      <button class="btn-success" onclick="savePerson()">저장</button>
       <button class="btn-secondary" onclick="closePersonModal()">취소</button>
     </div>
   </div>
@@ -356,6 +386,6 @@ input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#3498db}
 </div>
 
 <div class="status-bar" id="statusBar">준비</div>
-<script src="app.js?v=20260821person"></script>
+<script src="app.js?v=20260821face3"></script>
 </body>
 </html>

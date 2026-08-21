@@ -1043,9 +1043,20 @@ public sealed class MySqlStateStore
     {
         e.Code = string.IsNullOrWhiteSpace(p.Code) ? p.UserID : p.Code;
         e.Name = p.Name;
-        e.Photo = p.Photo;
-        e.PhotoMd5 = p.PhotoMD5;
-        e.PhotoLen = p.PhotoLen;
+        // 빈 사진/단말기 내부 경로는 기존 사진을 유지. PhotoLen<0 만 명시적 삭제.
+        if (p.PhotoLen < 0)
+        {
+            e.Photo = null;
+            e.PhotoMd5 = null;
+            e.PhotoLen = 0;
+        }
+        else if (!string.IsNullOrWhiteSpace(p.Photo)
+                 && !p.Photo.StartsWith("/data/", StringComparison.OrdinalIgnoreCase))
+        {
+            e.Photo = p.Photo;
+            e.PhotoMd5 = p.PhotoMD5;
+            e.PhotoLen = p.PhotoLen > 0 ? p.PhotoLen : p.Photo.Length;
+        }
         e.Password = p.Password;
         e.CardNum = string.IsNullOrWhiteSpace(p.CardNum) ? "0" : p.CardNum;
         e.QrCode = p.QRCode;

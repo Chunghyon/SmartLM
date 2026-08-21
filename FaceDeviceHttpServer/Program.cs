@@ -371,6 +371,32 @@ app.MapGet("/admin/people/{userId}/photo", (string userId, MySqlStateStore store
     return Results.NotFound(new ApiResponse(404, "Device photo path is not accessible from server (device is outbound-only)."));
 });
 
+app.MapPost("/admin/people/validate-photo", async (HttpRequest request) =>
+{
+    try
+    {
+        using var reader = new StreamReader(request.Body);
+        var raw = await reader.ReadToEndAsync();
+        if (string.IsNullOrWhiteSpace(raw))
+            return Results.Json(new { ok = false, faceCount = 0, message = "요청이 비어 있습니다." });
+        var body = JsonNode.Parse(raw);
+        var photo = body?["Photo"]?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(photo))
+            return Results.Json(new { ok = false, faceCount = 0, message = "사진이 없습니다." });
+        var comma = photo.IndexOf(',');
+        if (comma >= 0) photo = photo[(comma + 1)..];
+        byte[] bytes;
+        try { bytes = Convert.FromBase64String(photo); }
+        catch { return Results.Json(new { ok = false, faceCount = 0, message = "사진 형식이 올바르지 않습니다." }); }
+        var (ok, count, message) = FacePhotoValidator.ValidateJpeg(bytes);
+        return Results.Json(new { ok, faceCount = count, message });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { ok = false, faceCount = 0, message = "서버 얼굴 검사 오류: " + ex.Message });
+    }
+});
+
 app.MapPost("/admin/people", (PersonInfo person, MySqlStateStore store) =>
 {
     var normalized = NormalizePerson(person);

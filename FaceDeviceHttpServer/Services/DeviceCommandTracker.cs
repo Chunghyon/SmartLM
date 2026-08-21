@@ -16,7 +16,7 @@ public sealed class DeviceCommandTracker
     private readonly object _sync = new();
     private readonly Dictionary<string, DeviceCommandJob> _jobs = new();
     private readonly HashSet<string> _ownedQueryReset = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _importToServer = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, DateTime> _importUntil = new(StringComparer.OrdinalIgnoreCase);
 
 
     public DeviceCommandJob Start(string deviceSn, string type, string? message = null)
@@ -80,12 +80,25 @@ public sealed class DeviceCommandTracker
     public void MarkImportToServer(string deviceSn)
     {
         lock (_sync)
-            _importToServer.Add(deviceSn);
+            _importUntil[deviceSn] = DateTime.UtcNow.AddMinutes(2);
     }
 
-    public bool ConsumeImportToServer(string deviceSn)
+    public bool IsImportToServer(string deviceSn)
     {
         lock (_sync)
-            return _importToServer.Remove(deviceSn);
+        {
+            if (!_importUntil.TryGetValue(deviceSn, out var until))
+                return false;
+            if (DateTime.UtcNow > until)
+            {
+                _importUntil.Remove(deviceSn);
+                return false;
+            }
+            // 한 명씩 올라오는 동안 만료를 연장
+            _importUntil[deviceSn] = DateTime.UtcNow.AddMinutes(2);
+            return true;
+        }
     }
+
+    public bool ConsumeImportToServer(string deviceSn) => IsImportToServer(deviceSn);
 }

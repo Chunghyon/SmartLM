@@ -360,7 +360,7 @@ public partial class PersonForm : Form
         txtPhotoUrl = new TextBox
         {
             Location  = new Point(ctrlX, y),
-            Width     = 282,
+            Width     = 268,
             ReadOnly  = true,
             BackColor = SystemColors.Window
         };
@@ -369,8 +369,8 @@ public partial class PersonForm : Form
         btnBrowsePhoto = new Button
         {
             Text     = "찾아보기",
-            Location = new Point(ctrlX + 290, y - 2),
-            Size     = new Size(90, 28)
+            Location = new Point(ctrlX + 278, y - 1),
+            Size     = new Size(110, 24)
         };
         btnBrowsePhoto.Click += BtnBrowsePhoto_Click;
         mainPanel.Controls.Add(btnBrowsePhoto);
@@ -378,8 +378,8 @@ public partial class PersonForm : Form
         btnClearPhoto = new Button
         {
             Text      = "제거",
-            Location  = new Point(ctrlX + 388, y - 2),
-            Size      = new Size(50, 28),
+            Location  = new Point(ctrlX + 395, y - 1),
+            Size      = new Size(50, 24),
             ForeColor = Color.DarkRed,
             Enabled   = false
         };
